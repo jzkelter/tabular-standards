@@ -18,6 +18,7 @@ globals[
 
 breed [input-good-firms input-good-firm]
 breed [consumer-good-firms consumer-good-firm]
+directed-link-breed [framework-agreements framework-agreement]
 
 turtles-own [
   input-information
@@ -27,7 +28,7 @@ turtles-own [
   profits
   current-total-cost
   preferred-index
-  framework-agreements
+  framework-agreement-dict
   inputs-received?
   firing?
   done-producing?
@@ -50,7 +51,7 @@ consumer-good-firms-own[
   quantity-sold
 ]
 
-links-own [
+framework-agreements-own [
   quantitative-value
   expiration-date
   index
@@ -67,23 +68,19 @@ to setup
   setup-type-3-firms
   setup-consumer-good-firms
   initiate-framework-agreements
-  run-production-cycle
-  calculate-unemployment
-  calculate-alp
-  ask consumer-good-firms [
-    set actual-demand ((LABOR-MONEY-POT * market-share) / price)
-  ]
   reset-ticks
 end
 
 to initiate-globals
   set DATE time:anchor-to-ticks time:create "2000/01/01" 1 "months"
   set WAGE-RATE 75
-  set AVERAGE-LABOR-PRODUCTIVITY 100
-  set MARKUP-RULE 0.2
+  set AVERAGE-LABOR-PRODUCTIVITY ts-create ["APL"]
+  set AVERAGE-LABOR-PRODUCTIVITY ts-add-row AVERAGE-LABOR-PRODUCTIVITY (list DATE 100)
+  set MARKUP-RULE 0.1
   set LABOR-MONEY-POT 0
   set COST-OF-NEGOTIATION 100
-  set START-DATE time:create "1999/12/01"
+  set START-DATE time:create "2000/01/01"
+  set UNEMPLOYMENT-RATE ts-create ["Unemployment"]
 end
 
 to setup-INDICIES
@@ -127,7 +124,7 @@ to setup-type-1-firms
     set production-capacity 1650
     set preferred-index one-of (table:keys INDICIES)
     set x (x + increment)
-    set framework-agreements table:make
+    set framework-agreement-dict table:make
     set inputs-received? false
   ]
 end
@@ -147,7 +144,7 @@ to setup-type-2-firms
     set production-capacity 500
     set profits ts-create ["Profits"]
     set preferred-index one-of (table:keys INDICIES)
-    set framework-agreements table:make
+    set framework-agreement-dict table:make
     set inputs-received? false
   ]
 end
@@ -168,7 +165,7 @@ to setup-type-3-firms
     set production-capacity 600
     set profits ts-create ["Profits"]
     set preferred-index one-of (table:keys INDICIES)
-    set framework-agreements table:make
+    set framework-agreement-dict table:make
     set inputs-received? false
   ]
 end
@@ -189,7 +186,7 @@ to setup-consumer-good-firms
     set pending-orders table:make
     set profits ts-create ["Profits"]
     set preferred-index one-of (table:keys INDICIES)
-    set framework-agreements table:make
+    set framework-agreement-dict table:make
     set inputs-received? false
   ]
 end
@@ -210,7 +207,7 @@ to negotiate-framework-agreements [seller-type]
       let markup (1 + (abs (random-normal MARKUP-RULE 0.05)))
       set offer (list self (price-floor * markup))
       if length profits > 1 [set seller-profits current-profit]
-      create-link-to (current-turtle)
+      create-framework-agreement-to (current-turtle)
     ]
     ;have each firm pick a preferred index in setup for now
     (ifelse
@@ -225,7 +222,7 @@ to negotiate-framework-agreements [seller-type]
       ]
     )
     set offer lput price-index offer
-    ask link-with (first offer) [
+    ask framework-agreement-with (first offer) [
       hide-link
       set color [color] of (first offer)
       set quantitative-value item 1 offer
@@ -248,7 +245,7 @@ end
 
 to rank-frameworks [seller-type]
   let frameworks (list)
-  ask my-links [
+  ask my-framework-agreements [
     let unit-cost 0
     if [firm-type] of other-end = seller-type [
       set unit-cost (precision (quantitative-value * (table:get INDICIES index)) 2)
@@ -257,7 +254,7 @@ to rank-frameworks [seller-type]
     ]
   ]
   set frameworks sort-by [[a b] -> item 1 a < item 1 b] frameworks
-  table:put framework-agreements seller-type frameworks
+  table:put framework-agreement-dict seller-type frameworks
   let current-input-info table:get input-information seller-type
   let first-choice (first first frameworks)
 end
@@ -271,7 +268,7 @@ to-report get-cost-estimate [quantity]
     ifelse k = "Labor"[
       set unit-cost item 1 (table:get input-information k)
     ][
-      let frameworks table:get framework-agreements k
+      let frameworks table:get framework-agreement-dict k
       set unit-cost item 1 (first frameworks)
     ]
     let quantity-needed (quantity / marginal-productivity)
@@ -287,8 +284,8 @@ end
 to estimate-consumer-demand
   ask consumer-good-firms [
     ifelse time:is-equal DATE (START-DATE)[
-      let aggregate-consumption-estimate ((WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)) + (0.2 * WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)))
-      let estimated-market-share (random-normal market-share (0.25 * market-share))
+      let aggregate-consumption-estimate ((WAGE-RATE * (random-normal (LABOR-FORCE-SIZE) 250)) + (0.2 * WAGE-RATE * (random-normal (LABOR-FORCE-SIZE) 250)))
+      let estimated-market-share (random-normal market-share (0.1 * market-share))
       if estimated-market-share = 0 [set estimated-market-share (0.5 * (1 / NUM-CONSUMER-FIRMS))]
       let unit-cost-of-good get-cost-estimate (20)
       let markup (1 + (random-normal MARKUP-RULE 0.05))
@@ -303,6 +300,13 @@ to estimate-consumer-demand
       ;look into the dosi model to see how demand is adjusted
       ;another option is to just tell consumer good firms what their actual demand was
       ;hypothetical: after selling out more people walk in and so you can more or less figure out what actual demand would've been
+      ;this is just increasing or decreasing demand from the previous step
+      ifelse inventories = 0[
+        let unfilled-demand actual-demand - quantity-sold
+        set estimated-demand (quantity-sold + (abs random-normal unfilled-demand (unfilled-demand / 10)))
+      ][
+        set estimated-demand (estimated-demand - (abs random-normal inventories (inventories / 10)))
+      ]
     ]
   ]
 end
@@ -336,7 +340,7 @@ to order-inputs
       set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS + input-quantity-desired)
       set quantity-obtained input-quantity-desired
     ][
-      let frameworks table:get framework-agreements input-type
+      let frameworks table:get framework-agreement-dict input-type
       let counter 0
       while [quantity-obtained < input-quantity-desired and counter < length frameworks] [
         let current-framework item counter frameworks
@@ -355,7 +359,7 @@ to order-inputs
             set quantity-ordered (quantity-ordered + order-from-this-firm)
             set liquid-assets (liquid-assets + (order-from-this-firm * current-unit-cost))
           ]
-          ask link-with seller-firm [
+          ask framework-agreement-with seller-firm [
             show-link
             set purchase-order? true
             set quantity-of-order order-from-this-firm
@@ -405,7 +409,7 @@ to produce
     set input-type firm-type
   ]
   let total-revenue 0
-  ask my-out-links with [purchase-order? = true][
+  ask my-out-framework-agreements with [purchase-order? = true][
     set purchase-order? false ;instaead of calling it purchase-order? call it purchase-order?
     ;make a link-breed called framework agreements
     let quantity-to-be-delivered ((quantity-of-order / original-desired-production) * production-quantity) ;maybe call this original-quantity-ordered / maybe rearrange this formula
@@ -423,12 +427,16 @@ to produce
         set current-cost-of-input item 1 (table:get current-input-stock input-type)
       ]
       table:put current-input-stock input-type (list (current-quantity + quantity-to-be-delivered) (current-cost-of-input + total-cost-of-order))
-      if not (any? my-in-links with [purchase-order? = true])[
+      if not (any? my-in-framework-agreements with [purchase-order? = true])[
         set inputs-received? true
       ]
     ]
   ]
   set liquid-assets (liquid-assets - (amount-of-labor-hired * WAGE-RATE))
+  set liquid-assets (liquid-assets + total-revenue)
+  if member? self input-good-firms [
+    set profits ts-add-row profits (list DATE (total-revenue - current-total-cost))
+  ]
   foreach inputs [ i ->
     set input-type first i
     let data item 1 i
@@ -456,7 +464,7 @@ to run-production-cycle
   ask input-good-firms with [firm-type = "Input 2"] [order-inputs]
   ask input-good-firms with [firm-type = "Input 1"] [order-inputs]
   ask turtles [set done-producing? false]
-  ask turtles with [not (any? my-in-links with [purchase-order? = true])] [
+  ask turtles with [not (any? my-in-framework-agreements with [purchase-order? = true])] [
     set inputs-received? true
   ]
   while [any? turtles with [done-producing? = false]] [
@@ -473,7 +481,16 @@ to calculate-unemployment
     set aggregate-employment (aggregate-employment + employed-workers)
   ]
   let employment-rate (aggregate-employment / LABOR-FORCE-SIZE)
-  set UNEMPLOYMENT-RATE (1 - employment-rate)
+  set UNEMPLOYMENT-RATE ts-add-row UNEMPLOYMENT-RATE (list DATE (1 - employment-rate))
+end
+
+to-report current-unemployment
+  report last last UNEMPLOYMENT-RATE
+end
+
+to-report previous-unemployment-rate
+  let previous time:plus DATE -1 "Month"
+  report ts-get UNEMPLOYMENT-RATE previous "Unemployment"
 end
 
 to calculate-alp
@@ -483,7 +500,7 @@ to calculate-alp
     let mp-labor get-mp "Labor"
     set total-productivity (total-productivity + (employed-workers * mp-labor))
   ]
-  set AVERAGE-LABOR-PRODUCTIVITY (total-productivity / ((1 - UNEMPLOYMENT-RATE) * LABOR-FORCE-SIZE))
+  set AVERAGE-LABOR-PRODUCTIVITY ts-add-row AVERAGE-LABOR-PRODUCTIVITY (list DATE (total-productivity / ((1 - current-unemployment) * LABOR-FORCE-SIZE)))
 end
 
 to calculate-individual-consumer-competitiveness
@@ -504,10 +521,60 @@ to-report average-competetiveness
   report running-total
 end
 
+to calculate-market-share
+  let sector-competitiveness average-competetiveness
+  let aggregate-consumption WAGE-RATE * LABOR-FORCE-SIZE
+  ask consumer-good-firms [
+    let change-factor (-0.5 * ((competitiveness - sector-competitiveness) / sector-competitiveness))
+    set market-share (market-share * (1 + change-factor))
+  ]
+end
+
+to sell-consumer-goods
+  ask consumer-good-firms [
+    let actual-quantity-sold min (list actual-demand inventories)
+    set quantity-sold actual-quantity-sold
+    let total-revenue (price * quantity-sold)
+    set profits ts-add-row profits (list DATE (total-revenue - current-total-cost))
+  ]
+end
+
+to-report current-alp
+  report last last AVERAGE-LABOR-PRODUCTIVITY
+end
+
+to-report previous-alp
+  let previous-time time:plus DATE -1 "Month"
+  let alp ts-get AVERAGE-LABOR-PRODUCTIVITY previous-time "APL"
+  report alp
+end
+
+to adjust-wage-rate
+  let apl-weight 1
+  let unemployment-weight 0.1
+  let apl-change-factor 0
+  let unemployment-change-factor 0
+  if not (time:is-equal DATE START-DATE) [
+    set apl-change-factor (apl-weight * ((current-alp - previous-alp) / previous-alp))
+    set unemployment-change-factor (unemployment-weight * ((current-unemployment - previous-unemployment-rate) / current-unemployment))
+  ]
+  set WAGE-RATE (WAGE-RATE + (1 + apl-change-factor + unemployment-change-factor))
+  ;let apl-change-factor (apl-weight * (()))
+end
+
 to go
 ;probably going to make use of the run-production-cycle procedure
   ;need a procedure to update globals
+  show DATE
+  run-production-cycle
+  ask consumer-good-firms [
+    set actual-demand ((LABOR-MONEY-POT * market-share) / price)
+  ]
+  sell-consumer-goods
+  calculate-unemployment
+  calculate-alp
 
+  tick
 end
 ;once the go procedure is working, need to work on generating indices within the model
 ;look through Joseph's emails
@@ -629,6 +696,23 @@ BUTTON
 215
 NIL
 setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+77
+181
+141
+215
+NIL
+go
 NIL
 1
 T
