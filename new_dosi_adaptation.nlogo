@@ -14,7 +14,8 @@ globals[
   DATE ;a time object holding the current date
   START-DATE ;a time object holding the start date of the model
   TOTAL-LABOR-ORDERS ;a number holding the total amount of labor ordered by all firms
-  NUMBER-OF-EACH-FIRM ;a dictionary holding the number of each firm
+  FIRM-INFO ;a dictionary holding the number of each firm
+  GOOD-TYPES
 ]
 
 breed[input-good-firms input-good-firm]
@@ -60,9 +61,20 @@ to setup
   clear-all
   initiate-globals
   setup-indices
+  let firm-data csv:from-file "Mock-firm-data spreadsheet-Sheet1.csv"
+  set firm-data remove-item 0 firm-data
+  foreach butfirst firm-data[d ->
+    let input-data-list read-from-string (item 3 d)
+    set d replace-item 3 d input-data-list
+    show input-data-list
+    setup-firms (item 0 d) (item 1 d) (item 2 d) input-data-list (item 4 d)
+  ]
+  set firm-data butfirst firm-data
+  initiate-framework-agreements
+  reset-ticks
 end
 
-to initiate-globals
+to initiate-globals ;run by the observer, sets all of the global variables
   set DATE time:anchor-to-ticks time:create "2000/01/01" 1 "months"
   set WAGE-RATE 75
   set AVG-LABOR-PROD 100
@@ -70,10 +82,11 @@ to initiate-globals
   set LABOR-MONEY-POT 0
   set COST-OF-NEGOTIATION 100
   set START-DATE time:create "1999/12/01"
-  set NUMBER-OF-EACH-FIRM table:make
+  set FIRM-INFO table:make
+  set GOOD-TYPES (list 0)
 end
 
-to setup-indices
+to setup-indices ;run by the observer, sets up the indices, a temporary solution
   set INDICES table:make
   table:put INDICES "Index 1" (precision (random-normal 1.2 0.1) 2)
   table:put INDICES "Index 2" (precision (random-normal 1.2 0.1) 2)
@@ -82,9 +95,16 @@ to setup-indices
   table:put INDICES "Index 5" (precision (random-normal 1.2 0.1) 2)
 end
 
-to setup-firms [firm-breed good-produced num-firms input-data capacity]
+to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by the observer, sets up the firms based on info from a csv
+  let global-firm-data table:make
+  table:put global-firm-data "Number" num-firms
+  table:put global-firm-data "Inputs" (map first input-data)
+  table:put FIRM-INFO good-produced global-firm-data
+  set GOOD-TYPES lput good-produced GOOD-TYPES
   ifelse firm-breed = "Consumer"[
     create-consumer-good-firms num-firms[
+      set shape "circle"
+      setxy random-xcor random-ycor
       setup-input-table input-data
       set liquid-assets 0
       set profits ts-create["Profits"]
@@ -95,9 +115,10 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity]
       setup-consumer-variables num-firms
       ;maybe add capacity for consumer good firms
     ]
-    table:put NUMBER-OF-EACH-FIRM good-produced num-firms
   ][
     create-input-good-firms num-firms[
+      set shape "truck"
+      setxy random-xcor random-ycor
       setup-input-table input-data
       set liquid-assets 0
       set profits ts-create["Profits"]
@@ -107,11 +128,10 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity]
       set firm-type good-produced
       setup-input-variables capacity
     ]
-    table:put NUMBER-OF-EACH-FIRM good-produced num-firms
   ]
 end
 
-to setup-input-table [input-data]
+to setup-input-table [input-data] ;sets up the input table for a given firm, also based on info from a csv file
   set input-information table:make
   foreach input-data[i ->
     let current-input-data table:make
@@ -121,7 +141,7 @@ to setup-input-table [input-data]
     let input-type (item 0 i)
     let finished-negotiating false
     let average-unit-cost 0
-    if input-type = "Labor"[
+    if input-type = 0[
       set finished-negotiating true
       set average-unit-cost WAGE-RATE
     ]
@@ -131,7 +151,7 @@ to setup-input-table [input-data]
   ]
 end
 
-to setup-consumer-variables [num-firms]
+to setup-consumer-variables [num-firms] ;sets up the consumer good firm specific variables
   set market-share (1 / num-firms)
   set estimated-demand 0
   set desired-production 0
@@ -142,47 +162,170 @@ to setup-consumer-variables [num-firms]
   set quantity-sold 0
 end
 
-to setup-input-variables [production-capacity-info]
+to setup-input-variables [production-capacity-info] ;sets up the input firms specific variables
   set quantity-ordered 0
   set production-capacity production-capacity-info
 end
 
-to-report done-negotiating?
-  let ready false
+to-report uses-input? [good] ;run by a turtle, reports true if the turtle uses the given input
+  report table:has-key? input-information good
+end
+
+to-report agreements-negotiated? [good] ;run by a turtle, returns true if the agreements for a particular good have been negotiated
+  let good-information table:get input-information good
+  report table:get good-information "Agreements-negotiated?"
+end
+
+to-report done-negotiating? ;run by a turtle, reports true if the turtle is done negotiating all agreements
   let total-counter 0
   let negotiated-counter 0
-  foreach table:keys input-information[
-   set total-counter (total-counter + 1)
-    if ((table:get input-information "Agreements-negotiated?" ) = true)[
+  foreach table:keys input-information [k ->
+    if agreements-negotiated? k [
       set negotiated-counter (negotiated-counter + 1)
     ]
+    set total-counter (total-counter + 1)
   ]
-  if negotiated-counter = total-counter [
-    set ready true
+  ifelse total-counter = negotiated-counter[
+    report true
+  ][
+    report false
   ]
-  report ready
 end
 
-to-report agents-with-input [type-of-input]
-  report turtles with [table:has-key? input-information type-of-input]
+to-report number-firms [f] ;run by the observer, reports the total number of firms for a given firm type
+  let information table:get FIRM-INFO f
+  report table:get information "Number"
 end
 
-to initiate-framework-agreements
-  while [any? turtles with [not done-negotiating?]][
-    ask turtles with [not done-negotiating?][
-
+to-report current-negotiating-goods [good-table] ;run by the observer, reports a list of all the goods that firms can negotiate for
+  let ready-goods (list)
+  foreach table:keys good-table[k ->
+    if table:get good-table k [
+      set ready-goods lput k ready-goods
     ]
+  ]
+  let ready-firm-types (list)
+  foreach table:keys FIRM-INFO[k ->
+    let current-firm-info table:get FIRM-INFO k
+    let firm-inputs table:get current-firm-info "Inputs"
+    if (length firm-inputs) = (length ready-goods)[
+      let counter 0
+      let match-counter 0
+      foreach firm-inputs [i ->
+        set counter (counter + 1)
+        if member? i ready-goods[
+          set match-counter (match-counter + 1)
+        ]
+      ]
+      if counter = match-counter [
+        set ready-firm-types lput k ready-firm-types
+      ]
+    ]
+  ]
+  report ready-firm-types
+end
+
+to initiate-framework-agreements ;run by the observer, initiates all of the framework agreements
+  let good-negotiated-for? table:make
+  foreach GOOD-TYPES[g ->
+    ifelse g = 0[
+      table:put good-negotiated-for? g true
+    ][
+      table:put good-negotiated-for? g false
+    ]
+  ]
+  while [any? turtles with [not done-negotiating?]][
+    let ready-firm-types current-negotiating-goods good-negotiated-for?
+    foreach ready-firm-types [f ->
+      let num-firms number-firms f
+      ask turtles with [uses-input? f][
+        let num-negotiations (ceiling (abs (random-normal (num-firms / 10) 1)))
+        let buyer self
+        let buyer-profits current-profits
+        let buyer-preferred-index preferred-index
+        let sum-avg-costs 0
+        ask n-of num-negotiations turtles with [firm-type = f][
+          negotiate-agreement buyer buyer-profits buyer-preferred-index
+          ask link-with buyer [
+            set sum-avg-costs (sum-avg-costs + ((table:get INDICES index) * quantitative-value))
+          ]
+        ]
+        let avg-unit-cost (sum-avg-costs / num-negotiations)
+        let current-input-info table:get input-information f
+        table:put current-input-info "Average unit cost" avg-unit-cost
+        table:put current-input-info "Agreements-negotiated?" true
+        table:put input-information f current-input-info
+      ]
+      table:put good-negotiated-for? f true
+    ]
+  ]
+end
+
+to negotiate-agreement [buyer buyer-profits buyer-preferred-index] ;run by the seller firm, negotiates an individual agreement
+  let total-cost get-atc
+  let seller-profits current-profits
+  let seller-preferred-index preferred-index
+  create-framework-agreement-to buyer [
+    set quantitative-value (total-cost * MARKUP-RULE)
+    (ifelse
+      buyer-profits > seller-profits[
+        set index buyer-preferred-index
+      ]
+      seller-profits > buyer-profits[
+        set index seller-preferred-index
+      ]
+      buyer-profits = seller-profits[
+        ifelse random 2 = 0[
+          set index seller-preferred-index
+        ][
+          set index buyer-preferred-index
+        ]
+      ]
+    )
+    set expiration-date time:plus DATE 5 "years"
+    set purchase-order 0
+    set delivered? false
+  ]
+end
+
+to-report get-atc ;run by a turtle, reports the average total cost
+  let running-total 0
+  foreach table:keys input-information[k ->
+    let current-input table:get input-information k
+    set running-total (running-total + (table:get current-input "Average unit cost"))
+  ]
+  report running-total
+end
+
+to-report current-profits ;run by a turtle, reports the current profits
+  if length profits < 2[
+    report 0
+  ]
+  report last last profits
+end
+
+to layout
+  let number-of-firm-types (length GOOD-TYPES)
+  let colors base-colors
+  let counter 0
+  foreach GOOD-TYPES[g ->
+    ask turtles with [firm-type = g][
+      set color (item counter base-colors)
+    ]
+    let current-global-firm-data table:get FIRM-INFO g
+    table:put current-global-firm-data "Color" (item counter colors)
+    set counter (counter + 1)
   ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-647
-448
+1587
+577
 -1
 -1
-13.0
+16.91
 1
 10
 1
@@ -192,8 +335,8 @@ GRAPHICS-WINDOW
 1
 1
 1
--16
-16
+-40
+40
 -16
 16
 0
@@ -201,6 +344,23 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+BUTTON
+32
+112
+98
+145
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
