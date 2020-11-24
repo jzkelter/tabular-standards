@@ -15,7 +15,8 @@ globals[
   START-DATE ;a time object holding the start date of the model
   TOTAL-LABOR-ORDERS ;a number holding the total amount of labor ordered by all firms
   FIRM-INFO ;a dictionary holding the number of each firm
-  GOOD-TYPES
+  GOOD-TYPES ;a dictionary holding the types of goods in the model
+  TOTAL-FIRMS
 ]
 
 breed[input-good-firms input-good-firm]
@@ -32,6 +33,8 @@ turtles-own[
   ;**maybe firing? haven't figured out whether this is necessary yet
   done-producing? ;a boolean that keeps track of whether a firm is finished producing
   firm-type ;a string holding what the firm produces - primarily useful for the first iteration of this model
+  orders-placed?
+  desired-production ;a number representing how much a firm wants to produce
 ]
 
 input-good-firms-own[
@@ -42,7 +45,6 @@ input-good-firms-own[
 consumer-good-firms-own[
   market-share ;may get rid of in the event of having individual consumers
   estimated-demand ;a number representing how much a firm anticipates selling
-  desired-production ;a number representing how much a firm wants to produce
   inventories ;how much the firm has in stock
   competitiveness ;a number storing how competitive the firm is
   price ;a number storing how much the firm charges for a good
@@ -53,8 +55,12 @@ framework-agreements-own[
   quantitative-value ;a number holding the quantitative value of the agreement
   expiration-date ;when the agreement is invalid
   index ;a number holding the index of the agreement
-  purchase-order ;a number holding the amount that was ordered of the firm
-  delivered? ;a boolean holding whether or not a firm has delivered their goods
+  purchase-order ;a number holding the amount that was ordered of the firm - the most recent order
+  delivered? ;a boolean holding whether or not a firm has delivered their goods - for the most recent production cycle
+]
+
+patches-own[
+  patch-type
 ]
 
 to setup
@@ -66,17 +72,17 @@ to setup
   foreach butfirst firm-data[d ->
     let input-data-list read-from-string (item 3 d)
     set d replace-item 3 d input-data-list
-    show input-data-list
     setup-firms (item 0 d) (item 1 d) (item 2 d) input-data-list (item 4 d)
   ]
   set firm-data butfirst firm-data
   initiate-framework-agreements
+  layout
   reset-ticks
 end
 
 to initiate-globals ;run by the observer, sets all of the global variables
-  set DATE time:anchor-to-ticks time:create "2000/01/01" 1 "months"
-  set WAGE-RATE 75
+  set DATE time:anchor-to-ticks time:create "2000/01/01" 1 "months" ;all of these numbers are derived from the Dosi model and thus we expect them to work well
+  set WAGE-RATE 75 ;should they not work well initially, they will emerge over time to more appropriate values
   set AVG-LABOR-PROD 100
   set MARKUP-RULE 0.2
   set LABOR-MONEY-POT 0
@@ -84,6 +90,7 @@ to initiate-globals ;run by the observer, sets all of the global variables
   set START-DATE time:create "1999/12/01"
   set FIRM-INFO table:make
   set GOOD-TYPES (list 0)
+  set TOTAL-FIRMS 0
 end
 
 to setup-indices ;run by the observer, sets up the indices, a temporary solution
@@ -97,6 +104,7 @@ end
 
 to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by the observer, sets up the firms based on info from a csv
   let global-firm-data table:make
+  set TOTAL-FIRMS (TOTAL-FIRMS + num-firms)
   table:put global-firm-data "Number" num-firms
   table:put global-firm-data "Inputs" (map first input-data)
   table:put FIRM-INFO good-produced global-firm-data
@@ -106,12 +114,8 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
       set shape "circle"
       setxy random-xcor random-ycor
       setup-input-table input-data
-      set liquid-assets 0
-      set profits ts-create["Profits"]
-      set preferred-index one-of (table:keys INDICES)
-      set inputs-received? false
-      set done-producing? false
       set firm-type good-produced
+      setup-common-variables
       setup-consumer-variables num-firms
       ;maybe add capacity for consumer good firms
     ]
@@ -120,15 +124,21 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
       set shape "truck"
       setxy random-xcor random-ycor
       setup-input-table input-data
-      set liquid-assets 0
-      set profits ts-create["Profits"]
-      set preferred-index one-of (table:keys INDICES)
-      set inputs-received? false
-      set done-producing? false
       set firm-type good-produced
+      setup-common-variables
       setup-input-variables capacity
     ]
   ]
+end
+
+to setup-common-variables
+  set liquid-assets 0
+  set profits ts-create["Profits"]
+  set preferred-index one-of (table:keys INDICES)
+  set inputs-received? false
+  set done-producing? false
+  set orders-placed? false
+  set desired-production 0
 end
 
 to setup-input-table [input-data] ;sets up the input table for a given firm, also based on info from a csv file
@@ -153,8 +163,7 @@ end
 
 to setup-consumer-variables [num-firms] ;sets up the consumer good firm specific variables
   set market-share (1 / num-firms)
-  set estimated-demand 0
-  set desired-production 0
+  set estimated-demand 0 ;all of these variables are initialized to 0 because they depend on performance, which doesn't happen until the model starts
   set inventories 0
   set competitiveness 0
   set price 0
@@ -185,11 +194,7 @@ to-report done-negotiating? ;run by a turtle, reports true if the turtle is done
     ]
     set total-counter (total-counter + 1)
   ]
-  ifelse total-counter = negotiated-counter[
-    report true
-  ][
-    report false
-  ]
+  report total-counter = negotiated-counter
 end
 
 to-report number-firms [f] ;run by the observer, reports the total number of firms for a given firm type
@@ -198,28 +203,13 @@ to-report number-firms [f] ;run by the observer, reports the total number of fir
 end
 
 to-report current-negotiating-goods [good-table] ;run by the observer, reports a list of all the goods that firms can negotiate for
-  let ready-goods (list)
-  foreach table:keys good-table[k ->
-    if table:get good-table k [
-      set ready-goods lput k ready-goods
-    ]
-  ]
+  let ready-goods (map first (filter [i -> (item 1 i = true)] (table:to-list good-table)))
   let ready-firm-types (list)
   foreach table:keys FIRM-INFO[k ->
     let current-firm-info table:get FIRM-INFO k
     let firm-inputs table:get current-firm-info "Inputs"
-    if (length firm-inputs) = (length ready-goods)[
-      let counter 0
-      let match-counter 0
-      foreach firm-inputs [i ->
-        set counter (counter + 1)
-        if member? i ready-goods[
-          set match-counter (match-counter + 1)
-        ]
-      ]
-      if counter = match-counter [
-        set ready-firm-types lput k ready-firm-types
-      ]
+    if not (member? false (map [i -> member? i ready-goods] firm-inputs))[
+      set ready-firm-types lput k ready-firm-types
     ]
   ]
   report ready-firm-types
@@ -243,22 +233,25 @@ to initiate-framework-agreements ;run by the observer, initiates all of the fram
         let buyer self
         let buyer-profits current-profits
         let buyer-preferred-index preferred-index
-        let sum-avg-costs 0
+        let sum-costs 0
         ask n-of num-negotiations turtles with [firm-type = f][
           negotiate-agreement buyer buyer-profits buyer-preferred-index
           ask link-with buyer [
-            set sum-avg-costs (sum-avg-costs + ((table:get INDICES index) * quantitative-value))
+            set sum-costs (sum-costs + ((table:get INDICES index) * quantitative-value))
           ]
         ]
-        let avg-unit-cost (sum-avg-costs / num-negotiations)
+        let avg-unit-cost (sum-costs / num-negotiations)
         let current-input-info table:get input-information f
-        table:put current-input-info "Average unit cost" avg-unit-cost
+        if time:is-equal DATE START-DATE [
+          table:put current-input-info "Average unit cost" avg-unit-cost
+        ]
         table:put current-input-info "Agreements-negotiated?" true
         table:put input-information f current-input-info
       ]
       table:put good-negotiated-for? f true
     ]
   ]
+  ask links [hide-link]
 end
 
 to negotiate-agreement [buyer buyer-profits buyer-preferred-index] ;run by the seller firm, negotiates an individual agreement
@@ -275,11 +268,7 @@ to negotiate-agreement [buyer buyer-profits buyer-preferred-index] ;run by the s
         set index seller-preferred-index
       ]
       buyer-profits = seller-profits[
-        ifelse random 2 = 0[
-          set index seller-preferred-index
-        ][
-          set index buyer-preferred-index
-        ]
+        set index one-of (list seller-preferred-index buyer-preferred-index)
       ]
     )
     set expiration-date time:plus DATE 5 "years"
@@ -291,8 +280,9 @@ end
 to-report get-atc ;run by a turtle, reports the average total cost
   let running-total 0
   foreach table:keys input-information[k ->
-    let current-input table:get input-information k
-    set running-total (running-total + (table:get current-input "Average unit cost"))
+    let unit-cost get-metric "Average unit cost" k
+    let marginal-prod get-metric "Marginal-productivity" k
+    set running-total (running-total + (unit-cost * marginal-prod))
   ]
   report running-total
 end
@@ -304,17 +294,58 @@ to-report current-profits ;run by a turtle, reports the current profits
   report last last profits
 end
 
-to layout
-  let number-of-firm-types (length GOOD-TYPES)
+to layout ;lays out the firms by type
+  let number-of-firm-types (length butfirst GOOD-TYPES)
   let colors base-colors
-  let counter 0
-  foreach GOOD-TYPES[g ->
+  let counter 1
+  foreach butfirst GOOD-TYPES[g ->
     ask turtles with [firm-type = g][
       set color (item counter base-colors)
     ]
     let current-global-firm-data table:get FIRM-INFO g
     table:put current-global-firm-data "Color" (item counter colors)
     set counter (counter + 1)
+  ]
+  set counter 0
+  let current-start-block min-pxcor
+  foreach butfirst GOOD-TYPES[g ->
+    let width-factor ((number-firms g) / TOTAL-FIRMS)
+    let current-end-block current-start-block + (width-factor * world-width)
+    ask patches with [pxcor > current-start-block and pxcor < current-end-block][
+      set patch-type g
+    ]
+    ask turtles with [firm-type = g][
+      move-to one-of patches with [patch-type = g]
+    ]
+    set current-start-block (current-end-block + 1)
+  ]
+end
+
+to-report get-metric [key good] ;run by a firm, key must be a string
+  let good-info table:get input-information good
+  report (table:get good-info key)
+end
+
+to order-inputs ;run by a firm, orders all of the inputs
+  ;probably going to be necessary to have a reporter to determine whether a firm is done ordering inputs
+  ;the boolean value isn't enough
+end
+
+to estimate-demand ;run by the observer
+  ask consumer-good-firms[
+    ifelse time:is-equal DATE START-DATE [
+      let aggregate-consumption-estimate ((WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)) + (0.1 * WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)))
+      let estimated-market-share (market-share + (random-float (0.5 * market-share)) - (random-float (0.5 * market-share)))
+      let unit-cost-of-good get-atc
+      let markup (1 + MARKUP-RULE)
+      let price-of-good (unit-cost-of-good * markup)
+      set price price-of-good
+      let estimated-consumption (aggregate-consumption-estimate * estimated-market-share)
+      set estimated-demand round (estimated-consumption / price-of-good)
+    ][
+      set estimated-demand actual-demand
+    ]
+    set desired-production (estimated-demand - inventories)
   ]
 end
 @#$#@#$#@
@@ -361,6 +392,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+27
+64
+202
+97
+LABOR-FORCE-SIZE
+LABOR-FORCE-SIZE
+2000
+4000
+3000.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
