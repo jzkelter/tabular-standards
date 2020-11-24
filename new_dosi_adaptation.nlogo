@@ -33,7 +33,7 @@ turtles-own[
   ;**maybe firing? haven't figured out whether this is necessary yet
   done-producing? ;a boolean that keeps track of whether a firm is finished producing
   firm-type ;a string holding what the firm produces - primarily useful for the first iteration of this model
-  orders-placed?
+  done-ordering?
   desired-production ;a number representing how much a firm wants to produce
 ]
 
@@ -74,10 +74,27 @@ to setup
     set d replace-item 3 d input-data-list
     setup-firms (item 0 d) (item 1 d) (item 2 d) input-data-list (item 4 d)
   ]
+  finalize-global-firm-data
   set firm-data butfirst firm-data
   initiate-framework-agreements
   layout
   reset-ticks
+end
+
+to finalize-global-firm-data
+  foreach table:keys FIRM-INFO[k ->
+    let current-firm-info table:get FIRM-INFO k
+    let firm-type-inputs table:get current-firm-info "Inputs"
+    foreach firm-type-inputs [i ->
+      if i != 0[
+        let input-firm-info table:get FIRM-INFO i
+        let delivers-to table:get input-firm-info "Delivers to"
+        set delivers-to lput k delivers-to
+        table:put input-firm-info "Delivers to" delivers-to
+        table:put FIRM-INFO i input-firm-info
+      ]
+    ]
+  ]
 end
 
 to initiate-globals ;run by the observer, sets all of the global variables
@@ -102,14 +119,19 @@ to setup-indices ;run by the observer, sets up the indices, a temporary solution
   table:put INDICES "Index 5" (precision (random-normal 1.2 0.1) 2)
 end
 
+to-report get-index [k]
+  report table:get INDICES k
+end
+
 to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by the observer, sets up the firms based on info from a csv
   let global-firm-data table:make
   set TOTAL-FIRMS (TOTAL-FIRMS + num-firms)
   table:put global-firm-data "Number" num-firms
   table:put global-firm-data "Inputs" (map first input-data)
-  table:put FIRM-INFO good-produced global-firm-data
+  table:put global-firm-data "Delivers to" (list)
   set GOOD-TYPES lput good-produced GOOD-TYPES
   ifelse firm-breed = "Consumer"[
+    table:put global-firm-data "Consumer?" True
     create-consumer-good-firms num-firms[
       set shape "circle"
       setxy random-xcor random-ycor
@@ -120,6 +142,7 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
       ;maybe add capacity for consumer good firms
     ]
   ][
+    table:put global-firm-data "Consumer?" False
     create-input-good-firms num-firms[
       set shape "truck"
       setxy random-xcor random-ycor
@@ -129,6 +152,7 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
       setup-input-variables capacity
     ]
   ]
+  table:put FIRM-INFO good-produced global-firm-data
 end
 
 to setup-common-variables
@@ -137,7 +161,7 @@ to setup-common-variables
   set preferred-index one-of (table:keys INDICES)
   set inputs-received? false
   set done-producing? false
-  set orders-placed? false
+  set done-ordering? false
   set desired-production 0
 end
 
@@ -326,9 +350,56 @@ to-report get-metric [key good] ;run by a firm, key must be a string
   report (table:get good-info key)
 end
 
-to order-inputs ;run by a firm, orders all of the inputs
+to run-order-cycle ;run by a firm, orders all of the inputs
   ;probably going to be necessary to have a reporter to determine whether a firm is done ordering inputs
   ;the boolean value isn't enough
+  let firms-done-ordering table:make
+  foreach table:keys FIRM-INFO[k ->
+    table:put firms-done-ordering k false
+  ]
+  while [any? turtles with [not done-ordering?]][
+    foreach (ordering-firm-types firms-done-ordering)[f ->
+
+    ]
+  ]
+end
+
+to-report ordering-firm-types [firms-done-ordering] ;reports a list of firm types that are finished ordering **need to talk about this procedure because I don't know if it works
+  let finished-firm-types (map first (filter [i -> (item 1 i = true)] (table:to-list firms-done-ordering)))
+  ifelse (length finished-firm-types) = 0 [
+    report (filter [i -> is-consumer? i] (table:keys FIRM-INFO))
+  ][
+    let new-ready-firms (map first (filter [i -> not (member? i finished-firm-types)] (table:keys FIRM-INFO)))
+    foreach new-ready-firms[n ->
+      let current-firm-info table:get FIRM-INFO n
+      let delivers-to table:get current-firm-info "Delivers to"
+      ifelse (length delivers-to) <= (length finished-firm-types)[
+        if (member? false (map [i -> member? i new-ready-firms] delivers-to))[
+          set new-ready-firms remove n new-ready-firms
+        ]
+      ][
+        set new-ready-firms remove n new-ready-firms
+      ]
+    ]
+    report new-ready-firms
+  ]
+end
+
+to order-inputs ;run by a firm - has the firm order all of the inputs it needs
+  foreach table:keys input-information[k ->
+    let quantity-needed ((desired-production / (get-metric "Marginal-productivity" k)) - (get-metric "Current-stock" k))
+    let running-order-quantity 0
+    while [(running-order-quantity < quantity-needed) and (any? my-in-links with [purchase-order = 0])][
+      ask (min-one-of (my-in-links with [([firm-type] of other-end) = k]) [quantitative-value * (get-index index)])[
+
+      ]
+    ]
+  ]
+end
+
+to-report is-consumer? [type-of-firm]
+  let firm-type-info table:get FIRM-INFO type-of-firm
+  report (table:get firm-type-info "Consumer")
 end
 
 to estimate-demand ;run by the observer
@@ -346,6 +417,7 @@ to estimate-demand ;run by the observer
       set estimated-demand actual-demand
     ]
     set desired-production (estimated-demand - inventories)
+    set done-ordering? True
   ]
 end
 @#$#@#$#@
