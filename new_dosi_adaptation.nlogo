@@ -428,12 +428,12 @@ to order-inputs ;run by a firm - has the firm order all of the inputs it needs
   ]
 end
 
-to-report is-consumer? [type-of-firm]
+to-report is-consumer? [type-of-firm] ;run by the observer, reports whether a firm type is a consumer good firm
   let firm-type-info table:get FIRM-INFO type-of-firm
   report (table:get firm-type-info "Consumer?")
 end
 
-to estimate-demand ;run by the observer
+to estimate-demand ;run by the observer, asks consumer good firms to estimate demand
   ask consumer-good-firms[
     ifelse time:is-equal DATE START-DATE [
       let aggregate-consumption-estimate ((WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)) + (0.1 * WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)))
@@ -452,7 +452,7 @@ to estimate-demand ;run by the observer
   ]
 end
 
-to hire-labor[quantity] ;will be run by a turtle
+to hire-labor[quantity] ;run by a turtle, orders labor necessary for the subsequent production cycle
   set-metric "Pending-orders" 0 quantity
 end
 @#$#@#$#@
