@@ -38,7 +38,7 @@ turtles-own[
 ]
 
 input-good-firms-own[
-  quantity-ordered ;could keep or get rid of this
+  quantity-ordered ;could keep or get rid of this - stores the amount that has been ordered of a firm thus far
   production-capacity ;a number storing the maximum amount a firm can produce
 ]
 
@@ -78,6 +78,8 @@ to setup
   set firm-data butfirst firm-data
   initiate-framework-agreements
   layout
+  estimate-demand
+  run-order-cycle
   reset-ticks
 end
 
@@ -240,16 +242,16 @@ to-report current-negotiating-goods [good-table] ;run by the observer, reports a
 end
 
 to initiate-framework-agreements ;run by the observer, initiates all of the framework agreements
-  let good-negotiated-for? table:make
+  let good-negotiated-for table:make
   foreach GOOD-TYPES[g ->
     ifelse g = 0[
-      table:put good-negotiated-for? g true
+      table:put good-negotiated-for g true
     ][
-      table:put good-negotiated-for? g false
+      table:put good-negotiated-for g false
     ]
   ]
   while [any? turtles with [not done-negotiating?]][
-    let ready-firm-types current-negotiating-goods good-negotiated-for?
+    let ready-firm-types current-negotiating-goods good-negotiated-for
     foreach ready-firm-types [f ->
       let num-firms number-firms f
       ask turtles with [uses-input? f][
@@ -272,7 +274,7 @@ to initiate-framework-agreements ;run by the observer, initiates all of the fram
         table:put current-input-info "Agreements-negotiated?" true
         table:put input-information f current-input-info
       ]
-      table:put good-negotiated-for? f true
+      table:put good-negotiated-for f true
     ]
   ]
   ask links [hide-link]
@@ -306,7 +308,7 @@ to-report get-atc ;run by a turtle, reports the average total cost
   foreach table:keys input-information[k ->
     let unit-cost get-metric "Average unit cost" k
     let marginal-prod get-metric "Marginal-productivity" k
-    set running-total (running-total + (unit-cost * marginal-prod))
+    set running-total (running-total + (unit-cost / marginal-prod))
   ]
   report running-total
 end
@@ -350,6 +352,12 @@ to-report get-metric [key good] ;run by a firm, key must be a string
   report (table:get good-info key)
 end
 
+to set-metric [key good value] ;run by a firm, key must be a string
+  let good-info table:get input-information good
+  table:put good-info key value
+  table:put input-information good good-info
+end
+
 to run-order-cycle ;run by a firm, orders all of the inputs
   ;probably going to be necessary to have a reporter to determine whether a firm is done ordering inputs
   ;the boolean value isn't enough
@@ -357,9 +365,13 @@ to run-order-cycle ;run by a firm, orders all of the inputs
   foreach table:keys FIRM-INFO[k ->
     table:put firms-done-ordering k false
   ]
-  while [any? turtles with [not done-ordering?]][
+  while [any? turtles with [done-ordering? = false]][
     foreach (ordering-firm-types firms-done-ordering)[f ->
-
+      ask turtles with [firm-type = f][
+        order-inputs
+        set done-ordering? true
+      ]
+      table:put firms-done-ordering f true
     ]
   ]
 end
@@ -369,12 +381,12 @@ to-report ordering-firm-types [firms-done-ordering] ;reports a list of firm type
   ifelse (length finished-firm-types) = 0 [
     report (filter [i -> is-consumer? i] (table:keys FIRM-INFO))
   ][
-    let new-ready-firms (map first (filter [i -> not (member? i finished-firm-types)] (table:keys FIRM-INFO)))
+    let new-ready-firms filter [i -> not (member? i finished-firm-types)] (table:keys FIRM-INFO)
     foreach new-ready-firms[n ->
       let current-firm-info table:get FIRM-INFO n
-      let delivers-to table:get current-firm-info "Delivers to"
+      let delivers-to table:get current-firm-info "Delivers to" ;could convert all of this to a reporter and just use a filter
       ifelse (length delivers-to) <= (length finished-firm-types)[
-        if (member? false (map [i -> member? i new-ready-firms] delivers-to))[
+        if (member? false (map [i -> member? i finished-firm-types] delivers-to))[
           set new-ready-firms remove n new-ready-firms
         ]
       ][
@@ -386,20 +398,39 @@ to-report ordering-firm-types [firms-done-ordering] ;reports a list of firm type
 end
 
 to order-inputs ;run by a firm - has the firm order all of the inputs it needs
+  if (count my-out-links != 0)[
+    set desired-production quantity-ordered
+  ]
   foreach table:keys input-information[k ->
     let quantity-needed ((desired-production / (get-metric "Marginal-productivity" k)) - (get-metric "Current-stock" k))
     let running-order-quantity 0
-    while [(running-order-quantity < quantity-needed) and (any? my-in-links with [purchase-order = 0])][
-      ask (min-one-of (my-in-links with [([firm-type] of other-end) = k]) [quantitative-value * (get-index index)])[
-
+    ifelse k = 0 [
+      hire-labor quantity-needed
+    ][
+      while [(running-order-quantity < quantity-needed) and (any? (my-in-links with [[firm-type] of other-end = k and ([production-capacity - quantity-ordered] of other-end > 0)]) with [purchase-order = 0])][
+        ask (min-one-of (my-in-links with [([firm-type] of other-end = k) and ([production-capacity - quantity-ordered] of other-end > 0)]) [quantitative-value * (get-index index)])[
+          let quantity-available 0
+          let order-from-firm 0
+          ask other-end[
+            set quantity-available (production-capacity - quantity-ordered)
+            set order-from-firm min (list quantity-available (quantity-needed - running-order-quantity))
+            set quantity-ordered (quantity-ordered + order-from-firm)
+          ]
+          set purchase-order order-from-firm
+          if purchase-order > 0 [
+            show-link
+          ]
+          set running-order-quantity (running-order-quantity + order-from-firm)
+        ]
       ]
+      set-metric "Pending-orders" k running-order-quantity
     ]
   ]
 end
 
 to-report is-consumer? [type-of-firm]
   let firm-type-info table:get FIRM-INFO type-of-firm
-  report (table:get firm-type-info "Consumer")
+  report (table:get firm-type-info "Consumer?")
 end
 
 to estimate-demand ;run by the observer
@@ -419,6 +450,10 @@ to estimate-demand ;run by the observer
     set desired-production (estimated-demand - inventories)
     set done-ordering? True
   ]
+end
+
+to hire-labor[quantity] ;will be run by a turtle
+  set-metric "Pending-orders" 0 quantity
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
