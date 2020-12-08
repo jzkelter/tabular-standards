@@ -80,6 +80,7 @@ to setup
   layout
   estimate-demand
   run-order-cycle
+  run-production-cycle
   reset-ticks
 end
 
@@ -158,7 +159,7 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
 end
 
 to setup-common-variables
-  set liquid-assets 0
+  set liquid-assets 3000
   set profits ts-create["Profits"]
   set preferred-index one-of (table:keys INDICES)
   set inputs-received? false
@@ -405,10 +406,11 @@ to order-inputs ;run by a firm - has the firm order all of the inputs it needs
     let quantity-needed ((desired-production / (get-metric "Marginal-productivity" k)) - (get-metric "Current-stock" k))
     let running-order-quantity 0
     ifelse k = 0 [
-      hire-labor quantity-needed
+      set-metric "Pending-orders" 0 quantity-needed
+      set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS + quantity-needed)
     ][
       while [(running-order-quantity < quantity-needed) and (any? (my-in-links with [[firm-type] of other-end = k and ([production-capacity - quantity-ordered] of other-end > 0)]) with [purchase-order = 0])][
-        ask (min-one-of (my-in-links with [([firm-type] of other-end = k) and ([production-capacity - quantity-ordered] of other-end > 0)]) [quantitative-value * (get-index index)])[
+        ask (min-one-of (my-in-links with [([firm-type] of other-end = k) and ([production-capacity - quantity-ordered] of other-end > 0) and purchase-order = 0]) [quantitative-value * (get-index index)])[
           let quantity-available 0
           let order-from-firm 0
           ask other-end[
@@ -452,8 +454,91 @@ to estimate-demand ;run by the observer, asks consumer good firms to estimate de
   ]
 end
 
-to hire-labor[quantity] ;run by a turtle, orders labor necessary for the subsequent production cycle
-  set-metric "Pending-orders" 0 quantity
+to run-production-cycle ;will be run by the observer
+  ask turtles with [not any? my-in-links with [purchase-order > 0]][
+    set inputs-received? true
+  ]
+  while [any? turtles with [done-producing? = false]][
+    ask turtles with [inputs-received? = true and done-producing? = false][
+      produce
+    ]
+  ]
+end
+
+to produce ;will be run by a turtle
+  hire-labor
+  let production-quantity (min (map [i -> production-potential i] (table:keys input-information)))
+  let reduction-factor 0
+  let input-type firm-type
+  ifelse member? self consumer-good-firms[
+    set inventories (inventories + production-quantity)
+  ][
+    if quantity-ordered > 0[
+      set reduction-factor (production-quantity / quantity-ordered)
+    ]
+  ]
+  use-inputs production-quantity
+  let total-revenue 0
+  let input-firm-type firm-type
+  ask my-out-links with [purchase-order > 0][
+    let delivery-quantity (purchase-order * reduction-factor)
+    set purchase-order 0
+    let cost-of-order (delivery-quantity * (quantitative-value * (get-index index)))
+    set total-revenue (total-revenue + cost-of-order)
+    ask other-end[
+      set liquid-assets (liquid-assets - cost-of-order)
+      if delivery-quantity > 0[
+        receive-order delivery-quantity input-firm-type cost-of-order
+      ]
+      if not(any? my-in-links with [purchase-order > 0])[
+        set inputs-received? true
+      ]
+    ]
+  ]
+  set liquid-assets (liquid-assets + total-revenue)
+  set done-producing? true
+end
+
+to receive-order [delivery-quantity input-firm-type cost-of-order] ;will be run by a turtle
+  let current-input-stock get-metric "Current-stock" input-firm-type
+  set-metric "Current-stock" input-firm-type (current-input-stock + delivery-quantity)
+  ifelse current-input-stock = 0[
+    set-metric "Average unit cost" input-firm-type (cost-of-order / delivery-quantity)
+  ][
+    let current-average-cost (get-metric "Average unit cost" input-firm-type)
+        let new-average ((current-average-cost * current-input-stock) + (cost-of-order)) / (current-input-stock + delivery-quantity)
+    set-metric "Average unit cost" input-firm-type new-average
+  ]
+end
+
+to use-inputs [production-quantity] ;will be run by a turtle - adjusts all input stocks except labor to reflect production
+  foreach table:keys input-information [i ->
+    if i != 0[
+      let current-stock get-metric "Current-stock" i
+      let mp get-metric "Marginal-productivity" i
+      set-metric "Current-stock" i (current-stock - (production-quantity / mp))
+    ]
+  ]
+end
+
+to hire-labor
+  let labor-quantity-ordered (get-metric "Pending-orders" 0)
+  ifelse TOTAL-LABOR-ORDERS < LABOR-FORCE-SIZE[
+    set-metric "Current-stock" 0 labor-quantity-ordered
+    set liquid-assets (liquid-assets - (labor-quantity-ordered * WAGE-RATE))
+    set LABOR-MONEY-POT (LABOR-MONEY-POT + (labor-quantity-ordered * WAGE-RATE))
+  ][
+    let reduction-factor LABOR-FORCE-SIZE / TOTAL-LABOR-ORDERS
+    set-metric "Current-stock" 0 (reduction-factor * labor-quantity-ordered)
+    set liquid-assets (liquid-assets - (reduction-factor * labor-quantity-ordered * WAGE-RATE))
+    set LABOR-MONEY-POT (LABOR-MONEY-POT + ((reduction-factor * labor-quantity-ordered) * WAGE-RATE))
+  ]
+end
+
+to-report production-potential[input] ;run by a turtle, will report the amount that a firm can produce based on the quantity of 1 input
+  let stock (get-metric "Current-stock" input)
+  let marginal-prod (get-metric "Marginal-productivity" input)
+  report (stock * marginal-prod)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -507,9 +592,9 @@ SLIDER
 97
 LABOR-FORCE-SIZE
 LABOR-FORCE-SIZE
-2000
-4000
-3000.0
+5000
+10000
+7500.0
 1
 1
 NIL
