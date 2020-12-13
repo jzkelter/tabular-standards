@@ -1,7 +1,7 @@
 ;**this model hinges on the table of firms having "good produced" and "inputs" be of the same type
 ;**in other words, if a firm takes as input "input 1," the firm that produces it must have type "input 1"
 extensions[time table csv]
-__includes["time-series.nls"]
+__includes["time-series.nls" "test_file.nls"]
 
 globals[
   LABOR-MONEY-POT ;a number holding how much consumers have available to spend
@@ -16,7 +16,9 @@ globals[
   TOTAL-LABOR-ORDERS ;a number holding the total amount of labor ordered by all firms
   FIRM-INFO ;a dictionary holding the number of each firm
   GOOD-TYPES ;a dictionary holding the types of goods in the model
+  LABOR ;this will just be a placeholder variable that holds the number 0
   TOTAL-FIRMS
+  EMPLOYED-WORKERS ;a number that will hold the number of employed workers
 ]
 
 breed[input-good-firms input-good-firm]
@@ -111,6 +113,8 @@ to initiate-globals ;run by the observer, sets all of the global variables
   set FIRM-INFO table:make
   set GOOD-TYPES (list 0)
   set TOTAL-FIRMS 0
+  set LABOR 0
+  set EMPLOYED-WORKERS 0
 end
 
 to setup-indices ;run by the observer, sets up the indices, a temporary solution
@@ -159,7 +163,7 @@ to setup-firms [firm-breed good-produced num-firms input-data capacity] ;run by 
 end
 
 to setup-common-variables
-  set liquid-assets 3000
+  set liquid-assets 0
   set profits ts-create["Profits"]
   set preferred-index one-of (table:keys INDICES)
   set inputs-received? false
@@ -257,6 +261,9 @@ to initiate-framework-agreements ;run by the observer, initiates all of the fram
       let num-firms number-firms f
       ask turtles with [uses-input? f][
         let num-negotiations (ceiling (abs (random-normal (num-firms / 10) 1)))
+        if num-negotiations > num-firms[
+          set num-negotiations num-firms
+        ]
         let buyer self
         let buyer-profits current-profits
         let buyer-preferred-index preferred-index
@@ -286,7 +293,7 @@ to negotiate-agreement [buyer buyer-profits buyer-preferred-index] ;run by the s
   let seller-profits current-profits
   let seller-preferred-index preferred-index
   create-framework-agreement-to buyer [
-    set quantitative-value (total-cost * MARKUP-RULE)
+    set quantitative-value (total-cost * (1 + MARKUP-RULE))
     (ifelse
       buyer-profits > seller-profits[
         set index buyer-preferred-index
@@ -405,9 +412,12 @@ to order-inputs ;run by a firm - has the firm order all of the inputs it needs
   foreach table:keys input-information[k ->
     let quantity-needed ((desired-production / (get-metric "Marginal-productivity" k)) - (get-metric "Current-stock" k))
     let running-order-quantity 0
-    ifelse k = 0 [
-      set-metric "Pending-orders" 0 quantity-needed
-      set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS + quantity-needed)
+    ifelse k = LABOR [
+      let current-labor-force-size get-metric "Current-stock" LABOR
+      set-metric "Pending-orders" LABOR (quantity-needed - current-labor-force-size)
+      if (quantity-needed - current-labor-force-size > 0)[
+        set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS + quantity-needed)
+      ]
     ][
       while [(running-order-quantity < quantity-needed) and (any? (my-in-links with [[firm-type] of other-end = k and ([production-capacity - quantity-ordered] of other-end > 0)]) with [purchase-order = 0])][
         ask (min-one-of (my-in-links with [([firm-type] of other-end = k) and ([production-capacity - quantity-ordered] of other-end > 0) and purchase-order = 0]) [quantitative-value * (get-index index)])[
@@ -438,7 +448,7 @@ end
 to estimate-demand ;run by the observer, asks consumer good firms to estimate demand
   ask consumer-good-firms[
     ifelse time:is-equal DATE START-DATE [
-      let aggregate-consumption-estimate ((WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)) + (0.1 * WAGE-RATE * (random-normal LABOR-FORCE-SIZE 250)))
+      let aggregate-consumption-estimate (WAGE-RATE * (random-normal LABOR-FORCE-SIZE (0.05 * LABOR-FORCE-SIZE)))
       let estimated-market-share (market-share + (random-float (0.5 * market-share)) - (random-float (0.5 * market-share)))
       let unit-cost-of-good get-atc
       let markup (1 + MARKUP-RULE)
@@ -450,7 +460,6 @@ to estimate-demand ;run by the observer, asks consumer good firms to estimate de
       set estimated-demand actual-demand
     ]
     set desired-production (estimated-demand - inventories)
-    set done-ordering? True
   ]
 end
 
@@ -466,7 +475,9 @@ to run-production-cycle ;will be run by the observer
 end
 
 to produce ;will be run by a turtle
-  hire-labor
+  if get-metric "Pending-orders" LABOR > 0[
+    hire-labor
+  ]
   let production-quantity (min (map [i -> production-potential i] (table:keys input-information)))
   let reduction-factor 0
   let input-type firm-type
@@ -478,6 +489,7 @@ to produce ;will be run by a turtle
     ]
   ]
   use-inputs production-quantity
+  pay-wages
   let total-revenue 0
   let input-firm-type firm-type
   ask my-out-links with [purchase-order > 0][
@@ -496,6 +508,7 @@ to produce ;will be run by a turtle
     ]
   ]
   set liquid-assets (liquid-assets + total-revenue)
+  set profits ts-add-row profits (list DATE (total-revenue - (production-quantity * get-atc)))
   set done-producing? true
 end
 
@@ -506,7 +519,7 @@ to receive-order [delivery-quantity input-firm-type cost-of-order] ;will be run 
     set-metric "Average unit cost" input-firm-type (cost-of-order / delivery-quantity)
   ][
     let current-average-cost (get-metric "Average unit cost" input-firm-type)
-        let new-average ((current-average-cost * current-input-stock) + (cost-of-order)) / (current-input-stock + delivery-quantity)
+    let new-average ((current-average-cost * current-input-stock) + (cost-of-order)) / (current-input-stock + delivery-quantity)
     set-metric "Average unit cost" input-firm-type new-average
   ]
 end
@@ -521,17 +534,33 @@ to use-inputs [production-quantity] ;will be run by a turtle - adjusts all input
   ]
 end
 
-to hire-labor
-  let labor-quantity-ordered (get-metric "Pending-orders" 0)
-  ifelse TOTAL-LABOR-ORDERS < LABOR-FORCE-SIZE[
-    set-metric "Current-stock" 0 labor-quantity-ordered
-    set liquid-assets (liquid-assets - (labor-quantity-ordered * WAGE-RATE))
-    set LABOR-MONEY-POT (LABOR-MONEY-POT + (labor-quantity-ordered * WAGE-RATE))
+to pay-wages
+  let current-labor-force-size get-metric "Current-stock" LABOR
+  set liquid-assets (liquid-assets - (current-labor-force-size * WAGE-RATE))
+  set LABOR-MONEY-POT (LABOR-MONEY-POT + (current-labor-force-size * WAGE-RATE))
+end
+
+to hire-labor ;**this procedure needs to be looked at I don't know how well it is going to work anymore
+  let labor-quantity-ordered (get-metric "Pending-orders" LABOR)
+  let current-quantity-of-labor (get-metric "Current-stock" LABOR)
+  ifelse TOTAL-LABOR-ORDERS < (LABOR-FORCE-SIZE - EMPLOYED-WORKERS)[
+    set-metric "Current-stock" LABOR (labor-quantity-ordered + current-quantity-of-labor)
+    set EMPLOYED-WORKERS (EMPLOYED-WORKERS + labor-quantity-ordered)
+    set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS - labor-quantity-ordered)
   ][
-    let reduction-factor LABOR-FORCE-SIZE / TOTAL-LABOR-ORDERS
-    set-metric "Current-stock" 0 (reduction-factor * labor-quantity-ordered)
-    set liquid-assets (liquid-assets - (reduction-factor * labor-quantity-ordered * WAGE-RATE))
-    set LABOR-MONEY-POT (LABOR-MONEY-POT + ((reduction-factor * labor-quantity-ordered) * WAGE-RATE))
+    let reduction-factor (LABOR-FORCE-SIZE - EMPLOYED-WORKERS) / TOTAL-LABOR-ORDERS
+    set-metric "Current-stock" 0 ((reduction-factor * labor-quantity-ordered) + current-quantity-of-labor)
+    set EMPLOYED-WORKERS (EMPLOYED-WORKERS + (reduction-factor * labor-quantity-ordered))
+    set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS - (reduction-factor * labor-quantity-ordered))
+  ]
+end
+
+to fire-labor
+  ask turtles with [get-metric "Pending-orders" LABOR < 0][
+    let firing-quantity get-metric "Pending-orders" LABOR
+    let current-labor-force-size get-metric "Current-stock" LABOR
+    set-metric "Current-stock" LABOR (current-labor-force-size - firing-quantity)
+    set EMPLOYED-WORKERS (EMPLOYED-WORKERS - firing-quantity)
   ]
 end
 
@@ -539,6 +568,64 @@ to-report production-potential[input] ;run by a turtle, will report the amount t
   let stock (get-metric "Current-stock" input)
   let marginal-prod (get-metric "Marginal-productivity" input)
   report (stock * marginal-prod)
+end
+
+to sell-consumer-goods ;run by the observer, this procedure will have consumer good firms sell their goods in the market
+  let original-money-pot LABOR-MONEY-POT
+  ask consumer-good-firms[
+    let total-revenue (market-share * original-money-pot)
+    set quantity-sold (total-revenue / price)
+    set LABOR-MONEY-POT (LABOR-MONEY-POT - total-revenue)
+    set inventories (inventories - (total-revenue / price))
+    let previous-assets liquid-assets
+    set liquid-assets (liquid-assets + total-revenue)
+    set actual-demand ((market-share * original-money-pot) / price)
+    let additional-losses 0
+    if actual-demand < estimated-demand[
+      set additional-losses ((estimated-demand - actual-demand) * get-atc)
+    ]
+    set profits ts-add-row profits (list DATE (total-revenue - (quantity-sold * get-atc) - additional-losses))
+    let unfilled-demand 0
+    if inventories = 0[
+      set unfilled-demand (actual-demand - quantity-sold)
+    ]
+    set competitiveness ((- price) - unfilled-demand)
+  ]
+end
+
+to calculate-unemployement
+  let employment-rate (EMPLOYED-WORKERS / LABOR-FORCE-SIZE)
+  set UNEMPLOYMENT-RATE (1 - employment-rate)
+end
+
+to calculate-alp
+  let total-productivity 0
+  ask turtles[
+    let current-labor-force-size get-metric "Current-stock" LABOR
+    let mp-labor get-metric "Marginal-productivity" LABOR
+    set total-productivity (total-productivity + (mp-labor * current-labor-force-size))
+  ]
+  set AVG-LABOR-PROD (total-productivity / EMPLOYED-WORKERS)
+end
+
+to-report average-competitiveness
+  let running-total 0
+  ask consumer-good-firms[
+    set running-total (running-total + competitiveness * market-share)
+  ]
+  report running-total
+end
+
+to adjust-market-share [average-sectorial-competitiveness]
+  set market-share ((market-share) * (1 + ((competitiveness - average-sectorial-competitiveness) / average-sectorial-competitiveness)))
+end
+
+to reset
+  ask turtles[
+    foreach table:keys input-information[k ->
+      set-metric "Pending-orders" k 0
+    ]
+  ]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -592,13 +679,30 @@ SLIDER
 97
 LABOR-FORCE-SIZE
 LABOR-FORCE-SIZE
-5000
-10000
-7500.0
+0
+15000
+100.0
 1
 1
 NIL
 HORIZONTAL
+
+BUTTON
+99
+112
+195
+145
+NIL
+setup-test
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
