@@ -108,7 +108,7 @@ to initiate-globals ;run by the observer, sets all of the global variables
   set AVG-LABOR-PROD 100
   set MARKUP-RULE 0.2
   set LABOR-MONEY-POT 0
-  set COST-OF-NEGOTIATION 100
+  set COST-OF-NEGOTIATION 10
   set START-DATE time:create "1999/12/01"
   set FIRM-INFO table:make
   set GOOD-TYPES (list 0)
@@ -239,7 +239,7 @@ to-report current-negotiating-goods [good-table] ;run by the observer, reports a
   foreach table:keys FIRM-INFO[k ->
     let current-firm-info table:get FIRM-INFO k
     let firm-inputs table:get current-firm-info "Inputs"
-    if not (member? false (map [i -> member? i ready-goods] firm-inputs))[
+    if not (member? false (map [i -> member? i ready-goods] firm-inputs)) and not (member? k ready-goods)[ ;this was a problem procedure, keep this in mind
       set ready-firm-types lput k ready-firm-types
     ]
   ]
@@ -270,6 +270,9 @@ to initiate-framework-agreements ;run by the observer, initiates all of the fram
         let sum-costs 0
         ask n-of num-negotiations turtles with [firm-type = f][
           negotiate-agreement buyer buyer-profits buyer-preferred-index
+          ask buyer [
+            set liquid-assets liquid-assets - COST-OF-NEGOTIATION
+          ]
           ask link-with buyer [
             set sum-costs (sum-costs + ((table:get INDICES index) * quantitative-value))
           ]
@@ -292,6 +295,7 @@ to negotiate-agreement [buyer buyer-profits buyer-preferred-index] ;run by the s
   let total-cost get-atc
   let seller-profits current-profits
   let seller-preferred-index preferred-index
+  set liquid-assets (liquid-assets - COST-OF-NEGOTIATION)
   create-framework-agreement-to buyer [
     set quantitative-value (total-cost * (1 + MARKUP-RULE))
     (ifelse
@@ -508,7 +512,9 @@ to produce ;will be run by a turtle
     ]
   ]
   set liquid-assets (liquid-assets + total-revenue)
-  set profits ts-add-row profits (list DATE (total-revenue - (production-quantity * get-atc)))
+  if not member? self consumer-good-firms[
+    set profits ts-add-row profits (list DATE (total-revenue - (production-quantity * get-atc)))
+  ]
   set done-producing? true
 end
 
@@ -534,7 +540,7 @@ to use-inputs [production-quantity] ;will be run by a turtle - adjusts all input
   ]
 end
 
-to pay-wages
+to pay-wages ;run by a firm, pays the wages for the current stock of labor
   let current-labor-force-size get-metric "Current-stock" LABOR
   set liquid-assets (liquid-assets - (current-labor-force-size * WAGE-RATE))
   set LABOR-MONEY-POT (LABOR-MONEY-POT + (current-labor-force-size * WAGE-RATE))
@@ -555,7 +561,7 @@ to hire-labor ;**this procedure needs to be looked at I don't know how well it i
   ]
 end
 
-to fire-labor
+to fire-labor ;run by the obserer, will be done after the production cycle and good delivery
   ask turtles with [get-metric "Pending-orders" LABOR < 0][
     let firing-quantity get-metric "Pending-orders" LABOR
     let current-labor-force-size get-metric "Current-stock" LABOR
@@ -593,22 +599,22 @@ to sell-consumer-goods ;run by the observer, this procedure will have consumer g
   ]
 end
 
-to calculate-unemployement
+to-report calculate-unemployment ;reports the new unemployment; run by the observer
   let employment-rate (EMPLOYED-WORKERS / LABOR-FORCE-SIZE)
-  set UNEMPLOYMENT-RATE (1 - employment-rate)
+  report 1 - employment-rate
 end
 
-to calculate-alp
+to-report calculate-alp ;run by the observer and reports the new alp
   let total-productivity 0
   ask turtles[
     let current-labor-force-size get-metric "Current-stock" LABOR
     let mp-labor get-metric "Marginal-productivity" LABOR
     set total-productivity (total-productivity + (mp-labor * current-labor-force-size))
   ]
-  set AVG-LABOR-PROD (total-productivity / EMPLOYED-WORKERS)
+  report (total-productivity / EMPLOYED-WORKERS)
 end
 
-to-report average-competitiveness
+to-report average-competitiveness ;run by the observer and reports the average competitiveness of consumer good firms
   let running-total 0
   ask consumer-good-firms[
     set running-total (running-total + competitiveness * market-share)
@@ -616,16 +622,38 @@ to-report average-competitiveness
   report running-total
 end
 
-to adjust-market-share [average-sectorial-competitiveness]
+to adjust-market-share [average-sectorial-competitiveness] ;run by consumer good firms, adjusts market shares
   set market-share ((market-share) * (1 + ((competitiveness - average-sectorial-competitiveness) / average-sectorial-competitiveness)))
 end
 
-to reset
+to adjust-wage-rate [previous-alp previous-unemployment] ;run by the observer, adjusts the wage rate
+  let alp-change (AVG-LABOR-PROD - previous-alp)
+  let unemployment-change (UNEMPLOYMENT-RATE - previous-unemployment)
+  set WAGE-RATE (WAGE-RATE + (1 + (alp-change / previous-alp) + (unemployment-change / previous-unemployment)))
+end
+
+to reset ;run by the observer, gets things prepared for the next cycle
+  let average-sectorial-competitiveness average-competitiveness
+  let previous-unemployment UNEMPLOYMENT-RATE
+  let previous-alp AVG-LABOR-PROD
+  set AVG-LABOR-PROD calculate-alp
+  set UNEMPLOYMENT-RATE calculate-unemployment
+  set TOTAL-LABOR-ORDERS 0
+  if not (time:is-equal DATE START-DATE)[
+    adjust-wage-rate previous-alp previous-unemployment
+  ]
   ask turtles[
     foreach table:keys input-information[k ->
       set-metric "Pending-orders" k 0
+      if k = LABOR[
+        set-metric "Average unit cost" LABOR WAGE-RATE
+      ]
+    ]
+    if member? self consumer-good-firms[
+      adjust-market-share average-sectorial-competitiveness
     ]
   ]
+  ask framework-agreements[hide-link]
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -695,6 +723,23 @@ BUTTON
 NIL
 setup-test
 NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+45
+161
+123
+194
+NIL
+test-go
+T
 1
 T
 OBSERVER
