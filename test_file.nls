@@ -14,12 +14,6 @@ to setup-test
   set firm-data butfirst firm-data
   ;set WAGE-RATE 20
   initiate-framework-agreements
-  test-estimate-demand
-  run-order-cycle
-  run-production-cycle
-  sell-consumer-goods
-  fire-labor
-  reset
   reset-ticks
 end
 
@@ -35,12 +29,13 @@ end
 
 to test-estimate-demand
   ask consumer-good-firms[
-    ifelse time:is-equal DATE START-DATE[
+    ifelse time:is-equal DATE PRODUCTION-START-DATE[
       set price (get-atc * (1 + MARKUP-RULE))
-      set estimated-demand ((LABOR-FORCE-SIZE * WAGE-RATE) / price)
+      set estimated-demand ((LABOR-FORCE-SIZE * WAGE-RATE) / price) 
       set desired-production estimated-demand
     ][
       set estimated-demand actual-demand
+      set price (get-atc * (1 + MARKUP-RULE))
       set desired-production (estimated-demand - inventories)
     ]
 

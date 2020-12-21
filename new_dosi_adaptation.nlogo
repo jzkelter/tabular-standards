@@ -19,6 +19,7 @@ globals[
   LABOR ;this will just be a placeholder variable that holds the number 0
   TOTAL-FIRMS
   EMPLOYED-WORKERS ;a number that will hold the number of employed workers
+  PRODUCTION-START-DATE
 ]
 
 breed[input-good-firms input-good-firm]
@@ -80,9 +81,6 @@ to setup
   set firm-data butfirst firm-data
   initiate-framework-agreements
   layout
-  estimate-demand
-  run-order-cycle
-  run-production-cycle
   reset-ticks
 end
 
@@ -110,6 +108,7 @@ to initiate-globals ;run by the observer, sets all of the global variables
   set LABOR-MONEY-POT 0
   set COST-OF-NEGOTIATION 10
   set START-DATE time:create "1999/12/01"
+  set PRODUCTION-START-DATE time:create "2000/01/01"
   set FIRM-INFO table:make
   set GOOD-TYPES (list 0)
   set TOTAL-FIRMS 0
@@ -417,9 +416,8 @@ to order-inputs ;run by a firm - has the firm order all of the inputs it needs
     let quantity-needed ((desired-production / (get-metric "Marginal-productivity" k)) - (get-metric "Current-stock" k))
     let running-order-quantity 0
     ifelse k = LABOR [
-      let current-labor-force-size get-metric "Current-stock" LABOR
-      set-metric "Pending-orders" LABOR (quantity-needed - current-labor-force-size)
-      if (quantity-needed - current-labor-force-size > 0)[
+      set-metric "Pending-orders" LABOR quantity-needed
+      if (quantity-needed > 0)[
         set TOTAL-LABOR-ORDERS (TOTAL-LABOR-ORDERS + quantity-needed)
       ]
     ][
@@ -451,7 +449,7 @@ end
 
 to estimate-demand ;run by the observer, asks consumer good firms to estimate demand
   ask consumer-good-firms[
-    ifelse time:is-equal DATE START-DATE [
+    ifelse time:is-equal DATE PRODUCTION-START-DATE [
       let aggregate-consumption-estimate (WAGE-RATE * (random-normal LABOR-FORCE-SIZE (0.05 * LABOR-FORCE-SIZE)))
       let estimated-market-share (market-share + (random-float (0.5 * market-share)) - (random-float (0.5 * market-share)))
       let unit-cost-of-good get-atc
@@ -565,8 +563,8 @@ to fire-labor ;run by the obserer, will be done after the production cycle and g
   ask turtles with [get-metric "Pending-orders" LABOR < 0][
     let firing-quantity get-metric "Pending-orders" LABOR
     let current-labor-force-size get-metric "Current-stock" LABOR
-    set-metric "Current-stock" LABOR (current-labor-force-size - firing-quantity)
-    set EMPLOYED-WORKERS (EMPLOYED-WORKERS - firing-quantity)
+    set-metric "Current-stock" LABOR (current-labor-force-size + firing-quantity)
+    set EMPLOYED-WORKERS (EMPLOYED-WORKERS + firing-quantity)
   ]
 end
 
@@ -577,15 +575,16 @@ to-report production-potential[input] ;run by a turtle, will report the amount t
 end
 
 to sell-consumer-goods ;run by the observer, this procedure will have consumer good firms sell their goods in the market
-  let original-money-pot LABOR-MONEY-POT
+  let aggregate-consumption (LABOR-MONEY-POT + (0.1 * WAGE-RATE * (LABOR-FORCE-SIZE - EMPLOYED-WORKERS)))
   ask consumer-good-firms[
-    let total-revenue (market-share * original-money-pot)
-    set quantity-sold (total-revenue / price)
+    let estimated-consumption (market-share * aggregate-consumption)
+    set quantity-sold (min (list inventories (estimated-consumption / price)))
+    let total-revenue (quantity-sold * price)
     set LABOR-MONEY-POT (LABOR-MONEY-POT - total-revenue)
-    set inventories (inventories - (total-revenue / price))
+    set inventories (inventories - quantity-sold)
     let previous-assets liquid-assets
     set liquid-assets (liquid-assets + total-revenue)
-    set actual-demand ((market-share * original-money-pot) / price)
+    set actual-demand ((market-share * aggregate-consumption) / price)
     let additional-losses 0
     if actual-demand < estimated-demand[
       set additional-losses ((estimated-demand - actual-demand) * get-atc)
@@ -629,7 +628,7 @@ end
 to adjust-wage-rate [previous-alp previous-unemployment] ;run by the observer, adjusts the wage rate
   let alp-change (AVG-LABOR-PROD - previous-alp)
   let unemployment-change (UNEMPLOYMENT-RATE - previous-unemployment)
-  set WAGE-RATE (WAGE-RATE + (1 + (alp-change / previous-alp) + (unemployment-change / previous-unemployment)))
+  set WAGE-RATE (WAGE-RATE + (1 + (alp-change / previous-alp) - (unemployment-change / previous-unemployment)))
 end
 
 to reset ;run by the observer, gets things prepared for the next cycle
@@ -639,7 +638,7 @@ to reset ;run by the observer, gets things prepared for the next cycle
   set AVG-LABOR-PROD calculate-alp
   set UNEMPLOYMENT-RATE calculate-unemployment
   set TOTAL-LABOR-ORDERS 0
-  if not (time:is-equal DATE START-DATE)[
+  if not (time:is-equal DATE PRODUCTION-START-DATE)[
     adjust-wage-rate previous-alp previous-unemployment
   ]
   ask turtles[
@@ -649,18 +648,35 @@ to reset ;run by the observer, gets things prepared for the next cycle
         set-metric "Average unit cost" LABOR WAGE-RATE
       ]
     ]
-    if member? self consumer-good-firms[
+    ifelse member? self consumer-good-firms[
       adjust-market-share average-sectorial-competitiveness
+    ][
+      set quantity-ordered 0
     ]
+    set done-producing? false
+    set inputs-received? false
+    set done-ordering? false
+    set desired-production 0
   ]
   ask framework-agreements[hide-link]
+  set LABOR-MONEY-POT 0
+end
+
+to go
+  estimate-demand
+  run-order-cycle
+  run-production-cycle
+  sell-consumer-goods
+  fire-labor
+  reset
+  tick
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-1587
-577
+238
+17
+1615
+584
 -1
 -1
 16.91
@@ -739,7 +755,196 @@ BUTTON
 194
 NIL
 test-go
+NIL
+1
 T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+17
+311
+217
+461
+Estimated demand
+Time
+Demand
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [estimated-demand] of consumer-good-firms"
+
+BUTTON
+136
+169
+199
+202
+NIL
+go
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+20
+485
+220
+635
+Unemployment
+Time
+Unemployment-rate
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot UNEMPLOYMENT-RATE"
+
+BUTTON
+322
+616
+492
+649
+NIL
+test-estimate-demand
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+492
+616
+625
+649
+NIL
+run-order-cycle
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+625
+616
+792
+649
+NIL
+run-production-cycle
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+792
+616
+959
+649
+NIL
+sell-consumer-goods
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+958
+616
+1050
+649
+NIL
+fire-labor
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1050
+616
+1113
+649
+NIL
+reset
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1113
+616
+1176
+649
+NIL
+tick
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1284
+624
+1424
+657
+NIL
+estimate-demand
+NIL
 1
 T
 OBSERVER
