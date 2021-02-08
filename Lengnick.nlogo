@@ -541,7 +541,7 @@ PLOT
 10
 975
 147
-Avg Wage Rate
+Avg Wage Rate 
 NIL
 NIL
 0.0
