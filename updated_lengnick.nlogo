@@ -126,48 +126,174 @@ end
 
 ;;*************************************** go ***********************************************
 
+;to go
+;  ask firms[
+;    show (word "Wage-rate before go: " wage-rate)
+;  ]
+;  if ticks mod MONTH-LENGTH = 1[
+;    show "Start of month"
+;    ask firms [
+;      show (word "Start of month wage-rate: " wage-rate)
+;    ]
+;    ask firms[
+;      show (word "Before: " wage-rate)
+;      adjust-wage-rate
+;      show (word "After: " wage-rate)
+;      adjust-job-positions
+;      adjust-price
+;      reset-demand
+;    ]
+;    ask households[
+;      search-cheaper-vendor
+;      search-delivery-capable-vendor
+;      ifelse not employed?[
+;        search-job
+;      ][
+;        search-better-paid-job
+;      ]
+;      set-consumption
+;    ]
+;  ]
+;  ask households[
+;    buy-consumption-goods
+;  ]
+;  ask firms[
+;    produce-consumption-goods
+;  ]
+;  if (ticks mod MONTH-LENGTH) = 0[
+;    set MONTH MONTH + 1
+;    ask firms[
+;      decide-reserve
+;      distribute-profits
+;      pay-wages
+;    ]
+;    ask households[
+;      adjust-reservation-wage
+;    ]
+;    ask firms[
+;      decide-fire-worker
+;    ]
+;  ]
+;  tick
+;end
+
 to go
-  if ticks mod MONTH-LENGTH = 1[
-    show "running start of month"
-    ask firms[
-      adjust-wage-rate
-      adjust-job-positions
-      adjust-price
-      reset-demand
-    ]
-    ask households[
-      search-cheaper-vendor
-      search-delivery-capable-vendor
-      ifelse not employed?[
-        search-job
-      ][
-        search-better-paid-job
-      ]
-      set-consumption
-    ]
+  ask firms[
+    adjust-wage-rate
+    adjust-job-positions
+    adjust-price
+    reset-demand
   ]
   ask households[
-    buy-consumption-goods
+    search-cheaper-vendor
+    search-delivery-capable-vendor
+    ifelse not employed?[
+      search-job
+    ][
+      search-better-paid-job
+    ]
+    set-consumption
+  ]
+  let counter 0
+  while[counter < 21][
+    ask households[
+      buy-consumption-goods
+    ]
+    ask firms[
+      produce-consumption-goods
+    ]
+    set counter counter + 1
+  ]
+  set MONTH MONTH + 1
+  ask firms[
+    decide-reserve
+  ]
+  ask firms [
+    distribute-profits
+  ]
+  ask firms [
+    pay-wages
+  ]
+  ask households[
+    adjust-reservation-wage
+    set-house-size
   ]
   ask firms[
-    produce-consumption-goods
-  ]
-  if (ticks mod MONTH-LENGTH) = 0[
-    set MONTH MONTH + 1
-    ask firms[
-      decide-reserve
-      distribute-profits
-      pay-wages
-    ]
-    ask households[
-      adjust-reservation-wage
-    ]
-    ask firms[
-      decide-fire-worker
-    ]
+    decide-fire-worker
   ]
   tick
 end
+
+
+to set-house-size
+  set size .2 + (sqrt liquidity / 12)
+end
+
+;to go
+;  ;ask firms[
+;;    show (word "Wage-rate before go: " wage-rate)
+;;  ]
+;  show (word "mean Wage-rate before go: " mean [wage-rate] of firms)
+;  if ticks mod MONTH-LENGTH = 1[
+;    show "Start of month"
+;;    ask firms [
+;;      show (word "Start of month wage-rate: " wage-rate)
+;;    ]
+;    show (word "mean Start of month wage-rate: " mean [wage-rate] of firms)
+;    ask firms[
+;;      show (word "Before: " wage-rate)
+;      adjust-wage-rate
+;;      show (word "After: " wage-rate)
+;      adjust-job-positions
+;      adjust-price
+;      reset-demand
+;    ]
+;    ask households[
+;      search-cheaper-vendor
+;      search-delivery-capable-vendor
+;      ifelse not employed?[
+;        search-job
+;      ][
+;        search-better-paid-job
+;      ]
+;      set-consumption
+;    ]
+;  ]
+;  ask households[
+;    show (word "Liquidity before purchase: " liquidity)
+;    buy-consumption-goods
+;    show (word "Liquidity after purchase: " liquidity)
+;  ]
+;  show (word "mean Wage-rate before firms produce: " mean [wage-rate] of firms)
+;  ask firms[
+;    produce-consumption-goods
+;  ]
+;  show (word "mean Wage-rate after firms produce: " mean [wage-rate] of firms)
+;  if (ticks mod MONTH-LENGTH) = 0[
+;    set MONTH MONTH + 1
+;    show (word "mean Wage-rate before firms decide-reserve/distribute-profits/pay-wages: " mean [wage-rate] of firms)
+;    ask firms[
+;      decide-reserve
+;    ]
+;    show (word "mean wage-rate after decide-reserve: " mean [wage-rate] of firms)
+;    ask firms [
+;      distribute-profits
+;    ]
+;    show (word "mean wage-rate after distribute-profits: " mean [wage-rate] of firms)
+;    ask firms[
+;      pay-wages
+;    ]
+;    show (word "mean wage-rate after pay-wages: " mean [wage-rate] of firms)
+;    ask households[
+;      adjust-reservation-wage
+;    ]
+;    ask firms[
+;      decide-fire-worker
+;    ]
+;  ]
+;  tick
+;end
+
 
 ;;**************************************** firm procedures ****************************************************
 
@@ -231,7 +357,7 @@ to fire-worker
   ask one-of my-employment-links with [to-be-fired?][
     die
   ]
-  set close-position? true
+  set close-position? false
 end
 
 to decide-fire-worker
@@ -239,6 +365,7 @@ to decide-fire-worker
     ask one-of my-employment-links[
       set to-be-fired? true
     ]
+    fire-worker
   ]
   set close-position? false
 end
@@ -312,7 +439,8 @@ to search-delivery-capable-vendor
     if length blacklisted-suppliers > 0[
       let current-household self
       let other-firms firms with [not consumer-link-neighbor? current-household]
-      let chopping-block rnd:weighted-one-of-list blacklisted-suppliers [[demand-not-satisfied] of consumer-link-with current-household] ;***problem line right here***
+      ;let chopping-block rnd:weighted-one-of-list blacklisted-suppliers [[b] -> [demand-not-satisfied] of consumer-link-with current-household];***problem line right here***
+      let chopping-block select-chopping-block
       let new-firm rnd:weighted-one-of other-firms [labor-force-size]
       if (member? chopping-block blacklisted-suppliers)[
         set blacklisted-suppliers remove chopping-block blacklisted-suppliers
@@ -327,18 +455,33 @@ to search-delivery-capable-vendor
   ]
 end
 
+to-report select-chopping-block
+  let selected? false
+  while [not selected?][
+    let potential-link rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
+    let potential-chopping-block [other-end] of potential-link
+    if member? potential-chopping-block blacklisted-suppliers[
+      set selected? true
+      report potential-chopping-block
+    ]
+  ]
+end
+
 to search-job
   let counter 0
   while[not employed? and counter < 5][
     let potential-firm one-of firms with [open-position?]
-    if [wage-rate] of potential-firm > reservation-wage[
-      create-employment-link-with potential-firm[
-        init-employment-link
-      ]
-      ask potential-firm[
-        hire-worker
+    if potential-firm != Nobody [
+      if [wage-rate] of potential-firm > reservation-wage[
+        create-employment-link-with potential-firm[
+          init-employment-link
+        ]
+        ask potential-firm[
+          hire-worker
+        ]
       ]
     ]
+    set counter counter + 1
   ]
 end
 
@@ -410,6 +553,9 @@ to buy-consumption-goods
         set blacklisted-suppliers fput current-firm blacklisted-suppliers
       ]
     ]
+  ]
+  ask my-consumer-links[
+    set visited? false
   ]
 end
 
@@ -532,6 +678,78 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot (((count households) - (count employment-links)) / (count households))"
+
+PLOT
+241
+267
+441
+417
+Avg-wage-rate
+NIL
+NIL
+0.0
+10.0
+0.0
+5.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+
+PLOT
+441
+267
+641
+417
+Firm liquidity
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [liquidity] of firms"
+
+PLOT
+41
+416
+241
+566
+Household Liquidity
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [liquidity] of households"
+
+PLOT
+243
+416
+443
+566
+Total Liquidity
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot sum [liquidity] of turtles"
 
 @#$#@#$#@
 ## WHAT IS IT?
