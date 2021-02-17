@@ -143,20 +143,21 @@ to go
   ;;; beginning of the month
   ask firms [
     adjust-wage-rate
-    adjust-labor
+    adjust-job-positions
     adjust-price
     set demand 0  ; reset demand for the month
   ]
   ask households [
-    search-for-better-trading-connections
+    search-cheaper-vendor
+    search-delivery-capable-vendor
     search-for-employement
     set-consumption
   ]
 
   ;;; during month
   repeat month-length [
-    ask households [buy-goods]
-    ask firms [produce-goods]
+    ask households [buy-consumption-goods]
+    ask firms [produce-consumption-goods]
   ]
 
   ;;; end of month
@@ -169,7 +170,7 @@ to go
     adjust-reservation-wage
     set-house-size
   ]
-  ask firms [fire-workers] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+  ask firms [decide-fire-workers] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set month month + 1
   tick
@@ -196,7 +197,6 @@ to distribute-profits  ; observer procedure - distrubtes all profits allocated b
     set liquidity liquidity + share-of-profits
     set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
   ]
-;
 
   if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
 end
@@ -217,7 +217,7 @@ to-report failed-to-hire?  ; firm procedure. Reports if firm failed to hire last
   report months-with-all-positions-filled = 0 ;
 end
 
-to adjust-labor  ; firm procedure
+to adjust-job-positions  ; firm procedure
   (ifelse
     inventory <  ϕl * demand [
       set desired-labor-change 1  ; try to hire
@@ -244,7 +244,7 @@ to adjust-price
 end
 
 
-to fire-workers
+to decide-fire-workers
   (ifelse
     desired-labor-change < 0 [
       ask up-to-n-of abs desired-labor-change my-b-links [die]
@@ -267,7 +267,7 @@ to-report n-workers
   report count my-b-links
 end
 
-to produce-goods  ; firm procedure
+to produce-consumption-goods  ; firm procedure
   set inventory inventory + daily-production
 end
 
@@ -279,7 +279,6 @@ to pay-wages  ; firm procedure
   if n-workers > 0 [
     if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> immediate pay cut
       set wage-rate liquidity / n-workers
-      ; print (word "firm " who " cut wages due to insufficient funds at tick " ticks)
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt"]
@@ -300,7 +299,7 @@ to-report buffer-amount  ; firm procedure
 end
 
 ;*******************Household Procedures*********************
-to search-for-better-trading-connections  ; household procedure â
+to search-cheaper-vendor  ; household procedure â
   if random-float 1 < 0.25 [  ; this is Psi_price in Lengnick, the probability of switching trading firms based on price
     let current-trading-link one-of my-a-links
     let random-firm pick-random-firm
@@ -311,6 +310,9 @@ to search-for-better-trading-connections  ; household procedure â
     ]
   ]
 
+end
+
+to search-delivery-capable-vendor
   let link-failed-to-satisfy rnd:weighted-one-of my-a-links [demand-not-satisfied]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0 and random-float 1 < 0.25 [ ; 0.25 is Psi_quant in Lengnick, the probability of switching trading firms because it didn't have enough quantity to satisfy demand
     ask link-failed-to-satisfy [die]
@@ -325,18 +327,26 @@ end
 
 
 to search-for-employement  ; household procedure
-  (ifelse
-    unemployed? [
-      let firms-tried 0
-      while [unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
-        check-random-firm-for-job reservation-wage
-        set firms-tried firms-tried + 1
-      ]
-    ]
-    unsatisfied-with-wage? or random-float 1 < 0.1 [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
-      check-random-firm-for-job [wage-rate] of my-employer
-    ]
-  )
+  ifelse unemployed? [
+    search-job
+  ] [
+    search-better-paid-job
+  ]
+
+end
+
+to search-job  ; this is when the household is unemployed
+  let firms-tried 0
+  while [unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+    check-random-firm-for-job reservation-wage
+    set firms-tried firms-tried + 1
+  ]
+end
+
+to search-better-paid-job  ; this is when a household is currently employed
+  if unsatisfied-with-wage? or random-float 1 < 0.1 [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
+    check-random-firm-for-job [wage-rate] of my-employer
+  ]
 end
 
 to check-random-firm-for-job [min-wage]  ; household procedure
@@ -358,7 +368,7 @@ to-report ideal-consumption [money avg-price]
   report (money / avg-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
 end
 
-to buy-goods  ; household procedure
+to buy-consumption-goods  ; household procedure
   ask my-a-links [set demand-not-satisfied 0]
   let total-bought 0
   let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
@@ -693,7 +703,7 @@ BUTTON
 77
 225
 go-day
-\nask households [buy-goods]\nask firms [produce-goods]\ntick
+\nask households [buy-consumption-goods]\nask firms [produce-consumption-goods]\ntick
 NIL
 1
 T
@@ -710,7 +720,7 @@ BUTTON
 175
 225
 go-month
-repeat month-length [\nask households [buy-goods]\nask firms [produce-goods]\n]
+repeat month-length [\nask households [buy-consumption-goods]\nask firms [produce-consumption-goods]\n]
 NIL
 1
 T
