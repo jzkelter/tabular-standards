@@ -51,7 +51,7 @@ globals [
 
 to set-constants
   set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by
-  set γ 24  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set γ 1  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
   set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
   set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
   set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
@@ -187,12 +187,17 @@ end
 
 to distribute-profits  ; observer procedure - distrubtes all profits allocated by firms to households
   let total-hh-liquidity sum [liquidity] of households
+
+  ;; distribute profits proportionately to current wealth.
   let profits-to-be-allocated PROFITS-TO-ALLOCATE
   ask households [
-    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated
+    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated  ; distribute proportionately to wealth
+;    let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
     set liquidity liquidity + share-of-profits
     set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
   ]
+;
+
   if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
 end
 
