@@ -51,7 +51,7 @@ globals [
 
 to set-constants
   set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by
-  set γ 1  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set γ 24  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
   set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
   set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
   set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
@@ -103,7 +103,7 @@ to setup
 
   ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
     set-size
-    set liquidity buffer-amount  ; model begins at the beginning of a month, so start with the buffer amount
+    set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
     set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
     set demand (ideal-consumption wage-rate price) * (count a-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
     set inventory t0-inventory ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
@@ -287,14 +287,14 @@ to pay-wages  ; firm procedure
 end
 
 to allocate-profits  ; firm procedure
-  let buffer buffer-amount
+  let buffer decide-reserve
   if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
     set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE + liquidity - buffer
     set liquidity buffer
   ]
 end
 
-to-report buffer-amount  ; firm procedure
+to-report decide-reserve  ; firm procedure
   report 0.1 * wage-rate * n-workers  ; 0.1 is χ in Lengnick
 end
 
