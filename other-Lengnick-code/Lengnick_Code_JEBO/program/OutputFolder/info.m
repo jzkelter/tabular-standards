@@ -1,0 +1,15 @@
+NumberOfMonths = 5000
+NumberOfHH = 1000
+NumberOfFI = 100
+HHpar_SavingsProgression = 0.885
+HHpar_ResWageChange_Employed = 1.0
+HHpar_ResWageChange_Fired = 1.0
+HHpar_ResWageChange_Unemployed = 0.9
+FIpar_Price_Change_Probability = 0.78
+FIpar_Price_Change_Speed = 0.019
+FIpar_Wage_Change_Probability = 0.07
+FIpar_Wage_Change_Speed = 0.02
+FIpar_Min_Inventory_Fraction = 0.25
+FIpar_Max_Inventory_Fraction = 1.0
+FIpar_Min_Profit = 1.025
+FIpar_Max_Profit = 1.15

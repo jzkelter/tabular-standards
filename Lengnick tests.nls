@@ -1,30 +1,25 @@
 
-to run-tests  
-  test-adjust-wage-rate
-;  set fails fails + test-adjust-job-positions
-  ;set fails fails + test-allocate-profits
-  ;set fails fails + test-distribute-profits  
-  print "All tests passed"
+to lengnick-tests
+  run-tests (list
+    
+    (list "adjust-wage-rate-tests" test-adjust-wage-rate)
+    ;(list )
+;    (list "setup works?" [ ->
+;      setup1
+;      assert true "Smoke test!"
+;      assert-equals (count turtles) 99
+;      assert-equals turtles (turtles with [color = red])
+;    ])
+;
+;    (list "go after setup works!" [ ->
+;      setup1
+;      go1
+;      assert-equals turtles (turtles with [xcor = 0])
+;    ])
+
+  )
 end
 
-;********** helper functions *****************
-to assert-true [statement? message]
-  if statement? = false [
-    error message 
-  ]       
-end
-
-to assert-false [statement? message]
-  if statement? = true [
-    error message 
-  ]       
-end
-
-to assert-equal [v1 v2 message]
-  if v1 != v2 [
-    error message
-  ]
-end
 
 to-report seeded-random-float [n seed]
   ;; This reporter reports a random-float n with a given seed and then resets the seed to that number
@@ -38,101 +33,103 @@ end
 
 ;*******************************
 
-to test-adjust-wage-rate
+to-report test-adjust-wage-rate
   ca
   set-constants
   let fails 0
     
-  create-firms 1 [
-    
-    ;; test when wage should be increased
-    set wage-rate 10
-    set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
-    let new-wage (1 + seeded-random-float δ 1) * 10        
-    adjust-wage-rate        
-    assert-equal wage-rate new-wage "1 FAILED test-adjust-wage-rate when wage rate should have been raised"
-  
-    ;; test when wage should stay the same 1
-    set months-with-all-positions-filled 1
-    set wage-rate 10
-    adjust-wage-rate    
-    assert-equal wage-rate 10 "FAILED test-adjust-wage-rate when wage rate should have stayed the same"
-    
-    ;; test when wage should stay the same 2
-    set months-with-all-positions-filled 23
-    adjust-wage-rate
-    assert-equal wage-rate 10 "FAILED test-adjust-wage-rate when wage rate should have stayed the same"
-    
-    ;; test when wage should lower     
-    set months-with-all-positions-filled 24
-    set wage-rate 10
-    set new-wage (1 - seeded-random-float δ 1) * 10    
-    adjust-wage-rate
-    assert-equal wage-rate new-wage "FAILED test-adjust-wage-rate when wage rate should have stayed the same"    
-  ]      
+  report [ ->
+    create-firms 1 [
+      
+      ;; test when wage should be increased
+      set wage-rate 10
+      set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
+      let new-wage (1 + seeded-random-float δ 1) * 10        
+      adjust-wage-rate        
+      assert-equals wage-rate new-wage "(1) Wage rate should have been raised"
+      
+      ;; test when wage should stay the same 1
+      set months-with-all-positions-filled 1
+      set wage-rate 10
+      adjust-wage-rate    
+      assert-equals wage-rate 10 "(2) Wage rate should have stayed the same"
+      
+      ;; test when wage should stay the same 2
+      set months-with-all-positions-filled 23
+      adjust-wage-rate
+      assert-equals wage-rate 10 "(3) wage rate should have stayed the same"
+      
+      ;; test when wage should lower     
+      set months-with-all-positions-filled 24
+      set wage-rate 10
+      set new-wage (1 - seeded-random-float δ 1) * 10    
+      adjust-wage-rate
+      assert-equals wage-rate new-wage "(4) Wage rate should have stayed the same"    
+    ]  
+  ]    
   
 end
 
 
 
-to-report test-distribute-profits
-  ca  
-  let fails 0
-  create-households 10 [
-    set liquidity 1
-  ]
-  set PROFITS-TO-ALLOCATE 100
-  distribute-profits
-  
-  if not all? households [liquidity = 11] and PROFITS-TO-ALLOCATE = 0[
-    print "FAILED test-distribute-profits when all households should have receieved equally"
-    set fails fails + 1 
-  ]
-  
-  set PROFITS-TO-ALLOCATE 108
-  ask households [set liquidity 1]
-  ask household 0 [set liquidity 9]
-  if not all? households with [who > 0] [liquidity = 7] and [liquidity] of household 0 != 63 and PROFITS-TO-ALLOCATE = 0[
-    print "FAILED test-distribute-profits when households should have received unequally"
-    set fails fails + 1 
-  ]
-  
-  report report-pass-fail "PASS all test-distribute-profits tests" fails
-end
-
-
-
-to-report test-allocate-profits
-  ca  
-  let fails 0
-  create-households 10     
-  
-  
-  create-firms 1 [
-    set wage-rate 10    
-    create-b-links-with households
-    set liquidity 10
-    allocate-profits
-    if liquidity != 10 or PROFITS-TO-ALLOCATE != 0 [
-      print "FAILED test-allocate-profits when there were no profits to allocate"
-      set fails fails + 1 
-    ]
-    
-    set liquidity 9
-    allocate-profits
-    if liquidity != 9 or PROFITS-TO-ALLOCATE != 0 [
-      print "FAILED test-allocate-profits when there were no profits to allocate"
-      set fails fails + 1 
-    ]
-    
-    set liquidity 100
-    allocate-profits
-    if liquidity != 10 or PROFITS-TO-ALLOCATE != 90 [
-      print "FAILED test-allocate-profits when there were profits to allocate"
-      set fails fails + 1 
-    ]
-  ]        
-  
-  report report-pass-fail "PASS all test-allocate-profits tests" fails
-end
-
+;to-report test-distribute-profits
+;  ca  
+;  let fails 0
+;  create-households 10 [
+;    set liquidity 1
+;  ]
+;  set PROFITS-TO-ALLOCATE 100
+;  distribute-profits
+;  
+;  if not all? households [liquidity = 11] and PROFITS-TO-ALLOCATE = 0[
+;    print "FAILED test-distribute-profits when all households should have receieved equally"
+;    set fails fails + 1 
+;  ]
+;  
+;  set PROFITS-TO-ALLOCATE 108
+;  ask households [set liquidity 1]
+;  ask household 0 [set liquidity 9]
+;  if not all? households with [who > 0] [liquidity = 7] and [liquidity] of household 0 != 63 and PROFITS-TO-ALLOCATE = 0[
+;    print "FAILED test-distribute-profits when households should have received unequally"
+;    set fails fails + 1 
+;  ]
+;  
+;  ;report report-pass-fail "PASS all test-distribute-profits tests" fails
+;end
+;
+;
+;
+;to-report test-allocate-profits
+;  ca  
+;  let fails 0
+;  create-households 10     
+;  
+;  
+;  create-firms 1 [
+;    set wage-rate 10    
+;    create-b-links-with households
+;    set liquidity 10
+;    allocate-profits
+;    if liquidity != 10 or PROFITS-TO-ALLOCATE != 0 [
+;      print "FAILED test-allocate-profits when there were no profits to allocate"
+;      set fails fails + 1 
+;    ]
+;    
+;    set liquidity 9
+;    allocate-profits
+;    if liquidity != 9 or PROFITS-TO-ALLOCATE != 0 [
+;      print "FAILED test-allocate-profits when there were no profits to allocate"
+;      set fails fails + 1 
+;    ]
+;    
+;    set liquidity 100
+;    allocate-profits
+;    if liquidity != 10 or PROFITS-TO-ALLOCATE != 90 [
+;      print "FAILED test-allocate-profits when there were profits to allocate"
+;      set fails fails + 1 
+;    ]
+;  ]        
+;  
+;  report report-pass-fail "PASS all test-allocate-profits tests" fails
+;end
+;

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+ <head>
+ <meta charset="utf-8" />
+ <title>Lengnick's Baseline Economy</title>
+ <meta name="viewport" content="width=device-width, initial-scale = 1.0" />
+ <link rel="stylesheet" href="../../../../css/normalize.min.css" />
+ <link rel="stylesheet" href="../../../../css/description.css" />
+ <script src="metadata.js"></script>
+   <script src="../../../ui/description.js"></script>
+ </head>
+ <body onload="oes.ui.setupDescription()">
+  <div id="frontMatter">
+    <h1>Lengnick's Baseline Economy</h1>
+    <p>
+      <strong>Classification tags</strong>: economics, minimal economy, DES,
+      next-event time progression
+    </p>
+    <figure class="right">
+      <img src="img/theme-image.svg" alt="factory" width="150" />
+    </figure>
+    <section id="shortDescription"></section>
+  </div>
+  <section class="mbd collapsed">
+    <h1>
+      <span>►</span>Conceptual Model <sup class="expl-req">?</sup>
+    </h1>
+    <div id="expl-CM" class="expl"></div>
+    <p>Lengnick's Baseline Economy (LBE) consists of two types of economic actors: households playing the roles of workers/employees and consumers, 
+	  and firms playing the roles of employers and producers/suppliers.
+      Households are characterized by their <em>reservation wage</em> defining
+      their expectation on their wage, and their <em>liquidity</em> (amount of
+      money). Firms are characterized by their <em>liquidity</em>, their <em>consumption
+      goods price</em>, their <em>wage rate</em> and their <em>inventory level</em>.
+    </p>
+    <p>At the start of a month, firms may adjust their wage rate and
+      consumption goods price as well as their number of employees, while
+      households may search for cheaper vendors and for a job (if unemployed) or
+      a better paid job (if employed), as well as decide on their monthly
+      consumption budget.</p>
+    <p>On each day, households purchase consumption goods and firms produce
+      new consumption goods depending on their number of workers.</p>
+    <p>At the end of a month, firms distribute profits, pay wages, and
+      decide about firing a worker. Households receive their wage and may adjust
+      their reservation wage.</p>
+    <!--
+    <section><h1>Conceptual Information Model <sup class="expl-req">?</sup></h1>
+      <div id="expl-CIM" class="expl"></div>
+    </section>
+    <section>
+      <h1>
+        Conceptual Process Model <sup class="expl-req">?</sup>
+      </h1>
+      <div id="expl-CPM" class="expl"></div>
+    </section>
+  -->
+  </section>
+  <section class="mbd collapsed">
+    <h1>
+      <span>►</span>Simulation Design Model <sup class="expl-req">?</sup>
+    </h1>
+    <div id="expl-DM" class="expl"></div>
+    <p>
+      The model is based on discrete time with <em>days</em> as time units. A <em>month</em>
+      consists of a <em>StartOfMonth</em> event followed by 21 <em>EachDay</em>
+      events representing the 21 consecutive working days of a month, which are
+      followed by an <em>EndOfMonth</em> event.
+    </p>
+    <section><h1>Information Design Model <sup class="expl-req">?</sup></h1>
+      <div id="expl-IDM" class="expl"></div>
+    <p>
+      The model is composed of the object types <em>Household</em> and <em>Firm</em>
+      as well as the event types <em>StartOfMonth</em>, <em>EachDay</em> and <em>EndOfMonth</em>.
+    </p>
+      <p>
+        The model's two object types, and their associations with each other, implemented in <kbd>Firm.js</kbd> and <kbd>Household.js</kbd>, are described in the following information design model:
+      </p>
+      <figure>
+        <img src="img/IDM-ObjectTypes.svg" width="800" />
+        <figcaption>
+          An information design model describing <i>Firm</i> and <i>Household</i>.
+        </figcaption>
+      </figure>
+    </section>
+    <section><h1>Process Design Model <sup class="expl-req">?</sup></h1>
+      <div id="expl-PDM" class="expl"></div>
+      <p>T.B.D.</p>
+    </section>
+  </section>
+  <section class="mbd collapsed"><h1><span>►</span>OESjs Simulation Model</h1>
+  <p>The OESjs simulation model implements the simulation design model presented above. It consists of two object class definitions, <kbd>Firm.js</kbd> and <kbd>Household.js</kbd>, three event class definitions, <kbd>StartOfMonth.js</kbd>, <kbd>EachDay.js</kbd> and <kbd>EndOfMonth.js</kbd>, and the <kbd>simulation.js</kbd> file. Altogether, the OESjs implementation has about 1,200 lines of JavaScript code, while the original implementation by M. Lengnick has about 2,100 lines of Java code.</p>
+  </section>
+  <section class="mbd collapsed"><h1><span>►</span>Reproducing Economics Facts and Laws</h1>
+    <section><h1>Equilibrium</h1>
+      <p>LBE is able to self-organize to a state that is very close to a general equilibrium but shows a realistic amount of unemployment (real world economies show higher unemployment rates, partly due to structural unemployment, which has not been modeled in LBE). LBE shows that the interaction of economic agents following simple behavior rules can lead to an almost fully efficient allocation on the aggregate level (as an emergent property).</p>
+    </section>
+    <section><h1>Business Cycles</h1>
+	<p>In classical economics models, which are, typically, Dynamic Stochastic General Equilibrium (<a href=" https://en.wikipedia.org/wiki/Dynamic_stochastic_general_equilibrium">DSGE</a>) models, the empirical fact of a cyclical up and down of aggregate production (called <em>business cycles</em>) has been addressed by modeling exogenous shocks (technology shocks, cost shocks, news shocks, etc.) on the economy. In the LBE model, however, business cycles occur endogenously.</p>
+	<p>Business cycles are often understood as stochastic deviations around a trend in standard macro economics. In the LBE model they are a cyclical deviation downwards from the full employment level due to coordination failures of the economic agents. This difference is crucial when considering stabilization policy.</p>
+    </section>
+    <section><h1>The Phillips Curve</h1>
+      <p>The Phillips Curve describes an empirical trade-off between unemployment and inflation. See Figure 5 in Lengnick (2013).</p>
+    </section>
+    <section><h1>The Beveridge Curve</h1>
+      <p>The Beveridge curve describes an empirical trade-off between unemployment and vacancies. See Figure 5 in Lengnick (2013).</p>
+    </section>
+    <section><h1>Right-Skewedness of Firm Size Distribution</h1>
+     <p>According to [3] and [4], it is an empirical finding that the distribution of firm size is right skewed. See Figure 6 in Lengnick (2013).</p>
+    </section>
+    <section><h1>Right-Skewedness of Price Change Frequency</h1>
+     <p>According to [7] the frequency of price changes follows a right skewed distribution with median between 9 percent and 12 percent per month. See Figure 6 in Lengnick (2013).</p>
+    </section>
+    <section><h1>Inflation and GDP</h1>
+     <p>According to [8] inflation tends to be below trend when GDP is above trend and increases in GDP tend to be followed by increases in prices. See Figure 7 in Lengnick (2013).</p>
+    </section>
+    <section><h1>Monetary Policy</h1>
+     <p>Increasing money supply in the very long run (50 and more years) creates only inflation and has no influence on the level of production. This is empirically confirmed in, e.g., [6] and [1]. See Figure 8 in Lengnick (2013).</p>
+    </section>
+
+    <section><h1>References</h1>
+<ol>
+<li>Berentsen, A., Menzio, G., Wright, R., 2011. Inflation and unemployment in the long run. American Economic Review 101 (1), 371–398.</li>
+<li>Dosi, G., Fagiolo, G., Roventini, A., 2008. The microfoundations of business cycles: an evolutionary, multi-agent model. Journal of Evolutionary Economics
+18, 413–432.</li>
+<li>Gaffeo, E., Delli Gatti, D., Desiderio, S., Gallegati, M., 2008. Adaptive microfoundations for emergent macroeconomics. Eastern Economic Journal 34 (4),
+441–463.</li>
+<li>Delli Gatti, D., Gaffeo, E., Gallegati, M., Giulioni, G., Palestrini, A., 2008. Emergent Macroeconomics. Springer, Milan.</li>
+<li>Delli Gatti, D., Gaffeo, E., Gallegati, M., 2010. Complex agent-based macroeconomics: a manifesto for a new paradigm. Journal of Economic Interaction and
+Coordination 5 (2), 111–135.</li>
+<li>McCandless, G., Weber, W., 1995. Some monetary facts. Federal Reserve Bank of Minneapolis, Quarterly Review 19 (3), 2–11.</li>
+<li>Nakamura, E., Steinsson, J., 2008. Five facts about prices: a reevaluation of menu cost models. The Quarterly Journal of Economics 4, 1415–1464.</li>
+<li>Walsh, C.E., 2010. Monetary Theory and Policy. MIT Press, Cambridge, MA.</li>
+</ol>
+    </section>
+  </section>
+  <section class="mbd collapsed"><h1><span>►</span>Related Work</h1>
+   <ul>
+    <li><a href="http://eos.cs.princeton.edu/">The Economics via Object-oriented Simulation (EOS) Project</a>
+     <p>An open-source project devoted to the highly structured simulation of complete economies.</p></li>
+    <li><a href="http://jasss.soc.surrey.ac.uk/12/4/5.html">A Model of Spatial Labor Market Frictions</a>
+     <p>Using a calibrated model able to replicate a range of stylized facts of goods and labor markets, it is examined in how far effects differ if policy measures aiming at an improvement of general skills are uniformly spread over all regions in the economy or focused in one particular region.</p></li>
+   <ul>
+  </section>
+</body>
+</html>

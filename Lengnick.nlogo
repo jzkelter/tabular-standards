@@ -2,7 +2,7 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd]
-__includes["Lengnick tests.nls"]
+__includes["Lengnick tests.nls" "unit testing.nls"]
 
 breed [households household]
 breed [firms firm]
@@ -46,12 +46,11 @@ globals [
   ϕu
   φlb
   φub
-
 ]
 
 to set-constants
   set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by
-  set γ 24  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set γ 1  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
   set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
   set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
   set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
@@ -129,7 +128,7 @@ to set-size
 end
 
 to set-house-size
-  set size .2 + (sqrt liquidity / 12)
+  set size .2 + (sqrt (abs liquidity) / 12)
 end
 
 to init-b-link
@@ -139,7 +138,6 @@ end
 
 ;;***************GO****************************
 to go
-
   ;;; beginning of the month
   ask firms [
     adjust-wage-rate
@@ -170,7 +168,7 @@ to go
     adjust-reservation-wage
     set-house-size
   ]
-  ask firms [decide-fire-workers] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+  ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set month month + 1
   tick
@@ -244,11 +242,12 @@ to adjust-price
 end
 
 
-to decide-fire-workers
+to decide-fire-worker
   (ifelse
-    desired-labor-change < 0 [
-      ask up-to-n-of abs desired-labor-change my-b-links [die]
+    desired-labor-change < 0 and n-workers > 1[  ; firms won't fire their last worker
+      ask one-of my-b-links [die]
       set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+      set desired-labor-change 0  ; no longer want to fire
     ]
     desired-labor-change = 0 [
       set months-with-all-positions-filled months-with-all-positions-filled + 1
@@ -293,6 +292,16 @@ to allocate-profits  ; firm procedure
     set liquidity buffer
   ]
 end
+
+to-report sell-consumption-good [amount-wanted]  ; firm procedure
+  set demand demand + amount-wanted
+  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  set inventory inventory - goods-sold
+  if inventory < 0 [error "inventory cannot be negative"]
+  set liquidity liquidity + goods-sold * price
+  report goods-sold
+end
+
 
 to-report decide-reserve  ; firm procedure
   report 0.1 * wage-rate * n-workers  ; 0.1 is χ in Lengnick
@@ -344,7 +353,9 @@ to search-job  ; this is when the household is unemployed
 end
 
 to search-better-paid-job  ; this is when a household is currently employed
-  if unsatisfied-with-wage? or random-float 1 < 0.1 [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
+
+  if [n-workers] of my-employer > 1 and   ; only allowed to search for better paid job if the firm will still have another worker
+       (unsatisfied-with-wage? or random-float 1 < 0.1) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
     check-random-firm-for-job [wage-rate] of my-employer
   ]
 end
@@ -360,46 +371,71 @@ end
 
 to set-consumption  ; household procedure
   let mean-price mean [price] of a-link-neighbors  ; households only know prices of their trading firms
-  let IC ideal-consumption liquidity  mean-price
-  set daily-consumption (min list (liquidity / mean-price) IC) / month-length
+  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
+  set daily-consumption total-consumption / month-length
 end
 
-to-report ideal-consumption [money avg-price]
-  report (money / avg-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
+to-report ideal-consumption [money mean-price]
+  report (money / mean-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
 end
+
+; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
+;to buy-consumption-goods  ; household procedure
+;  ask my-a-links [set demand-not-satisfied 0]
+;  let total-bought 0
+;  let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
+;  while [total-bought < 0.95 * daily-consumption and any? firms-to-try] [
+;    ; figure out the transaction
+;    let the-firm one-of firms-to-try
+;
+;    let my-demand min list daily-consumption (liquidity / [price] of the-firm) ; demand was daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+;    let relevant-inventory min list daily-consumption ([inventory] of the-firm)
+;    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
+;
+;    ; set whether demand was met from this firm
+;    ask a-link-with the-firm [
+;      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
+;    ]
+;
+;    ; adjust household variables
+;    set liquidity liquidity - total-cost
+;    let goods-sold total-cost / [price] of the-firm
+;    set total-bought total-bought + goods-sold
+;
+;    ; adjust firm variables
+;    ask the-firm [
+;      set demand demand + my-demand
+;      set inventory precision (inventory - goods-sold) 10
+;      if inventory < 0 [error "inventory cannot be negative"]
+;      set liquidity liquidity + total-cost
+;      set firms-to-try other firms-to-try  ; remove this firm from the available set
+;    ]
+;  ]
+;end
 
 to buy-consumption-goods  ; household procedure
-  ask my-a-links [set demand-not-satisfied 0]
-  let total-bought 0
+  ;ask my-a-links [set demand-not-satisfied 0]
+  let remaining-demand daily-consumption
   let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
-  while [total-bought < 0.95 * daily-consumption and any? firms-to-try] [
+
+  while [remaining-demand >= (0.05 * daily-consumption) and any? firms-to-try] [
     ; figure out the transaction
     let the-firm one-of firms-to-try
 
-    let my-demand min list daily-consumption (liquidity / [price] of the-firm) ; demand was daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
-    let relevant-inventory min list daily-consumption ([inventory] of the-firm)
-    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
-
-    ; set whether demand was met from this firm
-    ask a-link-with the-firm [
-      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
-    ]
+    let goods-wanted min list daily-consumption (liquidity / [price] of the-firm)  ; demand is daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+    let amount-bought [sell-consumption-good goods-wanted] of the-firm
 
     ; adjust household variables
-    set liquidity liquidity - total-cost
-    let goods-sold total-cost / [price] of the-firm
-    set total-bought total-bought + goods-sold
+    set liquidity liquidity - amount-bought * [price] of the-firm
+    set remaining-demand remaining-demand - amount-bought
 
-    ; adjust firm variables
-    ask the-firm [
-      set demand demand + my-demand
-      set inventory precision (inventory - goods-sold) 10
-      if inventory < 0 [error "inventory cannot be negative"]
-      set liquidity liquidity + total-cost
-      set firms-to-try other firms-to-try  ; remove this firm from the available set
+    if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
+      ask a-link-with the-firm [set demand-not-satisfied remaining-demand]
     ]
+    ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
   ]
 end
+
 
 to adjust-reservation-wage
   (ifelse
@@ -448,7 +484,7 @@ GRAPHICS-WINDOW
 1
 1
 1
-ticks
+months
 30.0
 
 BUTTON
@@ -535,10 +571,10 @@ HORIZONTAL
 PLOT
 3
 253
-203
-403
+205
+396
 Employed Households
-NIL
+years
 NIL
 0.0
 10.0
@@ -548,8 +584,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count b-links"
-"pen-1" 1.0 0 -7500403 true "" "plot n-households"
+"default" 1.0 0 -16777216 true "" "plotxy (month / 12) count b-links"
 
 PLOT
 652
@@ -561,8 +596,8 @@ NIL
 NIL
 0.0
 10.0
-40.0
-10.0
+0.0
+60.0
 true
 true
 "" ""
@@ -570,6 +605,7 @@ PENS
 "mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
 "min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
+"max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 
 PLOT
 4
@@ -598,7 +634,7 @@ worker per firm distribution
 NIL
 NIL
 0.0
-20.0
+10.0
 0.0
 20.0
 true
@@ -806,6 +842,23 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
+
+BUTTON
+990
+164
+1110
+197
+NIL
+lengnick-tests
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
