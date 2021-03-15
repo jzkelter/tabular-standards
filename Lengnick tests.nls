@@ -1,23 +1,18 @@
 
 to lengnick-tests
-  run-tests (list
-    
+  run-tests (list    
     (list "adjust-wage-rate-tests" test-adjust-wage-rate)
-    ;(list )
-;    (list "setup works?" [ ->
-;      setup1
-;      assert true "Smoke test!"
-;      assert-equals (count turtles) 99
-;      assert-equals turtles (turtles with [color = red])
-;    ])
-;
-;    (list "go after setup works!" [ ->
-;      setup1
-;      go1
-;      assert-equals turtles (turtles with [xcor = 0])
-;    ])
-
+    (list "adjust-price tests" test-adjust-price)
+    (list "test-adjust-price-realistic-values" test-adjust-price-realistic-values)
+    (list "test-adjust-job-positions" test-adjust-job-positions)
+    (list "test-produce-consumption-goods" test-produce-consumption-goods)
+    (list "test-decide-reserve" test-decide-reserve)
+    (list "test-pay-wages" test-pay-wages)
+    (list "test-distribute-profits" test-distribute-profits)
+    (list "test-adjust-reservation-wage" test-adjust-reservation-wage)
   )
+    
+
 end
 
 
@@ -34,102 +29,290 @@ end
 ;*******************************
 
 to-report test-adjust-wage-rate
-  ca
-  set-constants
-  let fails 0
     
+  
   report [ ->
+    ca
+    set-constants
+    set MONTH 10
     create-firms 1 [
       
       ;; test when wage should be increased
-      set wage-rate 10
-      set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
-      let new-wage (1 + seeded-random-float δ 1) * 10        
+      
+      set wage-rate 10      
+      ;set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
+      set last-open-position 9
+      set filled-position? false 
+      let raised-wage (1 + seeded-random-float δ 1) * 10        
       adjust-wage-rate        
-      assert-equals wage-rate new-wage "(1) Wage rate should have been raised"
-      
-      ;; test when wage should stay the same 1
-      set months-with-all-positions-filled 1
-      set wage-rate 10
-      adjust-wage-rate    
-      assert-equals wage-rate 10 "(2) Wage rate should have stayed the same"
-      
+      assert-equals wage-rate raised-wage "Wage rate should have been raised (1)"
+     
+;      ;; test when wage should stay the same 1
+;      ;set months-with-all-positions-filled 1
+;      set last-open-position 9
+;      set filled-position? true 
+;      set wage-rate 10
+;      adjust-wage-rate    
+;      assert-equals wage-rate 10 "Wage rate should have stayed the same (2)"
+;      
       ;; test when wage should stay the same 2
-      set months-with-all-positions-filled 23
+      ;set months-with-all-positions-filled 23
+      set wage-rate 10
+      set last-open-position 9.5 ; 10 - (γ / 2)
+      set filled-position? false      
       adjust-wage-rate
-      assert-equals wage-rate 10 "(3) wage rate should have stayed the same"
+      assert-equals wage-rate 10 "Wage rate should have stayed the same (3)"
       
       ;; test when wage should lower     
-      set months-with-all-positions-filled 24
+      ; set months-with-all-positions-filled 24
+      set last-open-position 10 - γ
+      set filled-position? true
       set wage-rate 10
-      set new-wage (1 - seeded-random-float δ 1) * 10    
+      let lowered-wage (1 - seeded-random-float δ 1) * 10    
       adjust-wage-rate
-      assert-equals wage-rate new-wage "(4) Wage rate should have stayed the same"    
+      assert-equals wage-rate lowered-wage "Wage rate should have lowered (4)"
     ]  
   ]    
   
 end
 
+to-report test-adjust-price
+  
+  report [-> 
+    ca
+    set-constants
+    create-firms 1 [
+      set wage-rate 1
+      set tech-parameter 3
+      set demand 5
+      
+      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * φub * .9 ; price is below upper bound cost --> okay to increaes price
+      let old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert (price > old-price) "price should have gone up (5)"
+      
+      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * φub ; price is at upper bound cost --> don't increase price      
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price (marginal-costs * φub) "price should have stayed at maximum (6)"                       
+      
+      set inventory demand * (ϕl + ϕu) / 2  ; inventory is between upper and lower bounds
+      set price marginal-costs * (φub + φlb) / 2; price is better upper and lower bounds
+      set old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price old-price "price should have stayed the same (7)"
+      
+      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * φlb * 1.1 ; price is above minimum --> okay to decrease price
+      set old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true     
+      adjust-price      
+      assert (price < old-price) "price should have gone down (7)"
+      
+      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * φlb ; price is at lower bound cost --> don't decrease price      
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true 
+      adjust-price      
+      assert-equals price (marginal-costs * φlb) "price should have stayed at minimum (7)"                  
+      
+    ]
+  ]  
+end
+  
+to-report test-adjust-price-realistic-values
+  report [->
+    ca
+    set-constants
+    create-firms 1 [
+      set tech-parameter 3
+      
+      ;; test from real data
+      set wage-rate 37.56635545717483
+      set demand 1721.691032692973
+      set inventory 81     ; inventory << (1721.691032692973 * ϕl)  -> raise prices
+      set price 1.0088541030234168   ;  marginal-costs * φub =  0.6857350599325563  --> price stays 
+      let old-price price
+      random-seed 1 ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price old-price "price should have stayed the same (8)"
+    ]
+  ]
+end
 
 
-;to-report test-distribute-profits
-;  ca  
-;  let fails 0
-;  create-households 10 [
-;    set liquidity 1
-;  ]
-;  set PROFITS-TO-ALLOCATE 100
-;  distribute-profits
-;  
-;  if not all? households [liquidity = 11] and PROFITS-TO-ALLOCATE = 0[
-;    print "FAILED test-distribute-profits when all households should have receieved equally"
-;    set fails fails + 1 
-;  ]
-;  
-;  set PROFITS-TO-ALLOCATE 108
-;  ask households [set liquidity 1]
-;  ask household 0 [set liquidity 9]
-;  if not all? households with [who > 0] [liquidity = 7] and [liquidity] of household 0 != 63 and PROFITS-TO-ALLOCATE = 0[
-;    print "FAILED test-distribute-profits when households should have received unequally"
-;    set fails fails + 1 
-;  ]
-;  
-;  ;report report-pass-fail "PASS all test-distribute-profits tests" fails
-;end
-;
-;
-;
-;to-report test-allocate-profits
-;  ca  
-;  let fails 0
-;  create-households 10     
-;  
-;  
-;  create-firms 1 [
-;    set wage-rate 10    
-;    create-b-links-with households
-;    set liquidity 10
-;    allocate-profits
-;    if liquidity != 10 or PROFITS-TO-ALLOCATE != 0 [
-;      print "FAILED test-allocate-profits when there were no profits to allocate"
-;      set fails fails + 1 
-;    ]
-;    
-;    set liquidity 9
-;    allocate-profits
-;    if liquidity != 9 or PROFITS-TO-ALLOCATE != 0 [
-;      print "FAILED test-allocate-profits when there were no profits to allocate"
-;      set fails fails + 1 
-;    ]
-;    
-;    set liquidity 100
-;    allocate-profits
-;    if liquidity != 10 or PROFITS-TO-ALLOCATE != 90 [
-;      print "FAILED test-allocate-profits when there were profits to allocate"
-;      set fails fails + 1 
-;    ]
-;  ]        
-;  
-;  report report-pass-fail "PASS all test-allocate-profits tests" fails
-;end
-;
+to-report test-adjust-job-positions
+  ;If the inventory has fallen below i_f_lbar a new open position is created in order to raise production. If,viceversa,inventories are above
+   ; i_f_ubar , a randomly chosen worker is fired, i.e. the corresponding type B connection is cut.
+   
+  report [->
+    ca
+    set-constants
+    set month 10
+    create-firms 1 [
+      set last-open-position 8
+      set demand 500
+      let inventory-upper-bound ϕu * demand
+      let inventory-lower-bound ϕl * demand
+      
+      set inventory (inventory-upper-bound + inventory-lower-bound) / 2
+      adjust-job-positions
+      assert-equals open-position? false  "position should not have been opened (9)"
+      assert-equals close-position? false  "position should not have been closed (10)"
+      assert-equals last-open-position 8 "last-open-position should have stayed = 8 (11)"
+      
+      
+      set inventory (inventory-upper-bound + 1)
+      adjust-job-positions
+      assert-equals open-position? false  "position should not have been opened (12)"
+      assert-equals close-position? true  "position should be getting closed (13)"
+      assert-equals last-open-position 8 "last-open-position should have stayed = 8 (14)"
+      
+      set inventory (inventory-lower-bound - 1)
+      adjust-job-positions
+      assert-equals open-position? true  "position should have been opened (15)"
+      assert-equals close-position? false  "position should not be getting closed (16)"
+      assert-equals last-open-position 10 "last-open-position should now be 10 (17)"
+      
+    ]
+  ]
+end
+
+
+to-report test-produce-consumption-goods
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-b-link-with myself]
+      set inventory 0
+      set tech-parameter 3
+      produce-consumption-goods
+      assert-equals inventory 9 "(18)"      
+      
+      ask my-b-links  [die]
+      produce-consumption-goods
+      assert-equals inventory 9 "inventory should still be 9 (19)"              
+    ]
+  ]
+end
+
+
+to-report test-decide-reserve
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-b-link-with myself]
+      set wage-rate 1
+      assert-equals decide-reserve χ * 1 * 3 "(20)"
+      
+      ask my-b-links [die]
+      assert-equals decide-reserve 0 "(21)"
+    ]
+  ]
+end
+
+to-report test-pay-wages
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-b-link-with myself]
+      set wage-rate 1
+      set liquidity 4
+      
+      ; Case 1: enough liquidity to pay wages
+      pay-wages
+      assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
+      assert-equals liquidity 1 "firm should have $1 left (23)"
+      
+      ; Case 2: not enough liquidity to pay wages --> immediate pay cut
+      set liquidity .75 * 3
+      pay-wages
+      assert all? households [liquidity = 1.75] "households should have wage-rate of 1 (from last time) + .75 after getting paid (23)"
+      assert-equals liquidity 0 "firm should have 0 left (24)"
+      assert-equals wage-rate .75 "Wage should now be .75 (25)"             
+    ]
+  ]
+end
+
+
+to-report test-distribute-profits
+  report [->
+    ca
+    set-constants
+    create-households 3 [
+      set liquidity 1
+    ]
+    create-firms 1 [
+      ask households [create-b-link-with myself]
+      set wage-rate 1      
+      
+      ; Case 1: enough liquidity to keep buffer but not distribute profits
+      set liquidity decide-reserve
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept all liquidity in reserve (26)"
+      assert all? households [liquidity = 1]  "households should not have gotten any profits (27)"
+      
+      ; Case 2: enough liquidity to keep buffer and distribute the rest as profits. Equal distribution
+      set liquidity decide-reserve + 3
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept reserve (28)"
+      assert all? households [liquidity = 2]  "households should have gotten profits of $1 (plus original $1) (29)"
+      
+      ; Case 2: enough liquidity to keep buffer and distribute the rest as profits. Unequal distribution
+      ask household 0 [set liquidity 4]  ; other two housholds still have liquidity of 2
+      set liquidity decide-reserve + 4
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept reserve (30)"
+      print word "liquidity of households: " [liquidity] of households
+      assert (count households with [liquidity = 3] = 2)  "Two households should have gotten profits of $1 for total of $3 (31)"
+      assert (count households with [liquidity = 6] = 1)  "One household should have gotten profits of $2 for total of $6 (originally had $4) (32)"                  
+      
+    ]    
+  ]
+end
+
+to-report test-adjust-reservation-wage 
+  report [ ->
+    ca
+    set-constants
+    create-firms 1 [
+      set wage-rate 1
+    ]
+    
+    create-households 1 [
+      create-b-link-with one-of firms
+      set reservation-wage 0.5
+      
+      ; Case 1: wage is above reservation wage --> increase to current wage
+      adjust-reservation-wage
+      assert-equals reservation-wage 1 "reservation wage should now equal wage (33)"
+      
+      ; Case 2: wage is below reservation wage --> keep same reservation wage
+      set reservation-wage 1.1
+      adjust-reservation-wage
+      assert-equals reservation-wage 1.1 "reservation wage should not change (34)"
+      
+      ; Case 3: unemployed -> decreasea reservation wage 10%
+      ask my-b-links [die]
+      set reservation-wage 1
+      adjust-reservation-wage
+      assert-equals reservation-wage 0.9 "reservation wage should have dropped 10% (35)"
+      
+      
+    ]
+      
+    
+  ]
+end

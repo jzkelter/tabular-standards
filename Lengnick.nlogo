@@ -23,7 +23,14 @@ firms-own [
   price  ; the price of goods (p_f in Lengnick)
   wage-rate ; w_f in Lengnick
   desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
-  months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
+  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
+
+  last-open-position  ; the month that the firm last had an open position
+  filled-position?  ; if the firm had an open position last month, whether or not it was filled
+
+  open-position?  ; trying to hire?
+  close-position?  ; firing at the end of the month?
+
   demand  ; the most recent demand this firm experienced for its goods
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
 ]
@@ -46,24 +53,26 @@ globals [
   ϕu
   φlb
   φub
+  χ
 ]
 
 to set-constants
-  set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by
-  set γ 1  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02)
+  set γ 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
   set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
   set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
   set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
   set ϕu 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
   set φlb 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
   set φub 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
+  set χ 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set month-length 21
 end
 
 to setup
   ca
 
   set-constants
-  set month-length 21
   set MIN-WAGE-RATE 0
   let n-trading-links 7
 
@@ -74,7 +83,7 @@ to setup
     fd 11 + random 5
     set color blue
 
-    set liquidity t0-houshold-$  ; arbitrary initial condition - I tried starting everyone with two months of wages in bank, but didn't work so well
+    set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
     set-house-size
   ]
 
@@ -103,9 +112,13 @@ to setup
   ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
     set-size
     set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
-    set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
+    ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
+    set last-open-position -2 * γ  ; arbitrarily set > γ so firms don't try to immediately lower wage
+    set filled-position? false  ; just needs to be set to a boolean
+    set open-position?  false  ; not trying to hire immediately by default
+    set close-position? false  ; not firing immediately by default
     set demand (ideal-consumption wage-rate price) * (count a-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
-    set inventory t0-inventory ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+    set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
   ]
 
   ask one-of firms [ask my-links [show-link]]
@@ -138,26 +151,40 @@ end
 
 ;;***************GO****************************
 to go
-  ;;; beginning of the month
+  go-beginning-of-month-firms
+  go-beginning-of-month-households
+  go-month
+  go-end-of-month
+  tick
+end
+
+
+to go-beginning-of-month-firms
   ask firms [
     adjust-wage-rate
     adjust-job-positions
     adjust-price
     set demand 0  ; reset demand for the month
   ]
+end
+
+to go-beginning-of-month-households
   ask households [
     search-cheaper-vendor
     search-delivery-capable-vendor
     search-for-employement
     set-consumption
   ]
-
+end
+to go-month
   ;;; during month
   repeat month-length [
     ask households [buy-consumption-goods]
     ask firms [produce-consumption-goods]
   ]
+end
 
+to go-end-of-month
   ;;; end of month
   ask firms [
     pay-wages
@@ -171,9 +198,7 @@ to go
   ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set month month + 1
-  tick
 end
-
 
 
 to-report beginning-of-month?  ; observer procedure
@@ -202,59 +227,102 @@ end
 
 ;*******************Firm Procedures*********************
 to adjust-wage-rate  ; firm procedure
+
+  ;; NOTE: this is how Nardin implements it. Lengnick implements it differently
   (ifelse
-    failed-to-hire? [  ; If the firm tried to hire last month and failed, indcreaes wage rate.
+    last-open-position = (MONTH - 1) and not filled-position? [  ; firm had an open position last month and failed to fill
       set wage-rate (1 + random-float δ) * wage-rate
     ]
-    months-with-all-positions-filled >= γ [ ; If all hires in past γ months have succeded, lower wage rate.
+    (MONTH - last-open-position) >= γ [ ; If all hires in past γ months have succeded, lower wage rate.
       set wage-rate max list ((1 - random-float δ) * wage-rate) MIN-WAGE-RATE  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
     ])
+
 end
 
-to-report failed-to-hire?  ; firm procedure. Reports if firm failed to hire last month
-  report months-with-all-positions-filled = 0 ;
-end
+;to-report failed-to-hire?  ; firm procedure. Reports if firm failed to hire last month
+;  report months-with-all-positions-filled = 0 ;
+;end
 
 to adjust-job-positions  ; firm procedure
+  ; This was my implementation, changing to match Nardin/Jake
+;  (ifelse
+;    inventory <  ϕl * demand [
+;      set desired-labor-change 1  ; try to hire
+;    ]
+;    inventory > ϕu * demand [
+;      set desired-labor-change -1  ; fire at the end of month
+;    ] [  ; else if inventory is within desired range
+;      set desired-labor-change 0  ; don't change labor
+;    ]
+;  )
+  set filled-position? false  ; reset this, because none of the firms have filled a position at the beginning of a month
   (ifelse
-    inventory <  ϕl * demand [
-      set desired-labor-change 1  ; try to hire
+    inventory <  ϕl * demand [  ; inventory is low
+      set open-position? true  ; try to hire
+      set close-position? false  ; don't fire anyone
+      set last-open-position MONTH  ; this month is the last open position
     ]
-    inventory > ϕu * demand [
-      set desired-labor-change -1  ; fire at the end of month
+    inventory > ϕu * demand [  ; inventory is high
+      set open-position? false  ; don't hire
+      set close-position? true  ; fire
     ] [  ; else if inventory is within desired range
-      set desired-labor-change 0  ; don't change labor
+      ;; Nardin doesn't have anything here
+      set open-position? false
+      set close-position? false
     ]
   )
+
 end
 
 to adjust-price
-  (ifelse
-    ;;
-    (inventory < ϕl * demand) and (price < marginal-costs * φlb) and (random-float 1 < θ) [  ; if inventory is low and price is below threshold, with probability θ:
-      set price price * (1 + random-float ν)  ;; increase price by random amount
-    ]
+;  (ifelse
+;    ;;
+;    inventory < (ϕl * demand) and random-float 1 < θ [  ; if inventory is low and price is below threshold, with probability θ:
+;      set price min list (price * (1 + random-float ν)) (marginal-costs * φub)  ;; increase price by random amount, but don't go above critical upper bound
+;    ]
+;
+;    inventory > (ϕu * demand) and random-float 1 < θ [  ; if inventory is high and price is above threshold, with probability θ:
+;      set price max list (price * (1 - random-float ν)) (marginal-costs * φlb)  ;; decrease price by random amount, but don't go below critical lower bound
+;    ]
+;  )
 
-    (inventory > ϕu * demand) and (price > marginal-costs * φub) and random-float 1 < θ [  ; if inventory is high and price is above threshold, with probability θ:
-      set price price * (1 - random-float ν)  ;; decrease price by random amount.
+  (ifelse
+    ; if inventory is low and price is below upper threshold, with probability θ increase prce
+    (inventory < ϕl * demand) and (price < marginal-costs * φub) and (random-float 1 < θ) [
+      set price price * (1 + random-float ν)
+    ]
+    ; if inventory is high and price is above lower threshold, with probability θ decrease price
+    (inventory > ϕu * demand) and (price > marginal-costs * φlb) and random-float 1 < θ [  ;
+      set price price * (1 - random-float ν)
     ]
   )
 end
 
 
 to decide-fire-worker
-  (ifelse
-    desired-labor-change < 0 and n-workers > 1[  ; firms won't fire their last worker
-      ask one-of my-b-links [die]
-      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
-      set desired-labor-change 0  ; no longer want to fire
-    ]
-    desired-labor-change = 0 [
-      set months-with-all-positions-filled months-with-all-positions-filled + 1
-    ] [  ; if the firm still wants to hire at the end of the month
-      set months-with-all-positions-filled 0
-    ]
-  )
+
+;  (ifelse
+;    desired-labor-change < 0 and n-workers > 1 [  ; firms won't fire their last worker
+;      ask one-of my-b-links [die]
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+;      set desired-labor-change 0  ; no longer want to fire
+;    ]
+;    desired-labor-change = 0 [
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1
+;    ] [  ; if the firm still wants to hire at the end of the month
+;      set months-with-all-positions-filled 0
+;    ]
+;  )
+
+
+  if close-position? and n-workers > 1 [  ; firms won't fire their last worker
+    ask one-of my-b-links [die]
+    ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+    set desired-labor-change 0  ; no longer want to fire
+  ]
+  set close-position? false
+
+
   set-size
 end
 
@@ -304,7 +372,7 @@ end
 
 
 to-report decide-reserve  ; firm procedure
-  report 0.1 * wage-rate * n-workers  ; 0.1 is χ in Lengnick
+  report χ * wage-rate * n-workers  ; 0.1 is χ in Lengnick
 end
 
 ;*******************Household Procedures*********************
@@ -362,11 +430,29 @@ end
 
 to check-random-firm-for-job [min-wage]  ; household procedure
   let the-firm one-of firms
-  if [desired-labor-change] of the-firm > 0 and [wage-rate] of the-firm >= min-wage [
-    ask my-b-links [die]  ; in case they are switching jobs
+  ;if [desired-labor-change] of the-firm > 0 and [wage-rate] of the-firm >= min-wage [
+  if [open-position?] of the-firm and [wage-rate] of the-firm >= min-wage [
+
+    if employed? [quit-job]
+
     create-b-link-with the-firm [init-b-link]
-    ask the-firm [set desired-labor-change desired-labor-change - 1]
+    ;ask the-firm [set desired-labor-change desired-labor-change - 1]
+
+    ask the-firm [
+      set open-position? false  ;
+      set filled-position? true
+      set close-position? false  ; this shouldn't need to happen here, but why not
+    ]
   ]
+end
+
+to quit-job
+
+  ask my-employer [
+    set close-position? false
+    if who = 1050 [print (word "tick " ticks " someone quit from firm 1050 :(")]
+  ]
+  ask my-b-links [die]
 end
 
 to set-consumption  ; household procedure
@@ -376,7 +462,13 @@ to set-consumption  ; household procedure
 end
 
 to-report ideal-consumption [money mean-price]
-  report (money / mean-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
+  let ic 0
+  carefully [
+    set ic (money / mean-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
+  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
+    print error-message
+  ]
+  report ic
 end
 
 ; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
@@ -456,15 +548,19 @@ to-report unemployed?  ; household procedure
   report count my-b-links = 0
 end
 
+to-report employed?
+  report count my-b-links = 1
+end
+
 to-report unsatisfied-with-wage?  ; household procedure
   report [wage-rate] of my-employer < reservation-wage
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-647
-448
+205
+44
+642
+482
 -1
 -1
 13.0
@@ -490,10 +586,10 @@ months
 BUTTON
 0
 149
-55
+66
 182
-NIL
 setup
+stop-inspecting-dead-agents\nsetup
 NIL
 1
 T
@@ -505,12 +601,12 @@ NIL
 1
 
 BUTTON
-114
+124
 149
-195
+205
 182
 go-once
-go
+go\n
 NIL
 1
 T
@@ -522,9 +618,9 @@ NIL
 0
 
 BUTTON
-57
+67
 149
-112
+122
 182
 NIL
 go
@@ -570,8 +666,8 @@ HORIZONTAL
 
 PLOT
 3
-253
-205
+186
+201
 396
 Employed Households
 years
@@ -606,13 +702,14 @@ PENS
 "min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
+"median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 
 PLOT
 4
 407
 204
 557
-Failed to Hire
+open positions
 NIL
 NIL
 0.0
@@ -623,7 +720,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count firms with [failed-to-hire?]"
+"default" 1.0 0 -16777216 true "" "plot count firms with [open-position?]"
 
 PLOT
 212
@@ -634,7 +731,7 @@ worker per firm distribution
 NIL
 NIL
 0.0
-10.0
+20.0
 0.0
 20.0
 true
@@ -734,12 +831,12 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
 
 BUTTON
-0
-192
-77
-225
-go-day
-\nask households [buy-consumption-goods]\nask firms [produce-consumption-goods]\ntick
+237
+10
+310
+43
+bmonth-f
+go-beginning-of-month-firms\n
 NIL
 1
 T
@@ -751,12 +848,12 @@ NIL
 1
 
 BUTTON
-80
-192
-175
-225
+391
+10
+486
+43
 go-month
-repeat month-length [\nask households [buy-consumption-goods]\nask firms [produce-consumption-goods]\n]
+go-month\n
 NIL
 1
 T
@@ -784,28 +881,6 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [inventory] of firms"
-
-INPUTBOX
-88
-80
-173
-140
-t0-houshold-$
-98.78
-1
-0
-Number
-
-INPUTBOX
-3
-82
-81
-142
-t0-inventory
-50.0
-1
-0
-Number
 
 PLOT
 858
@@ -844,10 +919,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
 
 BUTTON
-990
-164
-1110
-197
+992
+21
+1112
+54
 NIL
 lengnick-tests
 NIL
@@ -859,6 +934,86 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+859
+145
+1059
+295
+firm 1050 employees
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot [n-workers] of firm 1050"
+
+BUTTON
+180
+10
+235
+43
+dsetup
+\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+487
+10
+631
+43
+go-end-of-month
+go-end-of-month\ntick\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+312
+10
+389
+43
+bmonth-h
+go-beginning-of-month-households\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+1025
+232
+1150
+277
+firm 1050 employees
+[n-workers] of firm 1050
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?

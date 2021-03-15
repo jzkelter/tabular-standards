@@ -6,10 +6,11 @@
 ; and `assert-equals` to check results.
 
 to run-tests [tests]
+  print "---------------running tests:"
   let tests-run 0
   let tests-failed 0
   foreach tests [ test ->
-    set tests-run (tests-run + 1)
+    set tests-run (tests-run + 1)    
     if not run-test (item 0 test) (item 1 test) [
       set tests-failed (tests-failed + 1)
     ]
@@ -20,7 +21,8 @@ to run-tests [tests]
   ]
 end
 
-to-report run-test [name test]
+to-report run-test [name test]  
+  ca
   let passed true
   carefully [
     run test
@@ -32,9 +34,9 @@ to-report run-test [name test]
   report passed
 end
 
-to assert-equals [expected actual]
+to assert-equals [actual expected message]
   if not (expected = actual) [
-    error (word "Expected: " expected ", but got " actual)
+    error (word "Expected: " expected ", but got " actual ". " message)
   ]
 end
 
@@ -68,14 +70,14 @@ to model-tests
     (list "setup works?" [ ->
       setup1
       assert true "Smoke test!"
-      assert-equals (count turtles) 99
-      assert-equals turtles (turtles with [color = red])
+      assert-equals (count turtles) 99 ""
+      assert-equals turtles (turtles with [color = red]) ""
     ])
 
     (list "go after setup works!" [ ->
       setup1
       go1
-      assert-equals turtles (turtles with [xcor = 0])
+      assert-equals turtles (turtles with [xcor = 0]) ""
     ])
 
   )
@@ -87,8 +89,8 @@ to model-test-fail-example
     (list "setup works!" [ ->
       setup
       assert true "Smoke test!"
-      assert-equals (count turtles) 100
-      assert-equals turtles (turtles with [color = blue])
+      assert-equals (count turtles) 100 ""
+      assert-equals turtles (turtles with [color = blue]) ""
     ])
 
   )
