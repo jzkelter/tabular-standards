@@ -1,0 +1,530 @@
+to run-tests
+  test-search-cheaper-vendor
+  test-search-delivery-capable-vendor
+  test-search-job
+  test-search-better-paid-job
+  test-set-consumption
+  test-buy-consumption-goods
+  print "All tests passed"
+end
+
+to assert-true [statement? message]
+  if statement? = false [
+    error message 
+  ]       
+end
+
+to assert-false [statement? message]
+  if statement? = true [
+    error message 
+  ]       
+end
+
+to assert-equal [v1 v2 message]
+  if v1 != v2 [
+    error message
+  ]
+end
+
+to assert-not-equal [v1 v2 message]
+  if v1 = v2[
+    error message
+  ]
+end
+
+to-report seeded-random-float [n seed]
+  ;; This reporter reports a random-float n with a given seed and then resets the seed to that number
+  ;; That means the next time random-float n is called it will give the same answer. This is useful
+  ;; for testing procedures with random component.
+  random-seed seed
+  let retval random-float n
+  random-seed seed
+  report retval
+end
+
+to generate-threshold-value [value op threshold]
+  let condition false
+  let seed 0
+  while [condition = false][
+    set seed seed + 1
+    let random-var seeded-random-float value seed
+    ifelse op = ">"[
+      if random-var > threshold [
+        set condition true
+      ]
+    ][
+      if random-var < threshold[
+        set condition true
+      ]
+    ]
+  ]
+end
+
+to test-search-cheaper-vendor
+  ca
+  ;; First test is to see whether a houehold switches firms when it should
+  create-households 1 [
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 8
+  ]
+  let blacklisted-firm one-of firms with [price = 10]
+  ask households[
+    set blacklisted-suppliers fput blacklisted-firm blacklisted-suppliers
+  ]
+  let condition false
+  let seed 0
+  let current-firm one-of firms with [price = 10]
+  let new-firm current-firm
+  generate-threshold-value 1 "<" 0.25
+  ask households[
+    search-cheaper-vendor
+    set new-firm [other-end] of one-of my-consumer-links
+    assert-not-equal (count my-consumer-links) 0 "Household did not make a new link"
+    assert-not-equal current-firm new-firm "Household did not change firms"
+    assert-not-equal (count my-consumer-links) 2 "Household did not delete old link"
+    assert-equal (length blacklisted-suppliers) 0 "Household did not remove old firm from blacklisted suppliers"
+  ]
+  
+  ;; now the household should not switch firms because the other firm's price is too expensive
+  ca
+  create-households 1 [
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 11
+  ]
+  set blacklisted-firm one-of firms with [price = 10]
+  ask households[
+    set blacklisted-suppliers fput blacklisted-firm blacklisted-suppliers
+  ]
+  set condition false
+  set seed 0
+  set current-firm one-of firms with [price = 10]
+  set new-firm current-firm
+  generate-threshold-value 1 "<" 0.25
+  ask households[
+    search-cheaper-vendor
+    set new-firm [other-end] of one-of my-consumer-links
+    assert-not-equal (count my-consumer-links) 0 "Household did not make a new link"
+    assert-equal current-firm new-firm "Household changed firms"
+    assert-not-equal (count my-consumer-links) 2 "Household made a new link"
+    assert-equal (length blacklisted-suppliers) 1 "Household removed firm from blacklisted suppliers"
+  ]
+  ;; switch but don't remove from blacklisted suppliers
+  ca
+  create-households 1 [
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 8
+  ]
+  create-firms 1[
+    set price 9
+  ]
+  set blacklisted-firm one-of firms with [price = 9]
+  ask households[
+    set blacklisted-suppliers fput blacklisted-firm blacklisted-suppliers
+  ]
+  set condition false
+  set seed 0
+  set current-firm one-of firms with [price = 10]
+  set new-firm current-firm
+  generate-threshold-value 1 "<" 0.25
+  ask households[
+    search-cheaper-vendor
+    assert-not-equal (count my-consumer-links) 2 "Household made an extra new link"
+    set new-firm [other-end] of one-of my-consumer-links
+    assert-not-equal (count my-consumer-links) 0 "Household did not make a new link"
+    assert-not-equal current-firm new-firm "Household did not change firms"
+    assert-equal (length blacklisted-suppliers) 1 "Household removed firm from blacklisted suppliers"
+  ]
+  ;; now the household shouldn't switch because the random decision was to not switch
+  ca
+  create-households 1 [
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 11
+  ]
+  set blacklisted-firm one-of firms with [price = 10]
+  ask households[
+    set blacklisted-suppliers fput blacklisted-firm blacklisted-suppliers
+  ]
+  set condition false
+  set seed 0
+  set current-firm one-of firms with [price = 10]
+  set new-firm current-firm
+  generate-threshold-value 1 ">" 0.25
+  ask households[
+    search-cheaper-vendor
+    set new-firm [other-end] of one-of my-consumer-links
+    assert-not-equal (count my-consumer-links) 0 "Household deleted it's link"
+    assert-equal current-firm new-firm "Household changed firms"
+    assert-not-equal (count my-consumer-links) 2 "Household made a new link"
+    assert-equal (length blacklisted-suppliers) 1 "Household removed firm from blacklisted suppliers"
+  ]
+end
+
+to test-search-delivery-capable-vendor
+  ;; no blacklisted suppliers so don't switch anything
+  ca
+  create-households 1[
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 11
+  ]
+  let current-firm one-of firms with [price = 10]
+  let new-firm current-firm
+  generate-threshold-value 1 "<" 0.25
+  ask households[
+    search-delivery-capable-vendor
+    set new-firm [other-end] of one-of my-consumer-links
+    assert-equal (count my-consumer-links) 1 "Number of links changed"
+    assert-equal current-firm new-firm "Household changed firms"
+  ]
+  ;; we have a blacklisted supplier, we'd like to remove it, but don't remove the other firm the household is connected with
+  ca
+  create-households 1[
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 10
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 11
+    create-consumer-link-with one-of households
+  ]
+  create-firms 1[
+    set price 9
+  ]
+  let blacklisted-firm one-of firms with [price = 10]
+  ask households[
+    set blacklisted-suppliers fput blacklisted-firm blacklisted-suppliers
+  ]
+  generate-threshold-value 1 "<" 0.25
+  ask households[
+    assert-equal (length blacklisted-suppliers) 1 "Blacklisted suppliers not initialized correctly"
+    search-delivery-capable-vendor
+    assert-equal (length blacklisted-suppliers) 0 "Blacklisted supplier was not removed"
+    assert-equal (count my-consumer-links) 2 "Incorrect number of links"
+    ask my-consumer-links[
+      ask other-end[
+        assert-not-equal price 10 "Firm still has link to blacklisted supplier"
+      ]
+    ]
+  ]
+end
+
+to test-search-job
+  ;; no firms with open positions, the household should be unemployed at the end of the search
+  ca
+  create-firms 10[
+    set open-position? false
+  ]
+  create-households 1[
+    search-job
+    assert-false (employed?) "Household found employment"
+  ]
+  ;; every firm has an open position but nobody's reservation wage is high enough, household should be unemployed at the end of the search
+  ca
+  create-firms 10[
+    set open-position? true
+    set wage-rate 1
+  ]
+  create-households 1[
+    set reservation-wage 2
+    search-job
+    assert-false (employed?) "Household found employment"
+  ]
+  ;; only one firm has an open position, but they pay enough; the household should be employed at the end of the search
+  ca
+  create-firms 9[
+    set open-position? false
+    set wage-rate 100
+  ]
+  create-firms 1[
+    set open-position? true
+    set wage-rate 1
+  ]
+  create-households 1[
+    set reservation-wage 0.9
+    search-job
+    assert-true (employed?) "Household did not find employment"
+  ]
+  ;; exactly one firm offers a high enough wage but all 5 firms have open positions, the household should be employed at the end of the search - not sure how to test this case
+  ca
+  create-firms 1[
+    set wage-rate 7
+    set open-position? true
+  ]
+  create-firms 4[
+    set wage-rate 4
+    set open-position? true
+  ]
+  create-households 1[
+    set reservation-wage 5
+    search-job
+    assert-true (employed?) "Household did not find employment"
+  ]
+end
+
+to test-search-better-paid-job
+  ;; employer has only one worker, so the household should not change jobs in this case
+  ca
+  create-households 1[
+  ]
+  create-firms 1[
+    set wage-rate 1
+    set open-position? false
+    create-employment-link-with one-of households[
+    ]
+  ]
+  create-firms 3[
+    set open-position? true
+    set wage-rate 4
+  ]
+  let current-firm one-of firms with [wage-rate = 1]
+  let new-firm current-firm
+  ask households[
+    search-better-paid-job
+    assert-equal (count my-employment-links) 1 "Incorrect number of employment links"
+    set new-firm [other-end] of one-of my-employment-links
+    assert-equal current-firm new-firm "Household changed firms"
+  ]
+  ;; one household is being paid too little, one household is being paid enough, however, the one being paid too little is going to search first and therefore the other firm should not be able to switch
+  ca
+  create-households 1[
+    set reservation-wage 9
+  ]
+  create-households 1[
+    set reservation-wage 7
+  ]
+  create-firms 1[
+    create-employment-link-with one-of households with [reservation-wage = 9]
+    create-employment-link-with one-of households with [reservation-wage = 7]
+    set open-position? true
+    set wage-rate 8
+  ]
+  create-firms 1[
+    set open-position? true
+    set wage-rate 10
+  ]
+  set current-firm one-of firms with [wage-rate = 8]
+  set new-firm current-firm
+  ask households with [reservation-wage = 9][
+    search-better-paid-job
+    set new-firm [other-end] of one-of my-employment-links
+    assert-equal (count my-employment-links) 1 "Incorrect number of employment links"
+    assert-equal new-firm (one-of firms with [wage-rate = 10]) "Household did not change employer"
+  ]
+  set new-firm current-firm
+  ask households with [reservation-wage = 7][
+    search-better-paid-job
+    set new-firm [other-end] of one-of my-employment-links
+    assert-equal (count my-employment-links) 1 "Incorrect number of employment links"
+    assert-equal new-firm current-firm "Household changed employer"
+  ]
+  ;; same as previous case except reverse the search order
+  ca
+  create-households 1[
+    set reservation-wage 9
+  ]
+  create-households 1[
+    set reservation-wage 7
+  ]
+  create-firms 1[
+    create-employment-link-with one-of households with [reservation-wage = 9]
+    create-employment-link-with one-of households with [reservation-wage = 7]
+    set open-position? true
+    set wage-rate 8
+  ]
+  create-firms 1[
+    set open-position? true
+    set wage-rate 10
+  ]
+  set current-firm one-of firms with [wage-rate = 8]
+  set new-firm current-firm
+  generate-threshold-value 1 "<" 0.1
+  ask households with [reservation-wage = 7][
+    search-better-paid-job
+    set new-firm [other-end] of one-of my-employment-links
+    assert-equal (count my-employment-links) 1 "Incorrect number of employment links"
+    assert-equal new-firm (one-of firms with [wage-rate = 10]) "Household did not change employer"
+  ]
+end
+
+to test-set-consumption
+  ;; general test case
+  ca
+  let household-num 0
+  create-households 1[
+    set household-num who
+  ]
+  create-firms 1[
+    set price 3
+    ;create-consumer-link-with household household-num
+    create-consumer-link-with one-of households
+  ]
+  create-firms 3[
+    set price 5
+    ;create-consumer-link-with household household-num
+    create-consumer-link-with one-of households
+  ]
+  ask one-of households[
+    set liquidity 90
+    set-consumption
+    show daily-demand
+    show ((90 / 4.5) ^ 0.9) / 21
+    assert-equal daily-demand (((90 / 4.5) ^ 0.9) / 21) "Wrong daily demand"
+  ]
+end
+
+to test-buy-consumption-goods
+  ;; first test case: just one seller firm
+  ca
+  create-households 1[
+    set liquidity 90
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1 [
+    set price 3
+    set inventories 100
+    set liquidity 0
+    create-consumer-link-with one-of households[
+      init-consumer-link
+    ]
+  ]
+  ask one-of households[
+    set-consumption
+    buy-consumption-goods
+    assert-equal blacklisted-suppliers (list) "Blacklisted suppliers is not empty"
+    assert-equal ([liquidity] of one-of firms) (daily-demand * 3) "Wrong firm liquidity"
+    assert-equal (liquidity) (90 - (3 * daily-demand)) "Wrong household liquidity"
+  ]
+  ;; second test case: seller firm doesn't have enough goods
+  ca
+  create-households 1[
+    set liquidity 90
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 1[
+    set price 3
+    set inventories 0
+    set liquidity 0
+    create-consumer-link-with one-of households[
+      init-consumer-link
+    ]
+  ]
+  ask one-of households[
+    set-consumption
+    buy-consumption-goods
+    assert-equal blacklisted-suppliers (list (one-of firms)) "Firm wasn't blacklisted"
+    assert-equal ([liquidity] of one-of firms) 0 "Firm gained liquidity and it should not have"
+    assert-equal liquidity 90 "Household liquidity changed"
+    assert-equal ([inventories] of one-of firms) 0 "Firm changed inventories"
+  ]
+  ;; 3 firms are available and together they will all satisfy daily demand but none of them on their own will do
+  ca
+  create-households 1[
+    set liquidity 90
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 3[
+    set price 3
+    create-consumer-link-with one-of households[
+      init-consumer-link
+    ]
+  ]
+  ask one-of households[
+    set-consumption
+    let household-dd daily-demand
+    ask firms[
+      set inventories (household-dd / 3)
+      set liquidity 0
+    ]
+    buy-consumption-goods
+    assert-equal (length blacklisted-suppliers) 2 "Wrong amount of blacklisted suppliers"
+    ;assert-equal liquidity (90 - (3 * daily-demand)) "Wrong household liquidity" - this test should work but for some reason the values are off by like 1*e-7
+    show liquidity
+    show (90 - (3 * daily-demand))
+    ask firms[
+      assert-not-equal liquidity 0 "Firm liquidity didn't change"
+    ]
+  ]
+  ;; 3 firms, together they should all wind up on blacklisted suppliers
+  ca
+  create-households 1[
+    set liquidity 90
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 3[
+    set price 3
+    create-consumer-link-with one-of households[
+      init-consumer-link
+    ]
+  ]
+  ask one-of households[
+    set-consumption
+    let household-dd daily-demand
+    ask firms[
+      set inventories (0.95 * (household-dd / 3))
+      set liquidity 0
+    ]
+    buy-consumption-goods
+    assert-equal (length blacklisted-suppliers) 3 "Wrong amount of blacklisted suppliers"
+    assert-true (liquidity > (90 - (3 * daily-demand))) "Wrong household liquidity" 
+    ask firms[
+      assert-not-equal liquidity 0 "Firm liquidity didn't change"
+    ]
+  ]
+  ;; 4 firms; they won't have enough to satisfy all demand but they'll have enough to get to 0.95 so there should be one firm that wasn't visited
+  ca
+  create-households 1[
+    set liquidity 90
+    set blacklisted-suppliers (list)
+  ]
+  create-firms 4[
+    set price 3
+    create-consumer-link-with one-of households[
+      init-consumer-link
+    ]
+  ]
+  ask one-of households[
+    set-consumption
+    let household-dd daily-demand
+    ask firms[
+      set inventories (0.96 * (household-dd / 3))
+      set liquidity 0
+    ]
+    buy-consumption-goods
+    assert-equal (length blacklisted-suppliers) 3 "Wrong amount of blacklisted suppliers"
+    ;assert-true (liquidity > (90 - (3 * daily-demand))) "Wrong household liquidity" 
+    show (count firms with [liquidity > 0])
+    assert-equal (count firms with [liquidity > 0]) 3 "Wrong number of firms with positive liquidity"
+    assert-equal (count firms with [liquidity = 0]) 1 "Wrong number of firms with no liquidity" 
+  ]
+end

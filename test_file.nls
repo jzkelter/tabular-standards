@@ -1,0 +1,52 @@
+to setup-test
+  clear-all
+  initiate-globals
+  set WAGE-RATE 20
+  test-setup-indices
+  let firm-data csv:from-file "Test_structure.csv"
+  foreach butfirst firm-data[d ->
+    let input-data-list read-from-string (item 3 d)
+    set d replace-item 3 d input-data-list
+    setup-firms (item 0 d) (item 1 d) (item 2 d) input-data-list (item 4 d)
+  ]
+  finalize-global-firm-data
+  layout
+  set firm-data butfirst firm-data
+  ;set WAGE-RATE 20
+  initiate-framework-agreements
+  reset-ticks
+end
+
+to test-go
+  test-estimate-demand
+  run-order-cycle
+  run-production-cycle
+  sell-consumer-goods
+  fire-labor
+  reset
+  tick
+end
+
+to test-estimate-demand
+  ask consumer-good-firms[
+    ifelse time:is-equal DATE PRODUCTION-START-DATE[
+      set price (get-atc * (1 + MARKUP-RULE))
+      set estimated-demand ((LABOR-FORCE-SIZE * WAGE-RATE) / price) 
+      set desired-production estimated-demand
+    ][
+      set estimated-demand actual-demand
+      set price (get-atc * (1 + MARKUP-RULE))
+      set desired-production (estimated-demand - inventories)
+    ]
+
+  ]
+end
+
+to test-setup-indices
+  set INDICES table:make
+  table:put INDICES "Index 1" 1
+  table:put INDICES "Index 2" 1
+  table:put INDICES "Index 3" 1
+  table:put INDICES "Index 4" 1
+  table:put INDICES "Index 5" 1
+end
