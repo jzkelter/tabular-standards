@@ -1,0 +1,100 @@
+; Code below here is the fancy NetLogo Unit Testing Library.
+
+; `run-tests` is the entry point, and it takes a list of pairs
+; where the first item is the test name, the second item is an
+; anonymous command that runs the code to test and uses the `assert`
+; and `assert-equals` to check results.
+
+to run-tests [tests]
+  print "---------------running tests:"
+  let tests-run 0
+  let tests-failed 0
+  foreach tests [ test ->
+    set tests-run (tests-run + 1)    
+    if not run-test (item 0 test) (item 1 test) [
+      set tests-failed (tests-failed + 1)
+    ]
+  ]
+  show (word tests-run " tests run.")
+  if tests-failed > 0 [
+    print (word "*** " tests-failed " tests failed!")
+  ]
+end
+
+to-report run-test [name test]  
+  ca
+  let passed true
+  carefully [
+    run test
+    print (word name ": passed")
+  ] [
+    print (word "*** " name " failed!  " error-message)
+    set passed false
+  ]
+  report passed
+end
+
+to assert-equals [actual expected message]
+  if not (expected = actual) [
+    error (word "Expected: " expected ", but got " actual ". " message)
+  ]
+end
+
+to assert [condition message]
+  if not condition [
+    error message
+  ]
+end
+
+
+;; Examples:
+
+to setup1
+  clear-all
+  create-turtles 100 [
+    fd 100
+    set color red
+  ]
+  reset-ticks
+end
+
+to go1
+  ask turtles [
+    set xcor 0
+  ]
+end
+
+to model-tests
+  run-tests (list
+
+    (list "setup works?" [ ->
+      setup1
+      assert true "Smoke test!"
+      assert-equals (count turtles) 99 ""
+      assert-equals turtles (turtles with [color = red]) ""
+    ])
+
+    (list "go after setup works!" [ ->
+      setup1
+      go1
+      assert-equals turtles (turtles with [xcor = 0]) ""
+    ])
+
+  )
+end
+
+to model-test-fail-example
+  run-tests (list
+
+    (list "setup works!" [ ->
+      setup
+      assert true "Smoke test!"
+      assert-equals (count turtles) 100 ""
+      assert-equals turtles (turtles with [color = blue]) ""
+    ])
+
+  )
+end
+
+
+

@@ -1,0 +1,54 @@
+<!-- ===========================================================================
+ * Generic simulation HTML file (can be customized by adding content elements)
+ * @copyright 2016 Gerd Wagner and Mircea Diaconescu, BTU (Germany) + ODU (VA, USA)
+ * @author Gerd Wagner and Mircea Diaconescu
+ * @license The MIT License (MIT)
+================================================================================ -->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta charset="utf-8"/>
+ <title>OES BaselineEconomy-1</title>
+  <meta name="viewport" content="width=device-width, initial-scale = 1.0" />
+  <style>
+    html { font-family: sans-serif;}
+    #sim4eduinfo { font-size: 90%;}
+    body > header > h1 {
+      font-size: 140%;
+      margin: 0.67em 0;
+      margin-top: 0.2em;
+    }
+    noscript > p { font-size: 1.2em; color: red;}
+  </style>
+ <!-- Global site tag (gtag.js) - Google Analytics -->
+ <script async src="https://www.googletagmanager.com/gtag/js?id=UA-98612205-1"></script>
+ <script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-98612205-1');
+ </script>
+  <!-- Load polyfills for supporting >=IE9 -->
+  <script src="https://cdn.polyfill.io/v2/polyfill.js?features=Array.from,Array.prototype.find,Array.prototype.includes,DOMTokenList,Element.prototype.after,Element.prototype.before,Element.prototype.classList,Element.prototype.cloneNode,Number.isInteger,Object.keys,Object.values,Promise,String.prototype.includes,console.log,fetch,&flags=gated" defer async></script>
+</head>
+<body>
+ <div id="frontMatter">
+  <div id="sim4eduinfo">Created with the <i>Object Event Simulation (OES)</i>
+   framework <b><i>OESjs</i></b> available from <a href='https://sim4edu.com'>sim4edu.com</a>.
+  </div>
+  <h1>Lengnick's Baseline Economy</h1>
+ </div>
+ <main>
+     <div id='model-menu'>
+         <button type='button' onclick='oes.ui.showNarrative()'>Narrative</button>
+         <button type='button' onclick='oes.ui.showDescription()'>Description</button>
+         <button id='showCodeBtn' type='button' onclick='oes.ui.showCode()'>Code</button>
+     </div>
+ </main>
+<!-- load scenario.js and all files required by it, and set up the user interface -->
+<script src="../loadManager.js"></script>
+<noscript>
+  <p>Please turn on JavaScript in your browser. Otherwise you cannot run Sim4edu simulations.</p>
+</noscript>
+</body>
+</html>
