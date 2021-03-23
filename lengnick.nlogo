@@ -1,477 +1,566 @@
-extensions [time table csv]
+;;; THINGS THAT MIGHT BE OFF
+; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
-__includes ["time-series.nls" "lengnick_test.nls"]
+extensions [rnd]
+__includes["Lengnick tests.nls" "unit testing.nls"]
 
-globals[
-  DATE
-  START-DATE
-]
-
-breed [firms firm]
 breed [households household]
-undirected-link-breed [employment-links employee]
-undirected-link-breed [consumer-links consumer]
+breed [firms firm]
+undirected-link-breed [a-links a-link]
+undirected-link-breed [b-links b-link]
 
-turtles-own[
-  liquidity
+turtles-own [
+  liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
 ]
 
-firms-own[
-  wage-rate
-  inventories
-  price
-  marginal-cost
-  demand
-  technology-constant
-  employment-attempts
-  open-position?
-  buffer
+households-own [
+  reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
+  daily-consumption ; c_h^r / 21 in Lengnick
 ]
 
-households-own[
-  reservation-wage
-  income
-  employed?
-  consumption
-  daily-division-factor
+firms-own [
+  inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
+  price  ; the price of goods (p_f in Lengnick)
+  wage-rate ; w_f in Lengnick
+  desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
+  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
+
+  last-open-position  ; the month that the firm last had an open position
+  filled-position?  ; if the firm had an open position last month, whether or not it was filled
+
+  open-position?  ; trying to hire?
+  close-position?  ; firing at the end of the month?
+
+  demand  ; the most recent demand this firm experienced for its goods
+  tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
 ]
 
-employment-links-own[
-  to-be-fired?
+a-links-own [
+  demand-not-satisfied
 ]
 
-consumer-links-own [
-  visited?
-  demand-satisfied?
+
+globals [
+  month
+  month-length  ; 21 to reflect number of business days
+  PROFITS-TO-ALLOCATE
+  MIN-WAGE-RATE
+  δ
+  γ
+  ν
+  θ
+  ϕl
+  ϕu
+  φlb
+  φub
+  χ
 ]
 
-to setup
-  clear-all
-  initialize-firms
-  initialize-households
-  set DATE time:anchor-to-ticks time:create "2000/01/02" 1 "days"
-  set START-DATE time:create "2000/01/01"
-  initialize-employment-connections
-  initialize-consumer-connections
-  set-monthly-demand
-  produce
-  reset-ticks
+to set-constants
+  set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02)
+  set γ 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
+  set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
+  set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
+  set ϕu 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
+  set φlb 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
+  set φub 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
+  set χ 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set month-length 21
 end
 
-to go
-  if time:get "day" DATE = 1[
-    set-wage-rate
-    adjust-labor-and-prices
-    search-for-labor
-    search-for-new-sellers
-    set-monthly-demand
+to setup
+  ca
+
+  set-constants
+  set MIN-WAGE-RATE 0
+  let n-trading-links 7
+
+  create-households n-households [
+    set shape "circle" ; "person"
+    set heading 0
+    rt (who - n-firms) * (360 / n-households)
+    fd 11 + random 5
+    set color blue
+
+    set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
+    set-house-size
   ]
-  consume
-  produce
-  if not ((time:get "month" DATE) = (time:get "month" (time:plus DATE 1 "day")))[
-    pay-wages
-    pay-dividends
-    fire-labor
+
+
+  create-firms n-firms [
+    set shape "building store"
+    set heading 0
+    rt who * (360 / n-firms)
+    fd 2 + random 6
+    set color brown
+    set tech-parameter 3  ; λ in Lengnick
+    set price 1 * small-random-change ; arbitrary, set to 1 for convenience
+    set wage-rate  52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+    create-b-link-with one-of households with [count my-b-links = 0] [init-b-link]  ; do this so each firm has at least on employee. Then ask households to get jobs after that
   ]
+
+  ask households[
+    create-a-links-with n-of n-trading-links firms [
+      init-a-link
+    ]
+    if count my-b-links = 0 [create-b-link-with one-of firms [init-b-link]]
+    set reservation-wage [wage-rate] of my-employer
+    set-consumption  ; this has to be set after households have trading connections to calculate mean price
+  ]
+
+  ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
+    set-size
+    set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+    ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
+    set last-open-position -2 * γ  ; arbitrarily set > γ so firms don't try to immediately lower wage
+    set filled-position? false  ; just needs to be set to a boolean
+    set open-position?  false  ; not trying to hire immediately by default
+    set close-position? false  ; not firing immediately by default
+    set demand (ideal-consumption wage-rate price) * (count a-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+    set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+  ]
+
+  ask one-of firms [ask my-links [show-link]]
+  reset-ticks
   tick
 end
 
-to initialize-firms
-  create-firms NUM-FIRMS[
-    set shape "truck"
-    set color 45
-    setxy random-xcor random-ycor
-    set inventories 0
-    set wage-rate (random-float 6) + 7
-    set demand 0
-    set technology-constant 3
-    set liquidity 0
-    set open-position? true
-    set marginal-cost (wage-rate / technology-constant)
-    set price (marginal-cost * (1 + ((random-float (0.15 - 0.025)) + 0.025)))
-    set employment-attempts ts-create ["open-spots" "quantity-hired"]
+
+to-report small-random-change
+  report (1 + (random-float 1 - 0.5) / 50)
+end
+
+to init-a-link
+  hide-link
+end
+
+
+to set-size
+  set size (count b-link-neighbors / 10) ; sqrt (count b-link-neighbors / 3)
+end
+
+to set-house-size
+  set size .2 + (sqrt (abs liquidity) / 12)
+end
+
+to init-b-link
+  set color blue
+  hide-link
+end
+
+;;***************GO****************************
+to go
+  go-beginning-of-month-firms
+  go-beginning-of-month-households
+  go-month
+  go-end-of-month
+  tick
+end
+
+
+to go-beginning-of-month-firms
+  ask firms [
+    adjust-wage-rate
+    adjust-job-positions
+    adjust-price
+    set demand 0  ; reset demand for the month
   ]
 end
 
-to initialize-households
-  create-households NUM-HOUSEHOLDS[
-    set shape "person"
-    set color 55
-    setxy random-xcor random-ycor
-    set reservation-wage (random-normal 10 0.5)
-    set liquidity (random-normal 10 0.5)
-    set income 0
-    set employed? false
-  ]
-end
-
-to initialize-employment-connections
-  search-for-labor
-  ask firms[
-    set open-position? false
-    ifelse labor-force-size = 0[
-      set employment-attempts ts-add-row employment-attempts (list START-DATE 1 0)
-    ][
-      set employment-attempts ts-add-row employment-attempts (list START-DATE 1 1)
-    ]
-  ]
-end
-
-to search-for-labor
+to go-beginning-of-month-households
   ask households [
-    let minimum-wage reservation-wage
-    let current-household self
-    let current-income income
-    ifelse employed?[
-      ifelse income > reservation-wage[
-        if ((random-float 1) < 0.1)[
-          ask one-of firms[
-            if wage-rate > current-income and open-position?[
-              let new-wage wage-rate
-              ask current-household [
-                ask my-employment-links[
-                  die
-                ]
-                set income new-wage
-              ]
-              set open-position? false
-              set employment-attempts remove (last employment-attempts) employment-attempts
-              set employment-attempts ts-add-row employment-attempts (list DATE 1 1)
-              create-employee-with current-household[
-                set color 95
-                set to-be-fired? false
-              ]
-            ]
-          ]
-        ]
-      ][
-        ask one-of firms[
-          if wage-rate > current-income and open-position?[
-            let new-wage wage-rate
-            ask current-household [
-              ask my-employment-links[
-                die
-              ]
-              set income new-wage
-            ]
-            create-employee-with current-household[
-              set color 95
-              set to-be-fired? false
-            ]
-            set employment-attempts remove (last employment-attempts) employment-attempts
-            set employment-attempts ts-add-row employment-attempts (list DATE 1 1)
-            set open-position? false
-          ]
-        ]
-      ]
-    ][
-      let employment-found false
-      let counter 0
-      ifelse time:is-equal DATE START-DATE[
-        set counter (random 4 + 1)
-      ][
-        set counter 5
-      ]
-      while [counter > 0 and employment-found = false] [
-        ask one-of firms[
-          let wage wage-rate
-          if wage-rate >= minimum-wage[
-            if time:is-equal DATE START-DATE or open-position?[
-              create-employee-with current-household[
-                set color 95
-                set employment-found true
-                set to-be-fired? false
-                ask current-household[
-                  set income wage
-                  set employed? true
-                ]
-                show-link
-              ]
-              if not (time:is-equal DATE START-DATE) [
-                set open-position? false
-                set employment-attempts remove (last employment-attempts) employment-attempts
-                set employment-attempts ts-add-row employment-attempts (list DATE 1 1)
+    search-cheaper-vendor
+    search-delivery-capable-vendor
+    search-for-employement
+    set-consumption
+  ]
+end
+to go-month
+  ;;; during month
+  repeat month-length [
+    ask households [buy-consumption-goods]
+    ask firms [produce-consumption-goods]
+  ]
+end
 
-              ]
-            ]
-          ]
-        ]
-        set counter counter - 1
-      ]
+to go-end-of-month
+  ;;; end of month
+  ask firms [
+    pay-wages
+    allocate-profits
+  ]
+  distribute-profits
+  ask households [
+    adjust-reservation-wage
+    set-house-size
+  ]
+  ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+
+  set month month + 1
+end
+
+
+to-report beginning-of-month?  ; observer procedure
+  report ticks mod month-length = 0
+end
+
+to-report end-of-month?  ; observer procedure
+  report ticks mod month-length = (month-length - 1)
+end
+
+to distribute-profits  ; observer procedure - distrubtes all profits allocated by firms to households
+  let total-hh-liquidity sum [liquidity] of households
+
+  ;; distribute profits proportionately to current wealth.
+  let profits-to-be-allocated PROFITS-TO-ALLOCATE
+  ask households [
+    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated  ; distribute proportionately to wealth
+;    let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
+    set liquidity liquidity + share-of-profits
+    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
+  ]
+
+  if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
+end
+
+
+;*******************Firm Procedures*********************
+to adjust-wage-rate  ; firm procedure
+
+  ;; NOTE: this is how Nardin implements it. Lengnick implements it differently
+  (ifelse
+    last-open-position = (MONTH - 1) and not filled-position? [  ; firm had an open position last month and failed to fill
+      set wage-rate (1 + random-float δ) * wage-rate
+    ]
+    (MONTH - last-open-position) >= γ [ ; If all hires in past γ months have succeded, lower wage rate.
+      set wage-rate max list ((1 - random-float δ) * wage-rate) MIN-WAGE-RATE  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
+    ])
+
+end
+
+;to-report failed-to-hire?  ; firm procedure. Reports if firm failed to hire last month
+;  report months-with-all-positions-filled = 0 ;
+;end
+
+to adjust-job-positions  ; firm procedure
+  ; This was my implementation, changing to match Nardin/Jake
+;  (ifelse
+;    inventory <  ϕl * demand [
+;      set desired-labor-change 1  ; try to hire
+;    ]
+;    inventory > ϕu * demand [
+;      set desired-labor-change -1  ; fire at the end of month
+;    ] [  ; else if inventory is within desired range
+;      set desired-labor-change 0  ; don't change labor
+;    ]
+;  )
+  set filled-position? false  ; reset this, because none of the firms have filled a position at the beginning of a month
+  (ifelse
+    inventory <  ϕl * demand [  ; inventory is low
+      set open-position? true  ; try to hire
+      set close-position? false  ; don't fire anyone
+      set last-open-position MONTH  ; this month is the last open position
+    ]
+    inventory > ϕu * demand [  ; inventory is high
+      set open-position? false  ; don't hire
+      set close-position? true  ; fire
+    ] [  ; else if inventory is within desired range
+      ;; Nardin doesn't have anything here
+      set open-position? false
+      set close-position? false
+    ]
+  )
+
+end
+
+to adjust-price
+;  (ifelse
+;    ;;
+;    inventory < (ϕl * demand) and random-float 1 < θ [  ; if inventory is low and price is below threshold, with probability θ:
+;      set price min list (price * (1 + random-float ν)) (marginal-costs * φub)  ;; increase price by random amount, but don't go above critical upper bound
+;    ]
+;
+;    inventory > (ϕu * demand) and random-float 1 < θ [  ; if inventory is high and price is above threshold, with probability θ:
+;      set price max list (price * (1 - random-float ν)) (marginal-costs * φlb)  ;; decrease price by random amount, but don't go below critical lower bound
+;    ]
+;  )
+
+  (ifelse
+    ; if inventory is low and price is below upper threshold, with probability θ increase prce
+    (inventory < ϕl * demand) and (price < marginal-costs * φub) and (random-float 1 < θ) [
+      set price price * (1 + random-float ν)
+    ]
+    ; if inventory is high and price is above lower threshold, with probability θ decrease price
+    (inventory > ϕu * demand) and (price > marginal-costs * φlb) and random-float 1 < θ [  ;
+      set price price * (1 - random-float ν)
+    ]
+  )
+end
+
+
+to decide-fire-worker
+
+;  (ifelse
+;    desired-labor-change < 0 and n-workers > 1 [  ; firms won't fire their last worker
+;      ask one-of my-b-links [die]
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+;      set desired-labor-change 0  ; no longer want to fire
+;    ]
+;    desired-labor-change = 0 [
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1
+;    ] [  ; if the firm still wants to hire at the end of the month
+;      set months-with-all-positions-filled 0
+;    ]
+;  )
+
+
+  if close-position? and n-workers > 1 [  ; firms won't fire their last worker
+    ask one-of my-b-links [die]
+    ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+    set desired-labor-change 0  ; no longer want to fire
+  ]
+  set close-position? false
+
+
+  set-size
+end
+
+to-report marginal-costs   ; firm procedure
+  report wage-rate /  month-length / tech-parameter
+end
+
+to-report n-workers
+  report count my-b-links
+end
+
+to produce-consumption-goods  ; firm procedure
+  set inventory inventory + daily-production
+end
+
+to-report daily-production
+  report tech-parameter * n-workers
+end
+
+to pay-wages  ; firm procedure
+  if n-workers > 0 [
+    if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> immediate pay cut
+      set wage-rate liquidity / n-workers
+    ]
+    set liquidity precision (liquidity - wage-rate * n-workers) 10
+    if liquidity < 0 [error "firms aren't allowed to go into debt"]
+    ask b-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
+  ]
+end
+
+to allocate-profits  ; firm procedure
+  let buffer decide-reserve
+  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
+    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE + liquidity - buffer
+    set liquidity buffer
+  ]
+end
+
+to-report sell-consumption-good [amount-wanted]  ; firm procedure
+  set demand demand + amount-wanted
+  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  set inventory inventory - goods-sold
+  if inventory < 0 [error "inventory cannot be negative"]
+  set liquidity liquidity + goods-sold * price
+  report goods-sold
+end
+
+
+to-report decide-reserve  ; firm procedure
+  report χ * wage-rate * n-workers  ; 0.1 is χ in Lengnick
+end
+
+;*******************Household Procedures*********************
+to search-cheaper-vendor  ; household procedure â
+  if random-float 1 < 0.25 [  ; this is Psi_price in Lengnick, the probability of switching trading firms based on price
+    let current-trading-link one-of my-a-links
+    let random-firm pick-random-firm
+    let current-price [price] of [other-end] of current-trading-link
+    if ([price] of random-firm) * 1.01 < current-price [  ; ξ=1.01 in Lengnick to switch if new price is at least 1% lower
+      ask current-trading-link [die]
+      create-a-link-with random-firm [init-a-link]
+    ]
+  ]
+
+end
+
+to search-delivery-capable-vendor
+  let link-failed-to-satisfy rnd:weighted-one-of my-a-links [demand-not-satisfied]
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0 and random-float 1 < 0.25 [ ; 0.25 is Psi_quant in Lengnick, the probability of switching trading firms because it didn't have enough quantity to satisfy demand
+    ask link-failed-to-satisfy [die]
+    create-a-link-with pick-random-firm [init-a-link]
+  ]
+end
+
+to-report pick-random-firm ; household procedure
+  ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
+  report rnd:weighted-one-of firms with [not member? myself a-link-neighbors] [count my-b-links]
+end
+
+
+to search-for-employement  ; household procedure
+  ifelse unemployed? [
+    search-job
+  ] [
+    search-better-paid-job
+  ]
+
+end
+
+to search-job  ; this is when the household is unemployed
+  let firms-tried 0
+  while [unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+    check-random-firm-for-job reservation-wage
+    set firms-tried firms-tried + 1
+  ]
+end
+
+to search-better-paid-job  ; this is when a household is currently employed
+
+  if [n-workers] of my-employer > 1 and   ; only allowed to search for better paid job if the firm will still have another worker
+       (unsatisfied-with-wage? or random-float 1 < 0.1) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
+    check-random-firm-for-job [wage-rate] of my-employer
+  ]
+end
+
+to check-random-firm-for-job [min-wage]  ; household procedure
+  let the-firm one-of firms
+  ;if [desired-labor-change] of the-firm > 0 and [wage-rate] of the-firm >= min-wage [
+  if [open-position?] of the-firm and [wage-rate] of the-firm >= min-wage [
+
+    if employed? [quit-job]
+
+    create-b-link-with the-firm [init-b-link]
+    ;ask the-firm [set desired-labor-change desired-labor-change - 1]
+
+    ask the-firm [
+      set open-position? false  ;
+      set filled-position? true
+      set close-position? false  ; this shouldn't need to happen here, but why not
     ]
   ]
 end
 
-to initialize-consumer-connections
-  ask households[
-    let current-household self
-    ask n-of 5 firms [
-      create-consumer-with current-household[
-        set color 25
-        set demand-satisfied? false
-        hide-link
-      ]
+to quit-job
+
+  ask my-employer [
+    set close-position? false
+    if who = 1050 [print (word "tick " ticks " someone quit from firm 1050 :(")]
+  ]
+  ask my-b-links [die]
+end
+
+to set-consumption  ; household procedure
+  let mean-price mean [price] of a-link-neighbors  ; households only know prices of their trading firms
+  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
+  set daily-consumption total-consumption / month-length
+end
+
+to-report ideal-consumption [money mean-price]
+  let ic 0
+  carefully [
+    set ic (money / mean-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
+  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
+    print error-message
+  ]
+  report ic
+end
+
+; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
+;to buy-consumption-goods  ; household procedure
+;  ask my-a-links [set demand-not-satisfied 0]
+;  let total-bought 0
+;  let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
+;  while [total-bought < 0.95 * daily-consumption and any? firms-to-try] [
+;    ; figure out the transaction
+;    let the-firm one-of firms-to-try
+;
+;    let my-demand min list daily-consumption (liquidity / [price] of the-firm) ; demand was daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+;    let relevant-inventory min list daily-consumption ([inventory] of the-firm)
+;    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
+;
+;    ; set whether demand was met from this firm
+;    ask a-link-with the-firm [
+;      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
+;    ]
+;
+;    ; adjust household variables
+;    set liquidity liquidity - total-cost
+;    let goods-sold total-cost / [price] of the-firm
+;    set total-bought total-bought + goods-sold
+;
+;    ; adjust firm variables
+;    ask the-firm [
+;      set demand demand + my-demand
+;      set inventory precision (inventory - goods-sold) 10
+;      if inventory < 0 [error "inventory cannot be negative"]
+;      set liquidity liquidity + total-cost
+;      set firms-to-try other firms-to-try  ; remove this firm from the available set
+;    ]
+;  ]
+;end
+
+to buy-consumption-goods  ; household procedure
+  ;ask my-a-links [set demand-not-satisfied 0]
+  let remaining-demand daily-consumption
+  let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
+
+  while [remaining-demand >= (0.05 * daily-consumption) and any? firms-to-try] [
+    ; figure out the transaction
+    let the-firm one-of firms-to-try
+
+    let goods-wanted min list daily-consumption (liquidity / [price] of the-firm)  ; demand is daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+    let amount-bought [sell-consumption-good goods-wanted] of the-firm
+
+    ; adjust household variables
+    set liquidity liquidity - amount-bought * [price] of the-firm
+    set remaining-demand remaining-demand - amount-bought
+
+    if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
+      ask a-link-with the-firm [set demand-not-satisfied remaining-demand]
     ]
+    ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
   ]
 end
 
-to produce
-  ask firms[
-    set inventories (inventories + labor-force-size * technology-constant)
-  ]
-end
 
-to-report inventories-bounds[old-demand]
-  report (list (old-demand) (0.25 * old-demand))
-end
-
-to-report price-bounds[mc]
-  report (list (1.15 * mc) (1.025 * mc))
-end
-
-to-report labor-force-size
-  report (count my-employment-links)
-end
-
-to set-wage-rate
-  ask firms[
-    ifelse unfilled-position[
-      set wage-rate (wage-rate * (1 + (random-float 0.02)))
-      set marginal-cost (wage-rate / technology-constant)
-    ][
-      if consistent-position-filling[
-        set wage-rate (wage-rate * (1 - (random-float 0.02)))
-        set marginal-cost (wage-rate / technology-constant)
-      ]
+to adjust-reservation-wage
+  (ifelse
+    unemployed? [
+      set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
     ]
-  ]
+    [wage-rate] of my-employer > reservation-wage [
+      set reservation-wage [wage-rate] of my-employer
+    ]
+  )
 end
 
-to-report unfilled-position
-  let most-recent-data last employment-attempts
-  report ((item 1 most-recent-data > item 2 most-recent-data))
+to-report my-employer
+  report [other-end] of one-of my-b-links  ; each household has only 1 b link, so this is the same everytime
 end
 
-to-report consistent-position-filling
-  let current-date time:plus DATE -1 "months"
-  let counter 24
-  while [(time:is-after current-date START-DATE or time:is-equal current-date START-DATE) and counter > 0][
-    let open-spots ts-get employment-attempts current-date "open-spots"
-    let quantity-hired ts-get employment-attempts current-date "quantity-hired"
-    if open-spots > quantity-hired[
-      report false
-    ]
-    set current-date time:plus current-date -1 "months"
-  ]
-  report true
+to-report unemployed?  ; household procedure
+  report count my-b-links = 0
 end
 
-to adjust-labor-and-prices
-  ask firms[
-    let inventory-thresholds inventories-bounds demand
-    let price-thresholds price-bounds marginal-cost
-    if inventories > (first inventory-thresholds)[
-      if labor-force-size > 0 [
-        ask one-of my-employment-links[
-          set to-be-fired? true
-        ]
-        set employment-attempts ts-add-row employment-attempts (list DATE 0 0)
-      ]
-      if price > last price-thresholds [
-        if random-float 1 < 0.75 [
-          set price (price * (1 - (random-float 0.02)))
-        ]
-      ]
-    ]
-    if inventories < (last inventory-thresholds) or demand = 0[
-      set open-position? true
-      set employment-attempts ts-add-row employment-attempts (list DATE 1 0)
-      if price < first price-thresholds [
-        if random-float 1 < 0.75 [
-          set price (price * (1 + (random-float 0.02)))
-        ]
-      ]
-    ]
-  ]
+to-report employed?
+  report count my-b-links = 1
 end
 
-to set-monthly-demand
-  ask households[
-    if liquidity > 0[
-      let average-price mean-price
-      set consumption min (list ((liquidity / average-price) ^ 0.9) (liquidity / average-price))
-      (ifelse
-        (not (time:get "month" DATE = (time:get "month" (time:plus DATE 28 "days")))) [
-          set daily-division-factor 28
-        ]
-        (not (time:get "month" DATE = (time:get "month" (time:plus DATE 29 "days"))))[
-          set daily-division-factor 28
-        ]
-        (not (time:get "month" DATE = (time:get "month" (time:plus DATE 30 "days"))))[
-          set daily-division-factor 30
-        ]
-        (not (time:get "month" DATE = (time:get "month" (time:plus DATE 31 "days"))))[
-          set daily-division-factor 31
-        ]
-      )
-    ]
-  ]
-end
-
-to-report mean-price
-  let running-total 0
-  let counter 0
-  ask my-consumer-links[
-    ask other-end[
-      set running-total (running-total + price)
-    ]
-    set counter counter + 1
-  ]
-  report (running-total / counter)
-end
-
-to search-for-new-sellers
-  ask households[
-    let current-household self
-    let new-consumer-connection 0
-    if random-float 1 < 0.25 [
-      let current-connection one-of my-consumer-links
-      let current-price 0
-      ask [other-end] of current-connection[
-        set current-price price
-      ]
-      let new-firm one-of firms with [not (consumer-neighbor? current-household)]
-      if new-firm != NOBODY[
-        let new-price [price] of new-firm
-        if new-price <= (0.99 * current-price)[
-          ask current-connection [
-            die
-          ]
-          create-consumer-with new-firm[
-            set color 25
-            hide-link
-            set demand-satisfied? false
-          ]
-        ]
-      ]
-    ]
-    if random-float 1 < 0.25 [
-      if any? my-consumer-links with [not demand-satisfied?]
-      [
-        let current-connection one-of my-consumer-links with [not demand-satisfied?]
-        let new-firm one-of firms with [not (consumer-neighbor? current-household)]
-        if new-firm != NOBODY [
-          ask current-connection[
-            die
-          ]
-          create-consumer-with new-firm [
-            set color 25
-            set demand-satisfied? false
-            hide-link
-          ]
-        ]
-      ]
-    ]
-  ]
-end
-
-to consume
-  ask households[
-    ask my-consumer-links[
-      set visited? false
-    ]
-    let daily-demand (consumption / daily-division-factor)
-    let quantity-acquired 0
-    while [liquidity > 0 and (quantity-acquired < (0.95 * daily-demand)) and any? my-consumer-links with [not visited?]][
-      let current-price 0
-      let quantity 0
-      let household-liquidity liquidity
-      ask one-of my-consumer-links with [not visited?][
-        let satisfactory false
-        set visited? true
-        ask other-end [
-          if inventories > 0[
-            set current-price price
-            let affordable-quantity (household-liquidity / price)
-            set quantity min (list inventories (daily-demand - quantity-acquired) affordable-quantity)
-            set inventories (inventories - quantity)
-            set liquidity (liquidity + (quantity * price))
-            set demand (demand + (daily-demand - quantity-acquired))
-            if quantity = affordable-quantity or quantity = (daily-demand - quantity-acquired)[
-              set satisfactory true
-            ]
-          ]
-        ]
-        set demand-satisfied? satisfactory
-      ]
-      set liquidity (liquidity - (quantity * current-price))
-    ]
-  ]
-end
-
-to pay-wages
-  ask firms[
-    if labor-force-size > 0[
-      let months-wages 0
-      set buffer 0
-      ifelse liquidity >= (wage-rate * labor-force-size)[
-        set months-wages wage-rate
-        set buffer (0.1 * wage-rate * labor-force-size)
-      ][
-        set months-wages (liquidity / labor-force-size)
-      ]
-      ask my-employment-links[
-        ask other-end[
-          set liquidity (liquidity + months-wages)
-          set income months-wages
-          if income > reservation-wage[
-            set reservation-wage income
-          ]
-        ]
-      ]
-      set liquidity (liquidity - (labor-force-size * months-wages))
-      let total-household-liquidity (sum [liquidity] of households)
-    ]
-  ]
-end
-
-to pay-dividends
-  ask firms[
-    let total-household-liquidity sum [liquidity] of households
-    if liquidity > 1 [
-      let profits-distribution (liquidity - buffer)
-      let original-profits-distribution profits-distribution
-      set liquidity liquidity - profits-distribution
-      ask households [
-        ifelse total-household-liquidity > 0[
-          let factor (liquidity / total-household-liquidity)
-          set liquidity (liquidity + (factor * original-profits-distribution))
-          set profits-distribution (profits-distribution - (original-profits-distribution * factor))
-        ][
-          set liquidity (liquidity + (original-profits-distribution / num-households))
-          set profits-distribution (profits-distribution - (original-profits-distribution / num-households))
-        ]
-      ]
-    ]
-  ]
-end
-
-to fire-labor
-  ask firms[
-    ask my-employment-links with [to-be-fired? = true][
-      ask other-end [
-        set employed? false
-      ]
-      die
-    ]
-  ]
+to-report unsatisfied-with-wage?  ; household procedure
+  report [wage-rate] of my-employer < reservation-wage
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-515
-10
-1446
-682
+205
+44
+642
+482
 -1
 -1
 13.0
@@ -481,56 +570,26 @@ GRAPHICS-WINDOW
 1
 1
 0
-1
-1
-1
--35
-35
--25
-25
 0
 0
 1
-ticks
+-16
+16
+-16
+16
+1
+1
+1
+months
 30.0
 
-SLIDER
-23
-49
-195
-82
-NUM-FIRMS
-NUM-FIRMS
-5
-100
-10.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-23
-81
-195
-114
-NUM-HOUSEHOLDS
-NUM-HOUSEHOLDS
-0
-1000
-100.0
-1
-1
-NIL
-HORIZONTAL
-
 BUTTON
-29
-165
-95
-198
-NIL
+0
+149
+66
+182
 setup
+stop-inspecting-dead-agents\nsetup
 NIL
 1
 T
@@ -542,10 +601,27 @@ NIL
 1
 
 BUTTON
-94
-165
-157
-198
+124
+149
+205
+182
+go-once
+go\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+0
+
+BUTTON
+67
+149
+122
+182
 NIL
 go
 T
@@ -556,34 +632,282 @@ NIL
 NIL
 NIL
 NIL
+0
+
+SLIDER
+6
+11
+178
+44
+n-households
+n-households
+10
+1000
+1000.0
+10
 1
+NIL
+HORIZONTAL
+
+SLIDER
+5
+46
+177
+79
+n-firms
+n-firms
+10
+100
+100.0
+10
+1
+NIL
+HORIZONTAL
 
 PLOT
-30
-231
-230
-381
-Unemployment-rate
-Time
-Unemployment
+3
+186
+201
+396
+Employed Households
+years
+NIL
 0.0
 10.0
-0.0
-1.0
+950.0
+1000.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot ((NUM-HOUSEHOLDS - (count employment-links)) / NUM-HOUSEHOLDS)"
+"default" 1.0 0 -16777216 true "" "plotxy (month / 12) count b-links"
 
 PLOT
-30
-381
-230
-531
-Demand estimation
-Time
-Demand estimation
+652
+10
+975
+147
+Avg Wage Rate 
+NIL
+NIL
+0.0
+10.0
+0.0
+60.0
+true
+true
+"" ""
+PENS
+"mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
+"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
+"max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
+"median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+
+PLOT
+4
+407
+204
+557
+open positions
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count firms with [open-position?]"
+
+PLOT
+212
+451
+412
+601
+worker per firm distribution
+NIL
+NIL
+0.0
+20.0
+0.0
+20.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
+
+PLOT
+653
+454
+853
+604
+liquidity of firms and households
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
+"households" 1.0 0 -13345367 true "" "plot  mean [liquidity] of households"
+"pen-2" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+
+BUTTON
+992
+103
+1086
+136
+hide-links
+ask links [hide-link]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+987
+69
+1174
+102
+show random firm's links
+ask one-of firms [ask my-links [show-link]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+414
+450
+614
+600
+customer per firm distribution
+NIL
+NIL
+0.0
+100.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [count a-link-neighbors] of firms"
+
+PLOT
+653
+300
+853
+450
+mean price
+NIL
+NIL
+0.0
+10.0
+0.98
+1.02
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
+
+BUTTON
+237
+10
+310
+43
+bmonth-f
+go-beginning-of-month-firms\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+391
+10
+486
+43
+go-month
+go-month\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+859
+455
+1059
+605
+mean inventory
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [inventory] of firms"
+
+PLOT
+858
+299
+1058
+449
+mean demand not satisfied
+NIL
+NIL
+0.0
+10.0
+0.0
+0.1
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of a-links"
+
+PLOT
+653
+147
+853
+297
+mean demand
+NIL
+NIL
 0.0
 10.0
 0.0
@@ -594,103 +918,13 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
 
-PLOT
-230
-231
-430
-381
-Wage-rate
-Time
-Wage-rate
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-
-PLOT
-230
-381
-430
-531
-Marginal-cost
-Time
-Marginal-cost
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [marginal-cost] of firms"
-
-PLOT
-30
-529
-230
-679
-Inventories
-Time
-Inventories
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [inventories] of firms"
-
-PLOT
-230
-530
-430
-680
-Household Liquidity
-Time
-Liquidity
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [liquidity] of households"
-
-PLOT
-299
-29
-499
-179
-One household
-Time
-liquidity
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot [liquidity] of household 8"
-
 BUTTON
-157
-165
-253
-198
+992
+21
+1112
+54
 NIL
-setup-test
+lengnick-tests
 NIL
 1
 T
@@ -700,6 +934,86 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+859
+145
+1059
+295
+firm 1050 employees
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot [n-workers] of firm 1050"
+
+BUTTON
+180
+10
+235
+43
+dsetup
+\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+487
+10
+631
+43
+go-end-of-month
+go-end-of-month\ntick\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+312
+10
+389
+43
+bmonth-h
+go-beginning-of-month-households\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+1025
+232
+1150
+277
+firm 1050 employees
+[n-workers] of firm 1050
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -724,7 +1038,9 @@ NIL
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+- Give firms some knowledge of the prices and wages of other firms.
+- Allow firms to go out of business and to be started and include population growth
+- create innovation in technology
 
 ## NETLOGO FEATURES
 
@@ -771,6 +1087,21 @@ Circle -7500403 true true 110 127 80
 Circle -7500403 true true 110 75 80
 Line -7500403 true 150 100 80 30
 Line -7500403 true 150 100 220 30
+
+building store
+false
+0
+Rectangle -7500403 true true 30 45 45 240
+Rectangle -16777216 false false 30 45 45 165
+Rectangle -7500403 true true 15 165 285 255
+Rectangle -16777216 true false 120 195 180 255
+Line -7500403 true 150 195 150 255
+Rectangle -16777216 true false 30 180 105 240
+Rectangle -16777216 true false 195 180 270 240
+Line -16777216 false 0 165 300 165
+Polygon -7500403 true true 0 165 45 135 60 90 240 90 255 135 300 165
+Rectangle -7500403 true true 0 0 75 45
+Rectangle -16777216 false false 0 0 75 45
 
 butterfly
 true
@@ -1043,7 +1374,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
