@@ -322,14 +322,12 @@ to decide-fire-worker
 ;    ]
 ;  )
 
-
   if close-position? and n-workers > 1 [  ; firms won't fire their last worker
     ask one-of my-employment-links [die]
     ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
     set desired-labor-change 0  ; no longer want to fire
   ]
   set close-position? false
-
 
   set-size
 end
@@ -388,7 +386,7 @@ to search-cheaper-vendor  ; household procedure
   let current-trading-link one-of my-consumer-links
   let random-firm pick-random-firm
   let current-price [price] of [other-end] of current-trading-link
-  if ([price] of random-firm) * (1 + ξ) <= current-price [  ; Switch if new price is at least ξ% lower
+  if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
     ask current-trading-link [die]
     create-consumer-link-with random-firm [init-consumer-link]
   ]
@@ -460,10 +458,8 @@ to check-random-firm-for-job [min-wage]  ; household procedure
 end
 
 to quit-job
-
   ask my-employer [
     set close-position? false
-    if who = 1050 [print (word "tick " ticks " someone quit from firm 1050 :(")]
   ]
   ask my-employment-links [die]
 end
@@ -569,6 +565,10 @@ end
 to-report unsatisfied-with-wage?  ; household procedure
   report [wage-rate] of my-employer < reservation-wage
 end
+
+to-report year
+  report month / 12
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
 205
@@ -598,10 +598,10 @@ months
 30.0
 
 BUTTON
-0
-149
-66
-182
+1
+88
+67
+121
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -615,10 +615,10 @@ NIL
 1
 
 BUTTON
-124
-149
-205
-182
+125
+88
+206
+121
 go-once
 go\n
 NIL
@@ -632,10 +632,10 @@ NIL
 0
 
 BUTTON
-67
-149
-122
-182
+68
+88
+123
+121
 NIL
 go
 T
@@ -679,10 +679,10 @@ NIL
 HORIZONTAL
 
 PLOT
-3
-186
+1
+125
 201
-396
+331
 Employed Households
 years
 NIL
@@ -694,14 +694,14 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy (month / 12) count employment-links"
+"default" 1.0 0 -16777216 true "" "plotxy year count employment-links"
 
 PLOT
 652
 10
 975
 147
-Avg Wage Rate
+Wage Rate Stats
 NIL
 NIL
 0.0
@@ -719,28 +719,10 @@ PENS
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 
 PLOT
-4
-407
-204
-557
-open positions
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot count firms with [open-position?]"
-
-PLOT
-213
-483
-413
-633
+653
+455
+853
+605
 worker per firm distribution
 NIL
 NIL
@@ -755,10 +737,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 PLOT
-653
-454
-853
-604
+857
+300
+1057
+450
 liquidity of firms and households
 NIL
 NIL
@@ -809,10 +791,10 @@ NIL
 1
 
 PLOT
-415
-482
-615
-632
+855
+454
+1055
+604
 customer per firm distribution
 NIL
 NIL
@@ -827,10 +809,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
 
 PLOT
-653
-300
-853
-450
+856
+147
+1056
+297
 mean price
 NIL
 NIL
@@ -879,28 +861,29 @@ NIL
 1
 
 PLOT
-859
-455
-1059
-605
-mean inventory
+0
+332
+200
+482
+mean inventory/demand
 NIL
 NIL
 0.0
 10.0
 0.0
-10.0
+0.6
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [inventory] of firms"
+"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / demand] of firms"
+"pen-1" 1.0 0 -7500403 true "" "plotxy year ϕl"
 
 PLOT
-858
-299
-1058
-449
+653
+300
+853
+450
 mean demand not satisfied
 NIL
 NIL
@@ -948,24 +931,6 @@ NIL
 NIL
 NIL
 1
-
-PLOT
-859
-145
-1059
-295
-firm 1050 employees
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot [n-workers] of firm 1050"
 
 BUTTON
 180
@@ -1018,16 +983,45 @@ NIL
 NIL
 1
 
-MONITOR
-1025
-232
-1150
-277
-firm 1050 employees
-[n-workers] of firm 1050
-17
-1
+PLOT
+0
+486
+200
+636
+firms w/ high/low inventory 
+NIL
+NIL
+0.0
+10.0
+0.0
+100.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  ϕl * demand]"
+"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  ϕu * demand]"
+"pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
+
+TEXTBOX
+204
+514
+359
+570
+inventory < ϕl * demand \n(want to hire)
 11
+0.0
+1
+
+TEXTBOX
+204
+598
+354
+626
+inventory >  ϕu * demand (want to fire)
+11
+15.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
