@@ -1,0 +1,751 @@
+
+to lengnick-tests
+  run-tests (list    
+    (list "adjust-wage-rate-tests" test-adjust-wage-rate)
+    (list "adjust-price tests" test-adjust-price)
+    (list "test-adjust-price-realistic-values" test-adjust-price-realistic-values)
+    (list "test-adjust-job-positions" test-adjust-job-positions)
+    (list "test-produce-consumption-goods" test-produce-consumption-goods)
+    (list "test-decide-reserve" test-decide-reserve)
+    (list "test-pay-wages" test-pay-wages)
+    (list "test-distribute-profits" test-distribute-profits)
+    (list "test-adjust-reservation-wage" test-adjust-reservation-wage)
+    (list "test-search-cheaper-vendor" test-search-cheaper-vendor)
+    (list "test-search-delivery-capable-vendor" test-search-delivery-capable-vendor)
+    (list "test-search-job" test-search-job)
+    (list "test-search-better-paid-job" test-search-better-paid-job)
+    (list "test-set-consumption" test-set-consumption)
+    (list "test-buy-consumption-goods" test-buy-consumption-goods)
+  )
+    
+
+end
+
+
+to-report seeded-random-float [n seed]
+  ;; This reporter reports a random-float n with a given seed and then resets the seed to that number
+  ;; That means the next time random-float n is called it will give the same answer. This is useful
+  ;; for testing procedures with random component.
+  random-seed seed
+  let retval random-float n
+  random-seed seed
+  report retval
+end
+
+
+to set-seed-so-next-random-float-1-is-less-than [threshold]
+  let random-var 1.1
+  let seed 0
+  while [random-var > threshold] [    
+    set seed seed + 1
+    set random-var seeded-random-float 1 seed
+  ]
+end
+;*******************************
+
+to-report test-adjust-wage-rate
+    
+  
+  report [ ->
+    ca
+    set-constants
+    set MONTH 10
+    create-firms 1 [
+      
+      ;; test when wage should be increased
+      
+      set wage-rate 10      
+      ;set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
+      set last-open-position 9
+      set filled-position? false 
+      let raised-wage (1 + seeded-random-float δ 1) * 10        
+      adjust-wage-rate        
+      assert-equals wage-rate raised-wage "Wage rate should have been raised (1)"
+     
+;      ;; test when wage should stay the same 1
+;      ;set months-with-all-positions-filled 1
+;      set last-open-position 9
+;      set filled-position? true 
+;      set wage-rate 10
+;      adjust-wage-rate    
+;      assert-equals wage-rate 10 "Wage rate should have stayed the same (2)"
+;      
+      ;; test when wage should stay the same 2
+      ;set months-with-all-positions-filled 23
+      set wage-rate 10
+      set last-open-position 9.5 ; 10 - (γ / 2)
+      set filled-position? false      
+      adjust-wage-rate
+      assert-equals wage-rate 10 "Wage rate should have stayed the same (3)"
+      
+      ;; test when wage should lower     
+      ; set months-with-all-positions-filled 24
+      set last-open-position 10 - γ
+      set filled-position? true
+      set wage-rate 10
+      let lowered-wage (1 - seeded-random-float δ 1) * 10    
+      adjust-wage-rate
+      assert-equals wage-rate lowered-wage "Wage rate should have lowered (4)"
+    ]  
+  ]    
+  
+end
+
+to-report test-adjust-price
+  
+  report [-> 
+    ca
+    set-constants
+    create-firms 1 [
+      set wage-rate 1
+      set tech-parameter 3
+      set demand 5
+      
+      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * φub * .9 ; price is below upper bound cost --> okay to increaes price
+      let old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert (price > old-price) "price should have gone up (5)"
+      
+      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * φub ; price is at upper bound cost --> don't increase price      
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price (marginal-costs * φub) "price should have stayed at maximum (6)"                       
+      
+      set inventory demand * (ϕl + ϕu) / 2  ; inventory is between upper and lower bounds
+      set price marginal-costs * (φub + φlb) / 2; price is better upper and lower bounds
+      set old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price old-price "price should have stayed the same (7)"
+      
+      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * φlb * 1.1 ; price is above minimum --> okay to decrease price
+      set old-price price
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true     
+      adjust-price      
+      assert (price < old-price) "price should have gone down (7)"
+      
+      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * φlb ; price is at lower bound cost --> don't decrease price      
+      random-seed 1  ;; with this random seed (random-float 1 < θ) will be true 
+      adjust-price      
+      assert-equals price (marginal-costs * φlb) "price should have stayed at minimum (7)"                  
+      
+    ]
+  ]  
+end
+  
+to-report test-adjust-price-realistic-values
+  report [->
+    ca
+    set-constants
+    create-firms 1 [
+      set tech-parameter 3
+      
+      ;; test from real data
+      set wage-rate 37.56635545717483
+      set demand 1721.691032692973
+      set inventory 81     ; inventory << (1721.691032692973 * ϕl)  -> raise prices
+      set price 1.0088541030234168   ;  marginal-costs * φub =  0.6857350599325563  --> price stays 
+      let old-price price
+      random-seed 1 ;; with this random seed (random-float 1 < θ) will be true      
+      adjust-price      
+      assert-equals price old-price "price should have stayed the same (8)"
+    ]
+  ]
+end
+
+
+to-report test-adjust-job-positions
+  ;If the inventory has fallen below i_f_lbar a new open position is created in order to raise production. If,viceversa,inventories are above
+   ; i_f_ubar , a randomly chosen worker is fired, i.e. the corresponding type B connection is cut.
+   
+  report [->
+    ca
+    set-constants
+    set month 10
+    create-firms 1 [
+      set last-open-position 8
+      set demand 500
+      let inventory-upper-bound ϕu * demand
+      let inventory-lower-bound ϕl * demand
+      
+      set inventory (inventory-upper-bound + inventory-lower-bound) / 2
+      adjust-job-positions
+      assert-equals open-position? false  "position should not have been opened (9)"
+      assert-equals close-position? false  "position should not have been closed (10)"
+      assert-equals last-open-position 8 "last-open-position should have stayed = 8 (11)"
+      
+      
+      set inventory (inventory-upper-bound + 1)
+      adjust-job-positions
+      assert-equals open-position? false  "position should not have been opened (12)"
+      assert-equals close-position? true  "position should be getting closed (13)"
+      assert-equals last-open-position 8 "last-open-position should have stayed = 8 (14)"
+      
+      set inventory (inventory-lower-bound - 1)
+      adjust-job-positions
+      assert-equals open-position? true  "position should have been opened (15)"
+      assert-equals close-position? false  "position should not be getting closed (16)"
+      assert-equals last-open-position 10 "last-open-position should now be 10 (17)"
+      
+    ]
+  ]
+end
+
+
+to-report test-produce-consumption-goods
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      set inventory 0
+      set tech-parameter 3
+      produce-consumption-goods
+      assert-equals inventory 9 "(18)"      
+      
+      ask my-employment-links  [die]
+      produce-consumption-goods
+      assert-equals inventory 9 "inventory should still be 9 (19)"              
+    ]
+  ]
+end
+
+
+to-report test-decide-reserve
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      set wage-rate 1
+      assert-equals decide-reserve χ * 1 * 3 "(20)"
+      
+      ask my-employment-links [die]
+      assert-equals decide-reserve 0 "(21)"
+    ]
+  ]
+end
+
+to-report test-pay-wages
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      set wage-rate 1
+      set liquidity 4
+      
+      ; Case 1: enough liquidity to pay wages
+      pay-wages
+      assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
+      assert-equals liquidity 1 "firm should have $1 left (23)"
+      
+      ; Case 2: not enough liquidity to pay wages --> immediate pay cut
+      set liquidity .75 * 3
+      pay-wages
+      assert all? households [liquidity = 1.75] "households should have wage-rate of 1 (from last time) + .75 after getting paid (23)"
+      assert-equals liquidity 0 "firm should have 0 left (24)"
+      assert-equals wage-rate .75 "Wage should now be .75 (25)"             
+    ]
+  ]
+end
+
+
+to-report test-distribute-profits
+  report [->
+    ca
+    set-constants
+    create-households 3 [
+      set liquidity 1
+    ]
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      set wage-rate 1      
+      
+      ; Case 1: enough liquidity to keep buffer but not distribute profits
+      set liquidity decide-reserve
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept all liquidity in reserve (26)"
+      assert all? households [liquidity = 1]  "households should not have gotten any profits (27)"
+      
+      ; Case 2: enough liquidity to keep buffer and distribute the rest as profits. Equal distribution
+      set liquidity decide-reserve + 3
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept reserve (28)"
+      assert all? households [liquidity = 2]  "households should have gotten profits of $1 (plus original $1) (29)"
+      
+      ; Case 2: enough liquidity to keep buffer and distribute the rest as profits. Unequal distribution
+      ask household 0 [set liquidity 4]  ; other two housholds still have liquidity of 2
+      set liquidity decide-reserve + 4
+      allocate-profits  ; Jake should comment this line out
+      distribute-profits
+      assert-equals liquidity decide-reserve  "firm should have kept reserve (30)"
+      print word "liquidity of households: " [liquidity] of households
+      assert (count households with [liquidity = 3] = 2)  "Two households should have gotten profits of $1 for total of $3 (31)"
+      assert (count households with [liquidity = 6] = 1)  "One household should have gotten profits of $2 for total of $6 (originally had $4) (32)"                  
+      
+    ]    
+  ]
+end
+
+to-report test-adjust-reservation-wage 
+  report [ ->
+    ca
+    set-constants
+    create-firms 1 [
+      set wage-rate 1
+    ]
+    
+    create-households 1 [
+      create-employment-link-with one-of firms
+      set reservation-wage 0.5
+      
+      ; Case 1: wage is above reservation wage --> increase to current wage
+      adjust-reservation-wage
+      assert-equals reservation-wage 1 "reservation wage should now equal wage (33)"
+      
+      ; Case 2: wage is below reservation wage --> keep same reservation wage
+      set reservation-wage 1.1
+      adjust-reservation-wage
+      assert-equals reservation-wage 1.1 "reservation wage should not change (34)"
+      
+      ; Case 3: unemployed -> decreasea reservation wage 10%
+      ask my-employment-links [die]
+      set reservation-wage 1
+      adjust-reservation-wage
+      assert-equals reservation-wage 0.9 "reservation wage should have dropped 10% (35)"
+      
+      
+    ]
+      
+    
+  ]
+end
+
+
+to-report test-search-cheaper-vendor
+  report [-> 
+    ca
+    set-constants
+    ;; First test is to see whether a houehold switches firms when it should
+    create-households 1 
+    
+    create-firms 1[
+      set price 10
+      create-consumer-link-with one-of households
+    ]
+    create-firms 1[
+      set price 9.9  ; just cheap enough to switch with ξ  = .01
+    ]
+            
+    let current-firm one-of firms with [price = 10]    
+    ask households[
+      search-cheaper-vendor
+      let new-firm [other-end] of one-of my-consumer-links
+      assert-equals (count my-consumer-links) 1 "Household should not have makde a new link (36)"
+      assert (current-firm != new-firm) "Household should have switched firms (37)"          
+    ]
+    
+    
+    ;; now the household should not switch firms because the other firm's price is too expensive
+    ca
+    set-constants
+    create-households 1 
+    
+    create-firms 1[
+      set price 10
+      create-consumer-link-with one-of households
+    ]
+    
+    create-firms 1[
+      set price 10.1  ; cheap enough to switch
+    ]
+    
+    ;set blacklisted-firm one-of firms with [price = 10]        
+    set current-firm one-of firms with [price = 10]    
+    set-seed-so-next-random-float-1-is-less-than 0.25    
+    ask households[
+      search-cheaper-vendor
+      let new-firm [other-end] of one-of my-consumer-links
+      assert-equals (count my-consumer-links) 1 "Household should not have makde a new link (38)"
+      assert-equals current-firm new-firm "Household should not have changed firms (39)"            
+    ]            
+  ]
+end
+
+to-report test-search-delivery-capable-vendor
+  report [->
+    ;; no suppliers unsatisfied demand. os don't switch anything
+    ca
+    set-constants
+    create-households 1
+    create-firms 1[
+      set price 10
+      create-consumer-link-with one-of households
+    ]
+    create-firms 1[
+      set price 11
+    ]
+    let current-firm one-of firms with [price = 10]
+    let new-firm current-firm    
+    ask households[
+      search-delivery-capable-vendor
+      set new-firm [other-end] of one-of my-consumer-links
+      assert-equals (count my-consumer-links) 1 "Number of consumer-links shouldn't have changed (40)"
+      assert-equals current-firm new-firm "Household shouldn't have changed firms (41)"
+    ]
+    
+    
+;  ;; we have a blacklisted supplier, we'd like to remove it, but don't remove the other firm the household is connected with
+    ca
+    set-constants
+    create-households 1
+    
+    let firm-to-go nobody
+    create-firms 1[
+      set price 10
+      set firm-to-go self
+      create-consumer-link-with one-of households [ set demand-not-satisfied 1]  ; only this firm has demand not satisfied, so it will be replaced
+    ]
+    create-firms 1[
+      set price 11
+      create-consumer-link-with one-of households
+    ]
+    create-firms 1[
+      set price 11
+    ]
+        
+    ask households[      
+      search-delivery-capable-vendor      
+      assert-equals (count my-consumer-links) 2 "Household should still have two links (42)"
+      assert (not member? firm-to-go consumer-link-neighbors) "Household should no longer have consumer link with firm-to-go (43)"      
+    ]
+  ]
+end
+
+
+to-report test-search-job
+  report [-> 
+    ;; no firms with open positions, the household should be unemployed at the end of the search
+    ca
+    set-constants
+    create-firms 10[
+      set open-position? false
+    ]
+    create-households 1[
+      search-job
+      assert (not employed?) "Household should not have found employment (44)"
+    ]
+    
+    
+;    ;; every firm has an open position but nobody's reservation wage is high enough, household should be unemployed at the end of the search
+    ca
+    set-constants
+    create-firms 10[
+      set open-position? true
+      set wage-rate 1
+    ]
+    create-households 1[
+      set reservation-wage 2
+      search-job
+      assert (not employed?) "Household should not have found employment (45)"
+    ]
+    
+    
+    ;; only one firm has an open position, but they pay enough; the household should be employed at the end of the search
+    ca
+    set-constants
+    create-firms 1[
+      set open-position? true
+      set wage-rate 1
+    ]
+    
+    create-firms 9[
+      set open-position? false
+      set wage-rate 1
+    ]
+    
+    create-households 1[
+      set reservation-wage 1
+      search-job
+      assert (employed?) "Household should have found employment (46)"
+      assert-equals firm 0 my-employer "Emloyer should be firm 0 that had open-position (47)"
+      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (48)"
+      
+    ]
+    
+;    ;; exactly one firm offers a high enough wage but all 5 firms have open positions, the household should be employed at the end of the search with the firm with high enough wage
+    ca
+    set-constants
+    create-firms 1[
+      set wage-rate 7
+      set open-position? true
+    ]
+    create-firms 4[
+      set wage-rate 4
+      set open-position? true
+    ]
+    create-households 1 [
+      set reservation-wage 5
+      search-job
+      assert employed? "Household should have found employment (49)"
+      assert-equals firm 0 my-employer "Emloyer should be firm 0 that had high enough wage (50)"
+      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (51)"
+      assert-equals (count firms with [open-position?]) 4 "There should still be 4 firms with open positions (52)"
+    ]
+  ]
+end
+
+to-report test-search-better-paid-job
+  report [->
+    ;; employer has only one worker, so the household should not change jobs in this case
+    ca
+    set-constants
+    create-households 1 [
+      set reservation-wage 2
+    ]
+    create-firms 1[
+      set wage-rate 1
+      set open-position? false
+      create-employment-link-with one-of households[
+      ]
+    ]
+    create-firms 3[
+      set open-position? true
+      set wage-rate 4
+    ]
+    let old-firm one-of firms with [wage-rate = 1]    
+    ask households[
+      search-better-paid-job
+      assert-equals (count my-employment-links) 1 "There should still be one employment link (53)"      
+      assert-equals old-firm my-employer "Household should not have changed firms (54)"      
+    ]
+    
+    
+  ;; one household is being paid too little, one household is being paid enough, 
+    ; however, the one being enough is going to search first and therefore the other firm should not be able to switch
+    ca
+    set-constants
+    create-households 1[
+      set reservation-wage 9
+    ]
+    create-households 1[
+      set reservation-wage 7
+    ]
+    create-firms 1[
+      create-employment-links-with households      
+      set open-position? true
+      set wage-rate 8
+    ]
+    create-firms 1[
+      set open-position? true
+      set wage-rate 10
+    ]
+     
+    set-seed-so-next-random-float-1-is-less-than 0.1  ; so when household searches, they search for job even though current wage is high enough
+    
+    ask households with [reservation-wage = 7][
+      search-better-paid-job      
+      assert-equals (count my-employment-links) 1 "There should still be one employment link (55)"            
+      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (56)"
+      assert-equals my-employer (one-of firms with [wage-rate = 10]) "Household should have changed to new employer (57)"      
+    ]
+    
+    ask households with [reservation-wage = 9][
+      search-better-paid-job
+      assert-equals (count my-employment-links) 1 "There should still be one employment link (58)"      
+      assert-equals my-employer one-of firms with [wage-rate = 8] "Household should not have been able to change employers (59)"
+    ]
+    
+    
+    ;; same as previous case except reverse the search order
+    ca
+    set-constants
+    create-households 1[
+      set reservation-wage 9
+    ]
+    create-households 1[
+      set reservation-wage 7
+    ]
+    create-firms 1[
+      create-employment-links-with households      
+      set open-position? true
+      set wage-rate 8
+    ]
+    create-firms 1[
+      set open-position? true
+      set wage-rate 10
+    ]    
+    
+    ask households with [reservation-wage = 9][
+      search-better-paid-job    
+      assert-equals (count my-employment-links) 1 "There should still be one employment link (60)"            
+      assert-equals my-employer (one-of firms with [wage-rate = 10]) "Household should have changed to new employer (61)"
+    ]
+  ]
+end
+
+
+to-report test-set-consumption
+  report [-> 
+    ;; general test case
+    ca
+    set-constants    
+    create-households 1      
+    create-firms 1[
+      set price 3      
+      create-consumer-link-with one-of households
+    ]
+    create-firms 3 [
+      set price 5
+      ;create-consumer-link-with household household-num
+      create-consumer-link-with one-of households
+    ]
+    ask one-of households[
+      set liquidity 90
+      set-consumption
+      assert-equals daily-consumption (((90 / 4.5) ^ α) / month-length) "Wrong daily demand (62)"
+    ]
+  ]
+end
+
+
+to-report test-buy-consumption-goods
+  report [-> 
+    ;; first test case: just one seller firm
+    ca
+    set-constants
+    create-households 1[
+      set liquidity 90      
+    ]
+    create-firms 1 [
+      set price 3
+      set inventory 100
+      set liquidity 0
+      create-consumer-link-with one-of households[
+        init-consumer-link
+      ]
+    ]
+    ask one-of households[
+      set-consumption
+      buy-consumption-goods      
+      assert-equals ([liquidity] of one-of firms) (daily-consumption * 3) "Firm liquidity is wrong (63)"
+      assert-equals (liquidity) (90 - (3 * daily-consumption)) "Household liquidity is wrong (64)"
+    ]
+
+
+    ;; second test case: seller firm doesn't have enough goods
+    ca
+    set-constants
+    create-households 1[
+      set liquidity 90      
+    ]    
+    create-firms 1[
+      set price 3
+      set inventory 0
+      set liquidity 0
+      create-consumer-link-with one-of households[
+        init-consumer-link
+      ]
+    ]
+    ask one-of households[
+      set-consumption
+      buy-consumption-goods
+      assert-equals ([demand-not-satisfied] of one-of my-consumer-links) daily-consumption "Demand not satisfied wasn't set properly (65)"
+      assert-equals ([liquidity] of one-of firms) 0 "Firm gained liquidity and it should not have (66)"
+      assert-equals liquidity 90 "Household liquidity should not have changed (67)"
+      assert-equals ([inventory] of one-of firms) 0 "Firm inventory should not have changed (68)"
+    ]
+    
+    
+    ;; 3 firms are available and together they will all satisfy daily demand but none of them on their own will do
+    ca
+    set-constants
+    create-households 1[
+      set liquidity 90      
+    ]
+    
+    create-firms 3[
+      set price 3
+      create-consumer-links-with households
+    ]
+    let daily-demand 0
+    ask one-of households[      
+      set-consumption      
+      set daily-demand daily-consumption
+      ask firms[
+        set inventory (daily-demand / 3)
+        set liquidity 0
+      ]
+      buy-consumption-goods
+      assert-equals (count my-links with [demand-not-satisfied > 0]) 2 "Wrong number of suppliers that failed to satisfy demand. (69)"
+      assert-equals (precision liquidity 10) (precision (90 - (3 * daily-consumption)) 10) "Wrong household liquidity (70)" 
+      
+      ask firms[
+        assert-equals liquidity price * daily-demand / 3 "Firm liquidity is wrong. (71)"
+      ]
+    ]
+    
+    ;; 3 firms, together they should all wind up on blacklisted suppliers
+    ca
+    set-constants
+    create-households 1[
+      set liquidity 90      
+    ]
+    create-firms 3[
+      set price 3
+      create-consumer-link-with one-of households[
+        init-consumer-link
+      ]
+    ]
+    let inventory-amount 0 
+    ask one-of households[
+      set-consumption
+      let household-dd daily-consumption
+      set inventory-amount (0.95 * (household-dd / 3))
+      ask firms[
+        set inventory inventory-amount
+        set liquidity 0
+      ]
+      buy-consumption-goods
+      assert-equals (count my-links with [demand-not-satisfied > 0]) 3 "Wrong number of suppliers that failed to satisfy demand. (72)"
+      assert (liquidity > (90 - (3 * daily-consumption))) "Wrong household liquidity (73)" 
+      ask firms[
+        assert-equals liquidity inventory-amount * price  "Firm liquidity is wrong (74)"
+      ]
+    ]
+    
+    ;; 4 firms; they won't have enough to satisfy all demand but they'll have enough to get to 0.95 so there should be one firm that wasn't visited
+    ca
+    set-constants
+    create-households 1[
+      set liquidity 90      
+    ]
+    create-firms 4[
+      set price 3
+      create-consumer-link-with one-of households        
+    ]
+    ask one-of households[
+      set-consumption
+      let household-dd daily-consumption
+      ask firms[
+        set inventory (0.96 * (household-dd / 3))
+        set liquidity 0
+      ]
+      buy-consumption-goods
+      assert-equals (count my-links with [demand-not-satisfied > 0]) 3 "Wrong number of suppliers that failed to satisfy demand. (75)"      
+      assert-equals (count firms with [liquidity > 0]) 3 "Wrong number of firms with positive liquidity (76)"
+      assert-equals (count firms with [liquidity = 0]) 1 "Wrong number of firms with no liquidity (77)" 
+    ]
+  ]
+end
