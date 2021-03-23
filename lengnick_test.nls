@@ -1,0 +1,10 @@
+to setup-test
+  clear-all
+  set NUM-HOUSEHOLDS 10
+  set NUM-FIRMS 2
+  
+end
+
+to test-go
+  
+end

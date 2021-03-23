@@ -2,12 +2,12 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd]
-__includes["lengnick-tests.nls" "unit testing.nls"]
+__includes["Lengnick tests.nls" "unit testing.nls"]
 
 breed [households household]
 breed [firms firm]
-undirected-link-breed [consumer-links consumer-link]
-undirected-link-breed [employment-links employment-link]
+undirected-link-breed [a-links a-link]
+undirected-link-breed [b-links b-link]
 
 turtles-own [
   liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
@@ -35,7 +35,7 @@ firms-own [
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
 ]
 
-consumer-links-own [
+a-links-own [
   demand-not-satisfied
 ]
 
@@ -54,10 +54,6 @@ globals [
   φlb
   φub
   χ
-  α
-  Ψprice
-  Ψquant
-  ξ
 ]
 
 to set-constants
@@ -70,10 +66,6 @@ to set-constants
   set φlb 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
   set φub 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
   set χ 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
-  set α .9  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
-  set Ψprice 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
-  set Ψquant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
-  set ξ 0.01  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper
   set month-length 21
 end
 
@@ -105,14 +97,14 @@ to setup
     set tech-parameter 3  ; λ in Lengnick
     set price 1 * small-random-change ; arbitrary, set to 1 for convenience
     set wage-rate  52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
-    create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]  ; do this so each firm has at least on employee. Then ask households to get jobs after that
+    create-b-link-with one-of households with [count my-b-links = 0] [init-b-link]  ; do this so each firm has at least on employee. Then ask households to get jobs after that
   ]
 
   ask households[
-    create-consumer-links-with n-of n-trading-links firms [
-      init-consumer-link
+    create-a-links-with n-of n-trading-links firms [
+      init-a-link
     ]
-    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]
+    if count my-b-links = 0 [create-b-link-with one-of firms [init-b-link]]
     set reservation-wage [wage-rate] of my-employer
     set-consumption  ; this has to be set after households have trading connections to calculate mean price
   ]
@@ -125,7 +117,7 @@ to setup
     set filled-position? false  ; just needs to be set to a boolean
     set open-position?  false  ; not trying to hire immediately by default
     set close-position? false  ; not firing immediately by default
-    set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+    set demand (ideal-consumption wage-rate price) * (count a-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
     set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
   ]
 
@@ -139,20 +131,20 @@ to-report small-random-change
   report (1 + (random-float 1 - 0.5) / 50)
 end
 
-to init-consumer-link
+to init-a-link
   hide-link
 end
 
 
 to set-size
-  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
+  set size (count b-link-neighbors / 10) ; sqrt (count b-link-neighbors / 3)
 end
 
 to set-house-size
   set size .2 + (sqrt (abs liquidity) / 12)
 end
 
-to init-employment-link
+to init-b-link
   set color blue
   hide-link
 end
@@ -178,8 +170,8 @@ end
 
 to go-beginning-of-month-households
   ask households [
-    if random-float 1 < Ψprice  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
-    if random-float 1 < Ψquant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
+    search-cheaper-vendor
+    search-delivery-capable-vendor
     search-for-employement
     set-consumption
   ]
@@ -311,7 +303,7 @@ to decide-fire-worker
 
 ;  (ifelse
 ;    desired-labor-change < 0 and n-workers > 1 [  ; firms won't fire their last worker
-;      ask one-of my-employment-links [die]
+;      ask one-of my-b-links [die]
 ;      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
 ;      set desired-labor-change 0  ; no longer want to fire
 ;    ]
@@ -324,7 +316,7 @@ to decide-fire-worker
 
 
   if close-position? and n-workers > 1 [  ; firms won't fire their last worker
-    ask one-of my-employment-links [die]
+    ask one-of my-b-links [die]
     ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
     set desired-labor-change 0  ; no longer want to fire
   ]
@@ -339,7 +331,7 @@ to-report marginal-costs   ; firm procedure
 end
 
 to-report n-workers
-  report count my-employment-links
+  report count my-b-links
 end
 
 to produce-consumption-goods  ; firm procedure
@@ -357,7 +349,7 @@ to pay-wages  ; firm procedure
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt"]
-    ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
+    ask b-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
   ]
 end
 
@@ -384,29 +376,30 @@ to-report decide-reserve  ; firm procedure
 end
 
 ;*******************Household Procedures*********************
-to search-cheaper-vendor  ; household procedure
-  let current-trading-link one-of my-consumer-links
-  let random-firm pick-random-firm
-  let current-price [price] of [other-end] of current-trading-link
-  if ([price] of random-firm) * (1 + ξ) <= current-price [  ; Switch if new price is at least ξ% lower
-    ask current-trading-link [die]
-    create-consumer-link-with random-firm [init-consumer-link]
+to search-cheaper-vendor  ; household procedure â
+  if random-float 1 < 0.25 [  ; this is Psi_price in Lengnick, the probability of switching trading firms based on price
+    let current-trading-link one-of my-a-links
+    let random-firm pick-random-firm
+    let current-price [price] of [other-end] of current-trading-link
+    if ([price] of random-firm) * 1.01 < current-price [  ; ξ=1.01 in Lengnick to switch if new price is at least 1% lower
+      ask current-trading-link [die]
+      create-a-link-with random-firm [init-a-link]
+    ]
   ]
 
 end
 
-
 to search-delivery-capable-vendor
-  let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
-  if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
-    create-consumer-link-with pick-random-firm [init-consumer-link]
+  let link-failed-to-satisfy rnd:weighted-one-of my-a-links [demand-not-satisfied]
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0 and random-float 1 < 0.25 [ ; 0.25 is Psi_quant in Lengnick, the probability of switching trading firms because it didn't have enough quantity to satisfy demand
     ask link-failed-to-satisfy [die]
+    create-a-link-with pick-random-firm [init-a-link]
   ]
 end
 
 to-report pick-random-firm ; household procedure
   ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
-  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors] [count my-employment-links]
+  report rnd:weighted-one-of firms with [not member? myself a-link-neighbors] [count my-b-links]
 end
 
 
@@ -428,27 +421,21 @@ to search-job  ; this is when the household is unemployed
 end
 
 to search-better-paid-job  ; this is when a household is currently employed
-  search-better-paid-job-logic random-float 1 < 0.1  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
-end
 
-to search-better-paid-job-logic [search-even-if-satisfied?]
   if [n-workers] of my-employer > 1 and   ; only allowed to search for better paid job if the firm will still have another worker
-  (unsatisfied-with-wage? or search-even-if-satisfied?) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage they might still look
+       (unsatisfied-with-wage? or random-float 1 < 0.1) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage, still look for a new job with p=0.1 (π in Lengnick)
     check-random-firm-for-job [wage-rate] of my-employer
   ]
 end
 
 to check-random-firm-for-job [min-wage]  ; household procedure
-  let the-firm nobody
-  ifelse unemployed?
-  [set the-firm one-of firms]
-  [set the-firm [one-of other firms] of my-employer]
-
+  let the-firm one-of firms
+  ;if [desired-labor-change] of the-firm > 0 and [wage-rate] of the-firm >= min-wage [
   if [open-position?] of the-firm and [wage-rate] of the-firm >= min-wage [
 
     if employed? [quit-job]
 
-    create-employment-link-with the-firm [init-employment-link]
+    create-b-link-with the-firm [init-b-link]
     ;ask the-firm [set desired-labor-change desired-labor-change - 1]
 
     ask the-firm [
@@ -465,11 +452,11 @@ to quit-job
     set close-position? false
     if who = 1050 [print (word "tick " ticks " someone quit from firm 1050 :(")]
   ]
-  ask my-employment-links [die]
+  ask my-b-links [die]
 end
 
 to set-consumption  ; household procedure
-  let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
+  let mean-price mean [price] of a-link-neighbors  ; households only know prices of their trading firms
   let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
   set daily-consumption total-consumption / month-length
 end
@@ -477,7 +464,7 @@ end
 to-report ideal-consumption [money mean-price]
   let ic 0
   carefully [
-    set ic (money / mean-price) ^ α  ; is α in Lengnick. Consumption increases with wealth at decaying rate
+    set ic (money / mean-price) ^ 0.9  ; 0.9 is α in Lengnick. Consumption increases with wealth at decaying rate
   ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
     print error-message
   ]
@@ -486,9 +473,9 @@ end
 
 ; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
 ;to buy-consumption-goods  ; household procedure
-;  ask my-consumer-links [set demand-not-satisfied 0]
+;  ask my-a-links [set demand-not-satisfied 0]
 ;  let total-bought 0
-;  let firms-to-try consumer-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
+;  let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
 ;  while [total-bought < 0.95 * daily-consumption and any? firms-to-try] [
 ;    ; figure out the transaction
 ;    let the-firm one-of firms-to-try
@@ -498,7 +485,7 @@ end
 ;    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
 ;
 ;    ; set whether demand was met from this firm
-;    ask consumer-link-with the-firm [
+;    ask a-link-with the-firm [
 ;      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
 ;    ]
 ;
@@ -519,12 +506,11 @@ end
 ;end
 
 to buy-consumption-goods  ; household procedure
-  ;ask my-consumer-links [set demand-not-satisfied 0]
+  ;ask my-a-links [set demand-not-satisfied 0]
   let remaining-demand daily-consumption
-  let firms-to-try consumer-link-neighbors
+  let firms-to-try a-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
 
   while [remaining-demand >= (0.05 * daily-consumption) and any? firms-to-try] [
-
     ; figure out the transaction
     let the-firm one-of firms-to-try
 
@@ -536,7 +522,7 @@ to buy-consumption-goods  ; household procedure
     set remaining-demand remaining-demand - amount-bought
 
     if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
-      ask consumer-link-with the-firm [set demand-not-satisfied remaining-demand]
+      ask a-link-with the-firm [set demand-not-satisfied remaining-demand]
     ]
     ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
   ]
@@ -555,15 +541,15 @@ to adjust-reservation-wage
 end
 
 to-report my-employer
-  report [other-end] of one-of my-employment-links  ; each household has only 1 b link, so this is the same everytime
+  report [other-end] of one-of my-b-links  ; each household has only 1 b link, so this is the same everytime
 end
 
 to-report unemployed?  ; household procedure
-  report count my-employment-links = 0
+  report count my-b-links = 0
 end
 
 to-report employed?
-  report count my-employment-links = 1
+  report count my-b-links = 1
 end
 
 to-report unsatisfied-with-wage?  ; household procedure
@@ -694,14 +680,14 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy (month / 12) count employment-links"
+"default" 1.0 0 -16777216 true "" "plotxy (month / 12) count b-links"
 
 PLOT
 652
 10
 975
 147
-Avg Wage Rate
+Avg Wage Rate 
 NIL
 NIL
 0.0
@@ -737,10 +723,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count firms with [open-position?]"
 
 PLOT
-213
-483
-413
-633
+212
+451
+412
+601
 worker per firm distribution
 NIL
 NIL
@@ -809,10 +795,10 @@ NIL
 1
 
 PLOT
-415
-482
-615
-632
+414
+450
+614
+600
 customer per firm distribution
 NIL
 NIL
@@ -824,7 +810,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
+"default" 1.0 1 -16777216 true "" "histogram [count a-link-neighbors] of firms"
 
 PLOT
 653
@@ -912,7 +898,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of a-links"
 
 PLOT
 653
