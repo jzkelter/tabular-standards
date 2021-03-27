@@ -571,10 +571,10 @@ to-report year
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-205
-44
-642
-482
+207
+51
+644
+489
 -1
 -1
 13.0
@@ -681,7 +681,7 @@ HORIZONTAL
 PLOT
 1
 125
-201
+202
 331
 Employed Households
 years
@@ -861,17 +861,17 @@ NIL
 1
 
 PLOT
-0
-332
-200
-482
+1
+333
+201
+483
 mean inventory/demand
 NIL
 NIL
 0.0
 10.0
 0.0
-0.6
+0.65
 true
 false
 "" ""
@@ -1021,6 +1021,16 @@ TEXTBOX
 inventory >  ϕu * demand (want to fire)
 11
 15.0
+1
+
+TEXTBOX
+4
+370
+46
+455
+above line we expect firing, below hiring
+10
+5.0
 1
 
 @#$#@#$#@
