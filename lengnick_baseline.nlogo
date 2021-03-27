@@ -22,7 +22,7 @@ firms-own [
   inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
   price  ; the price of goods (p_f in Lengnick)
   wage-rate ; w_f in Lengnick
-  desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
+  ; desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
   ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
 
   last-open-position  ; the month that the firm last had an open position
@@ -112,7 +112,7 @@ to setup
     create-consumer-links-with n-of n-trading-links firms [
       init-consumer-link
     ]
-    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]
+    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
     set reservation-wage [wage-rate] of my-employer
     set-consumption  ; this has to be set after households have trading connections to calculate mean price
   ]
@@ -325,7 +325,7 @@ to decide-fire-worker
   if close-position? and n-workers > 1 [  ; firms won't fire their last worker
     ask one-of my-employment-links [die]
     ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
-    set desired-labor-change 0  ; no longer want to fire
+    ; set desired-labor-change 0  ; no longer want to fire ( I used this before using close-position?
   ]
   set close-position? false
 
@@ -552,6 +552,7 @@ end
 
 to-report my-employer
   report [other-end] of one-of my-employment-links  ; each household has only 1 b link, so this is the same everytime
+
 end
 
 to-report unemployed?  ; household procedure
@@ -681,7 +682,7 @@ HORIZONTAL
 PLOT
 1
 125
-202
+201
 331
 Employed Households
 years
