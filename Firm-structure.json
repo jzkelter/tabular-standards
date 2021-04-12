@@ -9,13 +9,15 @@
                 }
             ],
             "Tech constant": 3,
-            "Firm count": 70
+            "Firm count": 70,
+            "Consumer?": true
         },
         {
             "Firm type": 2,
             "Input data": "None",
             "Tech constant": 3,
-            "Firm count": 30
+            "Firm count": 30,
+            "Consumer?":false
         }
     ],
     "Total firms": 100

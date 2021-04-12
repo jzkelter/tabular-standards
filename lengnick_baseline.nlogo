@@ -36,6 +36,7 @@ firms-own [
 
   demand  ; the most recent demand this firm experienced for its goods
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
+  consumer?
 ]
 
 consumer-links-own [
@@ -110,7 +111,7 @@ to setup
   setup-firms
 
   ask households[
-    create-consumer-links-with n-of n-trading-links firms [
+    create-consumer-links-with n-of n-trading-links firms with [consumer?][
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
@@ -142,6 +143,7 @@ to setup-firms
     let num-firms table:get f "Firm count"
     let firm-input-data generate-input-data table:get f "Input data"
     let firm-tech-parameter table:get f "Tech constant"
+    let is-consumer? table:get f "Consumer?"
     create-firms num-firms[
       set shape "building store"
       set heading 0
@@ -154,6 +156,7 @@ to setup-firms
       set input-data firm-input-data
       set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      set consumer? is-consumer?
     ]
   ]
 end
@@ -373,8 +376,42 @@ to decide-fire-worker
 end
 
 to-report marginal-costs   ; firm procedure
-  report wage-rate /  month-length / tech-parameter
+  report ((wage-rate /  month-length / tech-parameter) + input-cost-estimate)
 end
+
+;this procedure takes the average input cost to estimate cost
+to-report input-cost-estimate
+  let mc 0
+  foreach table:keys input-data [i ->
+    let sum-cost 0
+    ask my-framework-agreements with [input-firm-type = i][
+      ask other-end[
+        set sum-cost sum-cost + price
+      ]
+    ]
+    let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
+    set mc (mc + (avg-cost / month-length / marginal-productivity i))
+  ]
+  report mc
+end
+
+;this procedure will take the maximum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost max ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
+
+;this procedure will take the minimum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost min ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
 
 to-report current-stock [i]
   let input table:get input-data i
@@ -459,7 +496,7 @@ end
 
 to-report pick-random-firm ; household procedure
   ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
-  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors] [count my-employment-links]
+  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer?] [count my-employment-links]
 end
 
 
