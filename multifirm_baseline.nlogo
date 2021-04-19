@@ -54,7 +54,6 @@ globals [
   PROFITS-TO-ALLOCATE
   MIN-WAGE-RATE
   FIRM-STRUCTURE
-  n-firms
   δ
   γ
   ν
@@ -86,7 +85,6 @@ to set-constants
   set ξ 0.01  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper
   set month-length 21
   set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
-  set n-firms table:get (table:from-json-file "Firm-structure.json") "Total firms"
 end
 
 to setup
@@ -223,6 +221,10 @@ to init-framework-agreement [input-type]
   set demand-not-satisfied 0
   hide-link
 end
+
+to-report n-firms
+  report count firms
+end
 ;;***************GO****************************
 to go
   go-beginning-of-month-firms
@@ -253,7 +255,7 @@ to go-month
   ;;; during month
   repeat month-length [
     ask households [buy-consumption-goods]
-    ask firms [produce-consumption-goods]
+    ask firms [produce-goods]
   ]
 end
 
@@ -404,6 +406,30 @@ to decide-fire-worker
   set-size
 end
 
+to search-cheaper-supplier [input-i]
+  let current-framework-agreement one-of my-in-framework-agreements with [input-firm-type = input-i]
+  let random-firm pick-random-input-firm input-i
+  let current-price [price] of [other-end] of current-framework-agreement
+  if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
+    ask current-framework-agreement [die]
+    create-framework-agreement-from random-firm [
+      init-framework-agreement input-i
+    ]
+  ]
+end
+
+to search-delivery-capable-seller [input-i]
+  let link-failed-to-satisfy rnd:weighted-one-of my-in-framework-agreements with [input-firm-type = input-i][demand-not-satisfied]
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
+    create-framework-agreement-from pick-random-input-firm input-i [init-consumer-link input-i]
+    ask link-failed-to-satisfy [die]
+  ]
+end
+
+to-report pick-random-input-firm [input-i]
+  report rnd:weighted-one-of firms with [not member? myself out-framework-agreement-neighbors and firm-type = input-i] [count my-employment-links]
+end
+
 to-report marginal-costs   ; firm procedure
   report ((wage-rate /  month-length / tech-parameter) + input-cost-estimate)
 end
@@ -461,13 +487,16 @@ to-report n-workers
   report count my-employment-links
 end
 
-to produce-consumption-goods  ; firm procedure
-  set inventory inventory + daily-production
+to produce-goods  ; firm procedure
+  ;set inventory inventory + daily-production
+  let production-amount production-potential
+  set inventory inventory + production-amount
+  use-inputs production-amount
 end
 
-to-report daily-production
-  report tech-parameter * n-workers
-end
+;to-report daily-production
+;  report tech-parameter * n-workers
+;end
 
 to pay-wages  ; firm procedure
   if n-workers > 0 [
@@ -502,28 +531,49 @@ to-report decide-reserve  ; firm procedure
   report χ * wage-rate * n-workers  ; 0.1 is χ in Lengnick
 end
 
+to-report production-potential ;reports the potential daily production based on the amount of inputs a firm currently has in stock
+  ifelse input-data = "None"[
+    report n-workers * tech-parameter
+  ][
+    let minimum-potential 1000000000
+    foreach table:keys input-data[ i ->
+      let input-potential ((marginal-productivity i) * (current-stock i))
+      if input-potential < minimum-potential[
+        set minimum-potential input-potential
+      ]
+    ]
+    report (min (list minimum-potential (n-workers * tech-parameter)))
+  ]
+end
+
+to use-inputs [production-amount] ;adjusts the input amount after production
+  foreach table:keys input-data[ i ->
+    let current-amount current-stock i
+    set-stock i (current-amount - ((production-amount) / (marginal-productivity i)))
+  ]
+end
+
 ;*******************Household Procedures*********************
 to search-cheaper-vendor  ; household procedure
   let current-trading-link one-of my-consumer-links
-  let random-firm pick-random-firm
+  let random-firm pick-random-consumer-firm
   let current-price [price] of [other-end] of current-trading-link
   if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
     ask current-trading-link [die]
     create-consumer-link-with random-firm [init-consumer-link]
   ]
-
 end
 
 
 to search-delivery-capable-vendor
   let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
-    create-consumer-link-with pick-random-firm [init-consumer-link]
+    create-consumer-link-with pick-random-consumer-firm [init-consumer-link]
     ask link-failed-to-satisfy [die]
   ]
 end
 
-to-report pick-random-firm ; household procedure
+to-report pick-random-consumer-firm ; household procedure
   ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
   report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer?] [count my-employment-links]
 end
