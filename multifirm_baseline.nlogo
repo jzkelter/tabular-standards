@@ -125,8 +125,11 @@ to setup
     set filled-position? false  ; just needs to be set to a boolean
     set open-position?  false  ; not trying to hire immediately by default
     set close-position? false  ; not firing immediately by default
-    set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
-    set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+    if consumer? [
+      set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+      set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+      set-daily-input-demands
+    ]
   ]
 
   ask one-of firms [ask my-links [show-link]]
@@ -168,6 +171,7 @@ to-report generate-input-data [original-data]
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
       table:put inputi "Current stock" 0
+      table:put inputi "Daily demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]
     report data-table
@@ -190,6 +194,52 @@ to initialize-framework-agreements
           init-framework-agreement i
         ]
       ]
+    ]
+  ]
+end
+
+to initialize-input-firm-demands
+  let firm-types (list)
+  let firms-done-setting-demand (list)
+  let firms-ready-to-set-demand (list)
+  foreach FIRM-STRUCTURE[t ->
+    set firm-types fput table:get t "Firm type" firm-types
+    if table:get t "Consuemr?"[
+      set firms-done-setting-demand fput table:get t "Firm type" firms-done-setting-demand
+      let input-firms table:get t "Input data"
+      foreach input-firms[f ->
+        set firms-ready-to-set-demand fput table:get f "Input firm type" firms-ready-to-set-demand
+      ]
+    ]
+  ]
+  let finished? false
+  while [not finished?][
+    let new-ready-firms (list)
+    foreach firms-ready-to-set-demand [f ->
+      let aggregate-monthly-quantity-demanded 0
+      ask firms with [uses-input? f][
+        set aggregate-monthly-quantity-demanded (aggregate-monthly-quantity-demanded + (month-length * (daily-input-demand f)))
+      ]
+      ;******* This next part of the procedure is definitely up for debate on how to implement **********
+      let average-demand (aggregate-monthly-quantity-demanded / (count firms with [firm-type = f]))
+      ask firms with [firm-type = f][
+        set demand (average-demand * (1 + (random-float 0.25)))
+        set-daily-input-demands
+      ]
+      set firms-done-setting-demand fput f firms-done-setting-demand
+      set firms-ready-to-set-demand remove f firms-ready-to-set-demand
+      let global-firm-data item 0 (filter [i -> table:get "Firm-type" i = f] FIRM-STRUCTURE)
+      let firm-input-data table:get global-firm-data "Input data"
+      if firm-input-data != "None"[
+        foreach firm-input-data[i ->
+          set new-ready-firms fput i new-ready-firms
+        ]
+      ]
+    ]
+    ifelse (length firms-done-setting-demand = length firm-types) or (length new-ready-firms = 0)[
+      let finished? true
+    ][
+      set firms-ready-to-set-demand new-ready-firms
     ]
   ]
 end
@@ -421,7 +471,7 @@ end
 to search-delivery-capable-seller [input-i]
   let link-failed-to-satisfy rnd:weighted-one-of my-in-framework-agreements with [input-firm-type = input-i][demand-not-satisfied]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
-    create-framework-agreement-from pick-random-input-firm input-i [init-consumer-link input-i]
+    create-framework-agreement-from pick-random-input-firm input-i [init-framework-agreement input-i]
     ask link-failed-to-satisfy [die]
   ]
 end
@@ -532,6 +582,8 @@ to-report decide-reserve  ; firm procedure
 end
 
 to-report production-potential ;reports the potential daily production based on the amount of inputs a firm currently has in stock
+  ;try to modify this using a table-to-list primitive
+  ;do a map through the keys
   ifelse input-data = "None"[
     report n-workers * tech-parameter
   ][
@@ -551,6 +603,38 @@ to use-inputs [production-amount] ;adjusts the input amount after production
     let current-amount current-stock i
     set-stock i (current-amount - ((production-amount) / (marginal-productivity i)))
   ]
+end
+
+to-report daily-input-demand [i]
+  let input table:get input-data i
+  report table:get input "Daily demand"
+end
+
+to set-daily-demand [i value]
+  let input table:get input-data i
+  table:put input "Daily demand" value
+  table:put input-data i input
+end
+
+to set-daily-input-demands
+  if input-data != "None"[
+    let estimated-demand demand
+    let estimated-production (estimated-demand - inventory)
+    ;currently there's no buffer for how much of an input a firm orders, they order exactly as much as they think they'll need
+    foreach table:keys input-data[i ->
+      let current-amount current-stock i
+      let amount-needed (estimated-production / (marginal-productivity i))
+      ifelse amount-needed < current-amount[
+        set-daily-demand i ((amount-needed - current-amount) / month-length)
+      ][
+        set-daily-demand i 0
+      ]
+    ]
+  ]
+end
+
+to-report uses-input? [i]
+  report table:has-key? input-data i
 end
 
 ;*******************Household Procedures*********************

@@ -8,7 +8,7 @@ breed [households household]
 breed [firms firm]
 undirected-link-breed [consumer-links consumer-link]
 undirected-link-breed [employment-links employment-link]
-undirected-link-breed [framework-agreements framework-agreement]
+directed-link-breed [framework-agreements framework-agreement]
 
 turtles-own [
   liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
