@@ -237,7 +237,7 @@ to initialize-input-firm-demands
       ]
     ]
     ifelse (length firms-done-setting-demand = length firm-types) or (length new-ready-firms = 0)[
-      let finished? true
+      set finished? true
     ][
       set firms-ready-to-set-demand new-ready-firms
     ]
