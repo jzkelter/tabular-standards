@@ -131,7 +131,7 @@ to setup
       set-daily-input-demands
     ]
   ]
-
+  initialize-input-firm-demands
   ask one-of firms [ask my-links [show-link]]
   reset-ticks
   tick
@@ -204,7 +204,7 @@ to initialize-input-firm-demands
   let firms-ready-to-set-demand (list)
   foreach FIRM-STRUCTURE[t ->
     set firm-types fput table:get t "Firm type" firm-types
-    if table:get t "Consuemr?"[
+    if table:get t "Consumer?"[
       set firms-done-setting-demand fput table:get t "Firm type" firms-done-setting-demand
       let input-firms table:get t "Input data"
       foreach input-firms[f ->
@@ -228,7 +228,7 @@ to initialize-input-firm-demands
       ]
       set firms-done-setting-demand fput f firms-done-setting-demand
       set firms-ready-to-set-demand remove f firms-ready-to-set-demand
-      let global-firm-data item 0 (filter [i -> table:get "Firm-type" i = f] FIRM-STRUCTURE)
+      let global-firm-data item 0 (filter [i -> table:get i "Firm type" = f] FIRM-STRUCTURE)
       let firm-input-data table:get global-firm-data "Input data"
       if firm-input-data != "None"[
         foreach firm-input-data[i ->
@@ -634,6 +634,9 @@ to set-daily-input-demands
 end
 
 to-report uses-input? [i]
+  if input-data = "None"[
+    report false
+  ]
   report table:has-key? input-data i
 end
 
