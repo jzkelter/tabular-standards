@@ -290,6 +290,13 @@ to go-beginning-of-month-firms
     adjust-job-positions
     adjust-price
     set demand 0  ; reset demand for the month
+    set-daily-input-demands
+    if input-data != "None"[
+      foreach table:keys input-data[i ->
+        search-cheaper-supplier i
+        search-delivery-capable-seller i
+      ]
+    ]
   ]
 end
 
@@ -305,7 +312,12 @@ to go-month
   ;;; during month
   repeat month-length [
     ask households [buy-consumption-goods]
-    ask firms [produce-goods]
+    ask firms [
+      produce-goods
+      if input-data != "None"[
+        buy-input-goods
+      ]
+    ]
   ]
 end
 
@@ -487,15 +499,17 @@ end
 ;this procedure takes the average input cost to estimate cost
 to-report input-cost-estimate
   let mc 0
-  foreach table:keys input-data [i ->
-    let sum-cost 0
-    ask my-framework-agreements with [input-firm-type = i][
-      ask other-end[
-        set sum-cost sum-cost + price
+  if input-data != "None" [
+    foreach table:keys input-data [i ->
+      let sum-cost 0
+      ask my-framework-agreements with [input-firm-type = i][
+        ask other-end[
+          set sum-cost sum-cost + price
+        ]
       ]
+      let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
+      set mc (mc + (avg-cost / month-length / marginal-productivity i))
     ]
-    let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
-    set mc (mc + (avg-cost / month-length / marginal-productivity i))
   ]
   report mc
 end
@@ -599,9 +613,11 @@ to-report production-potential ;reports the potential daily production based on 
 end
 
 to use-inputs [production-amount] ;adjusts the input amount after production
-  foreach table:keys input-data[ i ->
-    let current-amount current-stock i
-    set-stock i (current-amount - ((production-amount) / (marginal-productivity i)))
+  if input-data != "None" [
+    foreach table:keys input-data[ i ->
+      let current-amount current-stock i
+      set-stock i (current-amount - ((production-amount) / (marginal-productivity i)))
+    ]
   ]
 end
 
@@ -624,7 +640,7 @@ to set-daily-input-demands
     foreach table:keys input-data[i ->
       let current-amount current-stock i
       let amount-needed (estimated-production / (marginal-productivity i))
-      ifelse amount-needed < current-amount[
+      ifelse amount-needed > current-amount[
         set-daily-demand i ((amount-needed - current-amount) / month-length)
       ][
         set-daily-demand i 0
@@ -638,6 +654,33 @@ to-report uses-input? [i]
     report false
   ]
   report table:has-key? input-data i
+end
+
+to-report sell-input-good [amount-wanted]
+  set demand demand + amount-wanted
+  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  set inventory inventory - goods-sold
+  if inventory < 0 [error "inventory cannot be negative"]
+  set liquidity liquidity + goods-sold * price
+  report goods-sold
+end
+
+to buy-input-goods
+  foreach table:keys input-data[i ->
+    let remaining-demand daily-input-demand i
+    let firms-to-try framework-agreement-neighbors with [firm-type = i]
+    while [remaining-demand >= (0.05 * daily-input-demand i) and any? firms-to-try][
+      let the-firm one-of firms-to-try
+      let goods-wanted min list (daily-input-demand i) (liquidity / [price] of the-firm)
+      let amount-bought [sell-input-good goods-wanted] of the-firm
+      set liquidity liquidity - amount-bought * [price] of the-firm
+      set remaining-demand remaining-demand - amount-bought
+      if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
+        ask framework-agreement-with the-firm [set demand-not-satisfied remaining-demand]
+      ]
+      ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
+    ]
+  ]
 end
 
 ;*******************Household Procedures*********************
