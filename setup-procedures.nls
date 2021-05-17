@@ -1,0 +1,173 @@
+to setup
+  ca
+
+  set-constants
+  set MIN-WAGE-RATE 0
+  let n-trading-links 7
+
+  create-households n-households [
+    set shape "circle" ; "person"
+    set heading 0
+    rt (who - n-firms) * (360 / n-households)
+    fd 11 + random 5
+    set color blue
+
+    set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
+    set-house-size
+  ]
+
+
+  setup-firms
+  initialize-framework-agreements
+  ask households[
+    create-consumer-links-with n-of n-trading-links firms with [consumer?][
+      init-consumer-link
+    ]
+    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
+    set reservation-wage [wage-rate] of my-employer
+    set-consumption  ; this has to be set after households have trading connections to calculate mean price
+  ]
+
+  ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
+    set-size
+    set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+    ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
+    set last-open-position -2 * γ  ; arbitrarily set > γ so firms don't try to immediately lower wage
+    set filled-position? false  ; just needs to be set to a boolean
+    set open-position?  false  ; not trying to hire immediately by default
+    set close-position? false  ; not firing immediately by default
+    if consumer? [
+      set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+      set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+      set-daily-input-demands
+    ]
+  ]
+  initialize-input-firm-demands
+  ask one-of firms [ask my-links [show-link]]
+  reset-ticks
+  tick
+end
+
+to set-constants
+  set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02)
+  set γ 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
+  set ν 0.02 ;  0.02 is ν from Lengnick: the max amount a firm increases/decreases prices by
+  set θ 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
+  set ϕl 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
+  set ϕu 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
+  set φlb 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
+  set φub 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
+  set χ 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set α .9  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
+  set Ψprice 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
+  set Ψquant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
+  set ξ 0.01  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper
+  set month-length 21
+  set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
+end
+
+to setup-firms
+  foreach FIRM-STRUCTURE[ f ->
+    let group table:get f "Firm type"
+    let num-firms table:get f "Firm count"
+    let firm-input-data generate-input-data table:get f "Input data"
+    let firm-tech-parameter table:get f "Tech constant"
+    let is-consumer? table:get f "Consumer?"
+    create-firms num-firms[
+      set shape "building store"
+      set heading 0
+      rt who * (360 / n-firms)
+      fd 2 + random 6
+      set color brown
+      set tech-parameter firm-tech-parameter ; λ in Lengnick
+      set price 1 * small-random-change ; arbitrary, set to 1 for convenience
+      set firm-type group
+      set input-data firm-input-data
+      set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      set consumer? is-consumer?
+    ]
+  ]
+end
+
+to-report generate-input-data [original-data]
+  ifelse original-data = "None"[
+    report "None"
+  ][
+    let data-table table:make
+    foreach original-data [i ->
+      let inputi table:make
+      table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
+      table:put inputi "Current stock" 0
+      table:put inputi "Daily demand" 0
+      table:put data-table (table:get i "Input firm type") inputi
+    ]
+    report data-table
+  ]
+end
+
+to initialize-framework-agreements
+  ask firms with [input-data != "None"][
+    foreach table:keys input-data[i ->
+      let num-agreements 5
+      if any? firms with [firm-type = i and n-out-agreements = 0][
+        set num-agreements num-agreements - 1
+        create-framework-agreement-from one-of firms with [firm-type = i and n-out-agreements = 0][
+          init-framework-agreement i
+        ]
+      ]
+      let current-firm self
+      ask n-of num-agreements firms with [firm-type = i and not out-framework-agreement-neighbor? self][
+        create-framework-agreement-to current-firm[
+          init-framework-agreement i
+        ]
+      ]
+    ]
+  ]
+end
+
+to initialize-input-firm-demands
+  let firm-types (list)
+  let firms-done-setting-demand (list)
+  let firms-ready-to-set-demand (list)
+  foreach FIRM-STRUCTURE[t ->
+    set firm-types fput table:get t "Firm type" firm-types
+    if table:get t "Consumer?"[
+      set firms-done-setting-demand fput table:get t "Firm type" firms-done-setting-demand
+      let input-firms table:get t "Input data"
+      foreach input-firms[f ->
+        set firms-ready-to-set-demand fput table:get f "Input firm type" firms-ready-to-set-demand
+      ]
+    ]
+  ]
+  let finished? false
+  while [not finished?][
+    let new-ready-firms (list)
+    foreach firms-ready-to-set-demand [f ->
+      let aggregate-monthly-quantity-demanded 0
+      ask firms with [uses-input? f][
+        set aggregate-monthly-quantity-demanded (aggregate-monthly-quantity-demanded + (month-length * (daily-input-demand f)))
+      ]
+      ;******* This next part of the procedure is definitely up for debate on how to implement **********
+      let average-demand (aggregate-monthly-quantity-demanded / (count firms with [firm-type = f]))
+      ask firms with [firm-type = f][
+        set demand (average-demand * (1 + (random-float 0.25)))
+        set-daily-input-demands
+      ]
+      set firms-done-setting-demand fput f firms-done-setting-demand
+      set firms-ready-to-set-demand remove f firms-ready-to-set-demand
+      let global-firm-data item 0 (filter [i -> table:get i "Firm type" = f] FIRM-STRUCTURE)
+      let firm-input-data table:get global-firm-data "Input data"
+      if firm-input-data != "None"[
+        foreach firm-input-data[i ->
+          set new-ready-firms fput i new-ready-firms
+        ]
+      ]
+    ]
+    ifelse (length firms-done-setting-demand = length firm-types) or (length new-ready-firms = 0)[
+      set finished? true
+    ][
+      set firms-ready-to-set-demand new-ready-firms
+    ]
+  ]
+end

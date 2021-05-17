@@ -1,0 +1,183 @@
+to search-cheaper-vendor  ; household procedure
+  let current-trading-link one-of my-consumer-links
+  let random-firm pick-random-consumer-firm
+  let current-price [price] of [other-end] of current-trading-link
+  if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
+    ask current-trading-link [die]
+    create-consumer-link-with random-firm [init-consumer-link]
+  ]
+end
+
+
+to search-delivery-capable-vendor
+  let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
+    create-consumer-link-with pick-random-consumer-firm [init-consumer-link]
+    ask link-failed-to-satisfy [die]
+  ]
+end
+
+to-report pick-random-consumer-firm ; household procedure
+  ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
+  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer?] [count my-employment-links]
+end
+
+
+to search-for-employement  ; household procedure
+  ifelse unemployed? [
+    search-job
+  ] [
+    search-better-paid-job
+  ]
+
+end
+
+to search-job  ; this is when the household is unemployed
+  let firms-tried 0
+  while [unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+    check-random-firm-for-job reservation-wage
+    set firms-tried firms-tried + 1
+  ]
+end
+
+to search-better-paid-job  ; this is when a household is currently employed
+  search-better-paid-job-logic random-float 1 < 0.1  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
+end
+
+to search-better-paid-job-logic [search-even-if-satisfied?]
+  if [n-workers] of my-employer > 1 and   ; only allowed to search for better paid job if the firm will still have another worker
+  (unsatisfied-with-wage? or search-even-if-satisfied?) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage they might still look
+    check-random-firm-for-job [wage-rate] of my-employer
+  ]
+end
+
+to check-random-firm-for-job [min-wage]  ; household procedure
+  let the-firm nobody
+  ifelse unemployed?
+  [set the-firm one-of firms]
+  [set the-firm [one-of other firms] of my-employer]
+
+  if [open-position?] of the-firm and [wage-rate] of the-firm >= min-wage [
+
+    if employed? [quit-job]
+
+    create-employment-link-with the-firm [init-employment-link]
+    ;ask the-firm [set desired-labor-change desired-labor-change - 1]
+
+    ask the-firm [
+      set open-position? false  ;
+      set filled-position? true
+      set close-position? false  ; this shouldn't need to happen here, but why not
+    ]
+  ]
+end
+
+to quit-job
+  ask my-employer [
+    set close-position? false
+  ]
+  ask my-employment-links [die]
+end
+
+to set-consumption  ; household procedure
+  let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
+  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
+  set daily-consumption total-consumption / month-length
+end
+
+to-report ideal-consumption [money mean-price]
+  let ic 0
+  carefully [
+    set ic (money / mean-price) ^ α  ; is α in Lengnick. Consumption increases with wealth at decaying rate
+  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
+    print error-message
+  ]
+  report ic
+end
+
+; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
+;to buy-consumption-goods  ; household procedure
+;  ask my-consumer-links [set demand-not-satisfied 0]
+;  let total-bought 0
+;  let firms-to-try consumer-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
+;  while [total-bought < 0.95 * daily-consumption and any? firms-to-try] [
+;    ; figure out the transaction
+;    let the-firm one-of firms-to-try
+;
+;    let my-demand min list daily-consumption (liquidity / [price] of the-firm) ; demand was daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+;    let relevant-inventory min list daily-consumption ([inventory] of the-firm)
+;    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
+;
+;    ; set whether demand was met from this firm
+;    ask consumer-link-with the-firm [
+;      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
+;    ]
+;
+;    ; adjust household variables
+;    set liquidity liquidity - total-cost
+;    let goods-sold total-cost / [price] of the-firm
+;    set total-bought total-bought + goods-sold
+;
+;    ; adjust firm variables
+;    ask the-firm [
+;      set demand demand + my-demand
+;      set inventory precision (inventory - goods-sold) 10
+;      if inventory < 0 [error "inventory cannot be negative"]
+;      set liquidity liquidity + total-cost
+;      set firms-to-try other firms-to-try  ; remove this firm from the available set
+;    ]
+;  ]
+;end
+
+to buy-consumption-goods  ; household procedure
+  ;ask my-consumer-links [set demand-not-satisfied 0]
+  let remaining-demand daily-consumption
+  let firms-to-try consumer-link-neighbors
+
+  while [remaining-demand >= (0.05 * daily-consumption) and any? firms-to-try] [
+
+    ; figure out the transaction
+    let the-firm one-of firms-to-try
+
+    let goods-wanted min list daily-consumption (liquidity / [price] of the-firm)  ; demand is daily-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+    let amount-bought [sell-consumption-good goods-wanted] of the-firm
+
+    ; adjust household variables
+    set liquidity liquidity - amount-bought * [price] of the-firm
+    set remaining-demand remaining-demand - amount-bought
+
+    if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
+      ask consumer-link-with the-firm [set demand-not-satisfied remaining-demand]
+    ]
+    ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
+  ]
+end
+
+
+to adjust-reservation-wage
+  (ifelse
+    unemployed? [
+      set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
+    ]
+    [wage-rate] of my-employer > reservation-wage [
+      set reservation-wage [wage-rate] of my-employer
+    ]
+  )
+end
+
+to-report my-employer
+  report [other-end] of one-of my-employment-links  ; each household has only 1 b link, so this is the same everytime
+
+end
+
+to-report unemployed?  ; household procedure
+  report count my-employment-links = 0
+end
+
+to-report employed?
+  report count my-employment-links = 1
+end
+
+to-report unsatisfied-with-wage?  ; household procedure
+  report [wage-rate] of my-employer < reservation-wage
+end

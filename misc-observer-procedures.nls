@@ -1,0 +1,36 @@
+to-report year
+  report month / 12
+end
+
+
+to-report n-firms
+  report count firms
+end
+
+to-report small-random-change
+  report (1 + (random-float 1 - 0.5) / 50)
+end
+
+to init-consumer-link
+  hide-link
+end
+
+
+to set-size
+  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
+end
+
+to set-house-size
+  set size .2 + (sqrt (abs liquidity) / 12)
+end
+
+to init-employment-link
+  set color blue
+  hide-link
+end
+
+to init-framework-agreement [input-type]
+  set input-firm-type input-type
+  set demand-not-satisfied 0
+  hide-link
+end
