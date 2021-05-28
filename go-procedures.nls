@@ -1,4 +1,5 @@
 ;;***************GO****************************
+;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go
   go-beginning-of-month-firms
   go-beginning-of-month-households
@@ -7,6 +8,7 @@ to go
   tick
 end
 
+;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
   ask firms [
     adjust-wage-rate
@@ -23,6 +25,7 @@ to go-beginning-of-month-firms
   ]
 end
 
+;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
 to go-beginning-of-month-households
   ask households [
     if random-float 1 < Ψprice  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
@@ -32,6 +35,7 @@ to go-beginning-of-month-households
   ]
 end
 
+;runs the daily production cycle for one month
 to go-month
   ;;; during month
   repeat month-length [
@@ -45,6 +49,7 @@ to go-month
   ]
 end
 
+;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
   ;;; end of month
   ask firms [
@@ -61,26 +66,5 @@ to go-end-of-month
   set month month + 1
 end
 
-to-report beginning-of-month?  ; observer procedure
-  report ticks mod month-length = 0
-end
 
-to-report end-of-month?  ; observer procedure
-  report ticks mod month-length = (month-length - 1)
-end
-
-to distribute-profits  ; observer procedure - distrubtes all profits allocated by firms to households
-  let total-hh-liquidity sum [liquidity] of households
-
-  ;; distribute profits proportionately to current wealth.
-  let profits-to-be-allocated PROFITS-TO-ALLOCATE
-  ask households [
-    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated  ; distribute proportionately to wealth
-;    let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
-    set liquidity liquidity + share-of-profits
-    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
-  ]
-
-  if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
-end
 

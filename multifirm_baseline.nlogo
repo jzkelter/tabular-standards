@@ -4,70 +4,7 @@
 extensions [rnd table]
 __includes["lengnick-tests.nls" "unit testing.nls" "household-procedures.nls" "firm-procedures.nls" "go-procedures.nls" "setup-procedures.nls" "misc-observer-procedures.nls"]
 
-breed [households household]
-breed [firms firm]
-undirected-link-breed [consumer-links consumer-link]
-undirected-link-breed [employment-links employment-link]
-directed-link-breed [framework-agreements framework-agreement] ;adjust these procedures too
 
-turtles-own [
-  liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
-]
-
-households-own [
-  reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
-  daily-consumption ; c_h^r / 21 in Lengnick
-]
-
-firms-own [
-  firm-type ; # a label for the firm
-  input-data ; the firm types and productivity that firms need to buy from
-  inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
-  price  ; the price of goods (p_f in Lengnick)
-  wage-rate ; w_f in Lengnick
-  ; desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
-  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
-
-  last-open-position  ; the month that the firm last had an open position
-  filled-position?  ; if the firm had an open position last month, whether or not it was filled
-
-  open-position?  ; trying to hire?
-  close-position?  ; firing at the end of the month?
-
-  demand  ; the most recent demand this firm experienced for its goods
-  tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
-  consumer?
-]
-
-consumer-links-own [
-  demand-not-satisfied
-]
-
-framework-agreements-own[
-  input-firm-type
-  demand-not-satisfied
-]
-
-globals [
-  month
-  month-length  ; 21 to reflect number of business days
-  PROFITS-TO-ALLOCATE
-  MIN-WAGE-RATE
-  FIRM-STRUCTURE
-  δ
-  γ
-  ν
-  θ
-  ϕl
-  ϕu
-  φlb
-  φub
-  χ
-  α
-  Ψprice
-  Ψquant
-  ξ
-]
 
 
 

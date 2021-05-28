@@ -1,3 +1,82 @@
+;the following lines define all of the breeds, this includes breeds for housholds, firms, and every type of link between breeds
+breed [households household]
+breed [firms firm]
+
+;links between firms and households for consumption
+undirected-link-breed [consumer-links consumer-link]
+
+;links between firms and households for employment
+undirected-link-breed [employment-links employment-link]
+
+;link between firms and other firms for supply distribution.
+directed-link-breed [framework-agreements framework-agreement] ;adjust these procedures too
+
+;defines fields that apply to all turtles
+turtles-own [
+  liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
+]
+
+;defines household specific fields
+households-own [
+  reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
+  daily-consumption ; c_h^r / 21 in Lengnick
+]
+
+;defines firm specific fields
+firms-own [
+  firm-type ; # a label for the firm
+  input-data ; the firm types and productivity that firms need to buy from
+  inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
+  price  ; the price of goods (p_f in Lengnick)
+  wage-rate ; w_f in Lengnick
+  ; desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
+  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
+
+  last-open-position  ; the month that the firm last had an open position
+  filled-position?  ; if the firm had an open position last month, whether or not it was filled
+
+  open-position?  ; trying to hire?
+  close-position?  ; firing at the end of the month?
+
+  demand  ; the most recent demand this firm experienced for its goods
+  tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
+  consumer?
+]
+
+;defines consumer link specific fields
+consumer-links-own [
+  demand-not-satisfied
+]
+
+;defines framework-agreement specific fields
+framework-agreements-own[
+  input-firm-type
+  demand-not-satisfied
+]
+
+;defines all global variables, see Lengnick paper or "setup-constants" for a description of what each of these does
+globals [
+  month
+  month-length  ; 21 to reflect number of business days
+  PROFITS-TO-ALLOCATE
+  MIN-WAGE-RATE
+  FIRM-STRUCTURE
+  δ
+  γ
+  ν
+  θ
+  ϕl
+  ϕu
+  φlb
+  φub
+  χ
+  α
+  Ψprice
+  Ψquant
+  ξ
+]
+
+;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
 to setup
   ca
 
@@ -48,6 +127,7 @@ to setup
   tick
 end
 
+;procedure to initialize all global constants
 to set-constants
   set δ 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02)
   set γ 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages
@@ -66,6 +146,7 @@ to set-constants
   set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
 end
 
+;setup procedure for firms, creates every firm in the model according to the specifications in a json file
 to setup-firms
   foreach FIRM-STRUCTURE[ f ->
     let group table:get f "Firm type"
@@ -90,6 +171,7 @@ to setup-firms
   ]
 end
 
+;generates the input data for a specific firm based on the structure specified in a json file
 to-report generate-input-data [original-data]
   ifelse original-data = "None"[
     report "None"
@@ -106,6 +188,7 @@ to-report generate-input-data [original-data]
   ]
 end
 
+;creates a single firm's framework agreements to all necessary suppliers
 to initialize-framework-agreements
   ask firms with [input-data != "None"][
     foreach table:keys input-data[i ->
@@ -126,6 +209,7 @@ to initialize-framework-agreements
   ]
 end
 
+;sets the initial input demands for all firms, this allows firms to estimate production up front and hire labor and set costs
 to initialize-input-firm-demands
   let firm-types (list)
   let firms-done-setting-demand (list)
