@@ -1,13 +1,14 @@
 ;;; THINGS THAT MIGHT BE OFF
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
-extensions [rnd]
+extensions [rnd table]
 __includes["lengnick-tests.nls" "unit testing.nls"]
 
 breed [households household]
 breed [firms firm]
 undirected-link-breed [consumer-links consumer-link]
 undirected-link-breed [employment-links employment-link]
+directed-link-breed [framework-agreements framework-agreement]
 
 turtles-own [
   liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
@@ -19,6 +20,8 @@ households-own [
 ]
 
 firms-own [
+  firm-type ; # a label for the firm
+  input-data ; the firm types and productivity that firms need to buy from
   inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
   price  ; the price of goods (p_f in Lengnick)
   wage-rate ; w_f in Lengnick
@@ -33,18 +36,25 @@ firms-own [
 
   demand  ; the most recent demand this firm experienced for its goods
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
+  consumer?
 ]
 
 consumer-links-own [
   demand-not-satisfied
 ]
 
+framework-agreements-own[
+  input-firm-type
+  demand-not-satisfied
+]
 
 globals [
   month
   month-length  ; 21 to reflect number of business days
   PROFITS-TO-ALLOCATE
   MIN-WAGE-RATE
+  FIRM-STRUCTURE
+  n-firms
   δ
   γ
   ν
@@ -75,6 +85,8 @@ to set-constants
   set Ψquant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set ξ 0.01  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper
   set month-length 21
+  set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
+  set n-firms table:get (table:from-json-file "Firm-structure.json") "Total firms"
 end
 
 to setup
@@ -96,20 +108,10 @@ to setup
   ]
 
 
-  create-firms n-firms [
-    set shape "building store"
-    set heading 0
-    rt who * (360 / n-firms)
-    fd 2 + random 6
-    set color brown
-    set tech-parameter 3  ; λ in Lengnick
-    set price 1 * small-random-change ; arbitrary, set to 1 for convenience
-    set wage-rate  52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
-    create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]  ; do this so each firm has at least on employee. Then ask households to get jobs after that
-  ]
+  setup-firms
 
   ask households[
-    create-consumer-links-with n-of n-trading-links firms [
+    create-consumer-links-with n-of n-trading-links firms with [consumer?][
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
@@ -132,6 +134,47 @@ to setup
   ask one-of firms [ask my-links [show-link]]
   reset-ticks
   tick
+end
+
+
+to setup-firms
+  foreach FIRM-STRUCTURE[ f ->
+    let group table:get f "Firm type"
+    let num-firms table:get f "Firm count"
+    let firm-input-data generate-input-data table:get f "Input data"
+    let firm-tech-parameter table:get f "Tech constant"
+    let is-consumer? table:get f "Consumer?"
+    create-firms num-firms[
+      set shape "building store"
+      set heading 0
+      rt who * (360 / n-firms)
+      fd 2 + random 6
+      set color brown
+      set tech-parameter firm-tech-parameter ; λ in Lengnick
+      set price 1 * small-random-change ; arbitrary, set to 1 for convenience
+      set firm-type group
+      set input-data firm-input-data
+      set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      set consumer? is-consumer?
+    ]
+  ]
+end
+
+
+to-report generate-input-data [original-data]
+  ifelse original-data = "None"[
+    report "None"
+  ][
+    let data-table table:make
+    foreach original-data [i ->
+      let inputi table:make
+      table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
+      table:put inputi "Current stock" 0
+      table:put data-table (table:get i "Input firm type") inputi
+    ]
+    report data-table
+  ]
 end
 
 
@@ -333,7 +376,56 @@ to decide-fire-worker
 end
 
 to-report marginal-costs   ; firm procedure
-  report wage-rate /  month-length / tech-parameter
+  report ((wage-rate /  month-length / tech-parameter) + input-cost-estimate)
+end
+
+;this procedure takes the average input cost to estimate cost
+to-report input-cost-estimate
+  let mc 0
+  foreach table:keys input-data [i ->
+    let sum-cost 0
+    ask my-framework-agreements with [input-firm-type = i][
+      ask other-end[
+        set sum-cost sum-cost + price
+      ]
+    ]
+    let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
+    set mc (mc + (avg-cost / month-length / marginal-productivity i))
+  ]
+  report mc
+end
+
+;this procedure will take the maximum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost max ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
+
+;this procedure will take the minimum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost min ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
+
+to-report current-stock [i]
+  let input table:get input-data i
+  report table:get input "Current stock"
+end
+
+to set-stock [input value]
+  let current-input table:get input-data input
+  table:put current-input "Current-stock" value
+end
+
+to-report marginal-productivity [i]
+  let input table:get input-data i
+  report table:get input "Marginal productivity"
 end
 
 to-report n-workers
@@ -404,7 +496,7 @@ end
 
 to-report pick-random-firm ; household procedure
   ; report a random firm that is not a current trading partner of this househould, weighted by # of employees
-  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors] [count my-employment-links]
+  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer?] [count my-employment-links]
 end
 
 
@@ -659,21 +751,6 @@ n-households
 10
 1000
 1000.0
-10
-1
-NIL
-HORIZONTAL
-
-SLIDER
-5
-46
-177
-79
-n-firms
-n-firms
-10
-100
-100.0
 10
 1
 NIL

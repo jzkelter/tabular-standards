@@ -1,0 +1,70 @@
+;;***************GO****************************
+;general go procedure, runs the beginning of the month, then the month, then the end of the month
+to go
+  go-beginning-of-month-firms
+  go-beginning-of-month-households
+  go-month
+  go-end-of-month
+  tick
+end
+
+;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
+to go-beginning-of-month-firms
+  ask firms [
+    adjust-wage-rate
+    adjust-job-positions
+    adjust-price
+    set-daily-input-demands
+    set demand 0  ; reset demand for the month
+    if input-data != "None"[
+      foreach table:keys input-data[i ->
+        search-cheaper-supplier i
+        search-delivery-capable-seller i
+      ]
+    ]
+  ]
+end
+
+;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
+to go-beginning-of-month-households
+  ask households [
+    if random-float 1 < Ψprice  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
+    if random-float 1 < Ψquant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
+    search-for-employement
+    set-consumption
+  ]
+end
+
+;runs the daily production cycle for one month
+to go-month
+  ;;; during month
+  repeat month-length [
+    ask households [buy-consumption-goods]
+    ask firms [
+      produce-goods
+      if input-data != "None"[
+        buy-input-goods
+      ]
+    ]
+  ]
+end
+
+;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
+to go-end-of-month
+  ;;; end of month
+  ask firms [
+    pay-wages
+    allocate-profits
+  ]
+  distribute-profits
+  ask households [
+    adjust-reservation-wage
+    set-house-size
+  ]
+  ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+
+  set month month + 1
+end
+
+
+

@@ -1,0 +1,68 @@
+;observer procedure, reports the current year of the model
+to-report year
+  report month / 12
+end
+
+;observer procedure, reports the number of firms in the model
+to-report n-firms
+  report count firms
+end
+
+;observer procedure, reports some random small number greater than 1, used for adjusting wage rates and prices
+to-report small-random-change
+  report (1 + (random-float 1 - 0.5) / 50)
+end
+
+;observer procedure, initializes a single consumer link
+to init-consumer-link
+  hide-link
+end
+
+;observer procedure, sets the size of firms based on the number of employees they have
+to set-size
+  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
+end
+
+;observer procedure, sets the size of households based on liquidity
+to set-house-size
+  set size .2 + (sqrt (abs liquidity) / 12)
+end
+
+;observer procedure, initializes a single employment link
+to init-employment-link
+  set color blue
+  hide-link
+end
+
+;observer procedure, initializes a single framework agreement
+to init-framework-agreement [input-type]
+  set input-firm-type input-type
+  set demand-not-satisfied 0
+  hide-link
+end
+
+;obsersver procedure, reports whether it is the beginning of a month
+to-report beginning-of-month?  
+  report ticks mod month-length = 0
+end
+
+;observer procedure, reports whether it is the end of a month
+to-report end-of-month?  
+  report ticks mod month-length = (month-length - 1)
+end
+
+;observer procedure, distrubtes all profits allocated by firms to households
+to distribute-profits  
+  let total-hh-liquidity sum [liquidity] of households
+
+  ;; distribute profits proportionately to current wealth.
+  let profits-to-be-allocated PROFITS-TO-ALLOCATE
+  ask households [
+    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated  ; distribute proportionately to wealth
+;    let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
+    set liquidity liquidity + share-of-profits
+    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
+  ]
+
+  if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
+end

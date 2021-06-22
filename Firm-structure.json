@@ -1,0 +1,24 @@
+{
+    "Firms":[
+        {
+            "Firm type": 1,
+            "Input data":[
+                {
+                    "Input firm type": 2,
+                    "Marginal productivity": 5
+                }
+            ],
+            "Tech constant": 3,
+            "Firm count": 70,
+            "Consumer?": true
+        },
+        {
+            "Firm type": 2,
+            "Input data": "None",
+            "Tech constant": 3,
+            "Firm count": 30,
+            "Consumer?":false
+        }
+    ]
+}
+

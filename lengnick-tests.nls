@@ -5,7 +5,7 @@ to lengnick-tests
     (list "adjust-price tests" test-adjust-price)
     (list "test-adjust-price-realistic-values" test-adjust-price-realistic-values)
     (list "test-adjust-job-positions" test-adjust-job-positions)
-    (list "test-produce-consumption-goods" test-produce-consumption-goods)
+    (list "test-produce-goods" test-produce-goods)
     (list "test-decide-reserve" test-decide-reserve)
     (list "test-pay-wages" test-pay-wages)
     (list "test-distribute-profits" test-distribute-profits)
@@ -197,7 +197,7 @@ to-report test-adjust-job-positions
 end
 
 
-to-report test-produce-consumption-goods
+to-report test-produce-goods
   report [->
     ca
     set-constants
@@ -206,11 +206,11 @@ to-report test-produce-consumption-goods
       ask households [create-employment-link-with myself]
       set inventory 0
       set tech-parameter 3
-      produce-consumption-goods
+      produce-goods
       assert-equals inventory 9 "(18)"      
       
       ask my-employment-links  [die]
-      produce-consumption-goods
+      produce-goods
       assert-equals inventory 9 "inventory should still be 9 (19)"              
     ]
   ]
