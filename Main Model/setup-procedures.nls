@@ -1,0 +1,258 @@
+;the following lines define all of the breeds, this includes breeds for housholds, firms, and every type of link between breeds
+breed [households household]
+breed [firms firm]
+
+;links between firms and households for consumption
+undirected-link-breed [consumer-links consumer-link]
+
+;links between firms and households for employment
+undirected-link-breed [employment-links employment-link]
+
+;link between firms and other firms for supply distribution.
+directed-link-breed [framework-agreements framework-agreement] ;adjust these procedures too
+
+;defines fields that apply to all turtles
+turtles-own [
+  liquidity  ; i.e. money currently available (m_h for households and m_f for firms in Lengnick )
+]
+
+;defines household specific fields
+households-own [
+  reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
+  daily-consumption ; c_h^r / 21 in Lengnick
+]
+
+;defines firm specific fields
+firms-own [
+  firm-type ; # a label for the firm
+  input-data ; the firm types and productivity that firms need to buy from
+  inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
+  price  ; the price of goods (p_f in Lengnick)
+  wage-rate ; w_f in Lengnick
+  ; desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
+  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
+
+  last-open-position  ; the month that the firm last had an open position
+  filled-position?  ; if the firm had an open position last month, whether or not it was filled
+
+  open-position?  ; trying to hire?
+  close-position?  ; firing at the end of the month?
+
+  demand  ; the most recent demand this firm experienced for its goods
+  tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
+  consumer?
+]
+
+;defines consumer link specific fields
+consumer-links-own [
+  demand-not-satisfied
+]
+
+;defines framework-agreement specific fields
+framework-agreements-own[
+  input-firm-type
+  demand-not-satisfied
+]
+
+;defines all global variables, see Lengnick paper or "setup-constants" for a description of what each of these does
+globals [
+  month
+  month-length  ; 21 to reflect number of business days
+  PROFITS-TO-ALLOCATE
+  MIN-WAGE-RATE
+  FIRM-STRUCTURE
+  δ
+  γ
+  ν
+  θ
+  ϕl
+  ϕu
+  φlb
+  φub
+  χ
+  α
+  Ψprice
+  Ψquant
+  ξ
+]
+
+;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
+to setup
+  ca
+
+  set-constants
+  set MIN-WAGE-RATE 0
+  let n-trading-links 7
+
+  create-households n-households [
+    set shape "circle" ; "person"
+    set heading 0
+    rt (who - n-firms) * (360 / n-households)
+    fd 11 + random 5
+    set color blue
+
+    set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
+    set-house-size
+  ]
+
+
+  setup-firms
+  initialize-framework-agreements
+  ask households[
+    create-consumer-links-with n-of n-trading-links firms with [consumer?][
+      init-consumer-link
+    ]
+    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
+    set reservation-wage [wage-rate] of my-employer
+    set-consumption  ; this has to be set after households have trading connections to calculate mean price
+  ]
+
+  ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
+    set-size
+    set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+    ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
+    set last-open-position -2 * γ  ; arbitrarily set > γ so firms don't try to immediately lower wage
+    set filled-position? false  ; just needs to be set to a boolean
+    set open-position?  false  ; not trying to hire immediately by default
+    set close-position? false  ; not firing immediately by default
+    if consumer? [
+      set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+      set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+      set-daily-input-demands
+    ]
+  ]
+  initialize-input-firm-demands
+  ask one-of firms [ask my-links [show-link]]
+  reset-ticks
+  tick
+end
+
+;procedure to initialize all global constants
+to set-constants
+  set max-wage-growth 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02) //WILL June 2021, Does this mean his code was using different variables than outlined in the paper.
+  set months-to-lower-wage 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages, paper uses 24
+  set max-price-growth 0.02 ;  ν in Lengnick: the max amount a firm increases/decreases prices by, (paper uses 0.02)
+  set prob-firm-changes-price 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
+  set inventory-floor 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
+  set inventory-cieling 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
+  set price-floor 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
+  set price-cieling 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
+  set buffer-labor-fraction 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set diminishing-utility-constant .9  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
+  set prob-change-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
+  set prob-change-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
+  set price-diff-lower-bound 0  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
+  set month-length 21
+  set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
+end
+
+;setup procedure for firms, creates every firm in the model according to the specifications in a json file
+to setup-firms
+  foreach FIRM-STRUCTURE[ f ->
+    let group table:get f "Firm type"
+    let num-firms table:get f "Firm count"
+    let firm-input-data generate-input-data table:get f "Input data"
+    let firm-tech-parameter table:get f "Tech constant"
+    let is-consumer? table:get f "Consumer?"
+    create-firms num-firms[
+      set shape "building store"
+      set heading 0
+      rt who * (360 / n-firms)
+      fd 2 + random 6
+      set color brown
+      set tech-parameter firm-tech-parameter ; λ in Lengnick
+      set price 1 * small-random-change ; arbitrary, set to 1 for convenience
+      set firm-type group
+      set input-data firm-input-data
+      set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      set consumer? is-consumer?
+    ]
+  ]
+end
+
+;generates the input data for a specific firm based on the structure specified in a json file
+to-report generate-input-data [original-data]
+  
+  ifelse length original-data = 0 [  ;;empty list means default settings
+    report "None"
+  ][
+    let data-table table:make
+    foreach original-data [i ->
+      let inputi table:make
+      table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
+      table:put inputi "Current stock" 0
+      table:put inputi "Daily demand" 0
+      table:put data-table (table:get i "Input firm type") inputi
+    ]
+    report data-table
+  ]
+end
+
+;creates a single firm's framework agreements to all necessary suppliers
+to initialize-framework-agreements
+  ask firms with [input-data != "None"][
+    foreach table:keys input-data[i ->
+      let num-agreements 5
+      if any? firms with [firm-type = i and n-out-agreements = 0][
+        set num-agreements num-agreements - 1
+        create-framework-agreement-from one-of firms with [firm-type = i and n-out-agreements = 0][
+          init-framework-agreement i
+        ]
+      ]
+      let current-firm self
+      ask n-of num-agreements firms with [firm-type = i and not out-framework-agreement-neighbor? self][
+        create-framework-agreement-to current-firm[
+          init-framework-agreement i
+        ]
+      ]
+    ]
+  ]
+end
+
+;sets the initial input demands for all firms, this allows firms to estimate production up front and hire labor and set costs
+to initialize-input-firm-demands
+  let firm-types (list)
+  let firms-done-setting-demand (list)
+  let firms-ready-to-set-demand (list)
+  foreach FIRM-STRUCTURE[t ->
+    set firm-types fput table:get t "Firm type" firm-types
+    if table:get t "Consumer?"[
+      set firms-done-setting-demand fput table:get t "Firm type" firms-done-setting-demand
+      let input-firms table:get t "Input data"
+      foreach input-firms[f ->
+        set firms-ready-to-set-demand fput table:get f "Input firm type" firms-ready-to-set-demand
+      ]
+    ]
+  ]
+  let finished? false
+  while [not finished?][
+    let new-ready-firms (list)
+    foreach firms-ready-to-set-demand [f ->
+      let aggregate-monthly-quantity-demanded 0
+      ask firms with [uses-input? f][
+        set aggregate-monthly-quantity-demanded (aggregate-monthly-quantity-demanded + (month-length * (daily-input-demand f)))
+      ]
+      ;******* This next part of the procedure is definitely up for debate on how to implement **********
+      let average-demand (aggregate-monthly-quantity-demanded / (count firms with [firm-type = f]))
+      ask firms with [firm-type = f][
+        set demand (average-demand * (1 + (random-float 0.25)))
+        set-daily-input-demands
+      ]
+      set firms-done-setting-demand fput f firms-done-setting-demand
+      set firms-ready-to-set-demand remove f firms-ready-to-set-demand
+      let global-firm-data item 0 (filter [i -> table:get i "Firm type" = f] FIRM-STRUCTURE)
+      let firm-input-data table:get global-firm-data "Input data"
+      if firm-input-data != "None"[
+        foreach firm-input-data[i ->
+          set new-ready-firms fput i new-ready-firms
+        ]
+      ]
+    ]
+    ifelse (length firms-done-setting-demand = length firm-types) or (length new-ready-firms = 0)[
+      set finished? true
+    ][
+      set firms-ready-to-set-demand new-ready-firms
+    ]
+  ]
+end

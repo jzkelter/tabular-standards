@@ -1,20 +1,18 @@
-;;; THINGS THAT MIGHT BE OFF
-; - it could be that dividing dividends based off of current wealth leads to an instability eventually
+extensions [table rnd gis]
 
-extensions [rnd table]
-__includes["lengnick-tests.nls" "unit testing.nls" "household-procedures.nls" "firm-procedures.nls" "go-procedures.nls" "setup-procedures.nls" "misc-observer-procedures.nls"]
-
-
-
-
-
-
+to go
+  let test-structure gis:load-dataset "Firm-structure.json"
+  show test-structure
+  let firms table:get test-structure "Firms"
+  let firm1 item 0 firms
+  show table:get firm1 "Input data"
+end
 @#$#@#$#@
 GRAPHICS-WINDOW
-207
-51
-644
-489
+210
+10
+647
+448
 -1
 -1
 13.0
@@ -24,170 +22,26 @@ GRAPHICS-WINDOW
 1
 1
 0
-0
-0
+1
+1
 1
 -16
 16
 -16
 16
+0
+0
 1
-1
-1
-months
+ticks
 30.0
 
 BUTTON
-1
-88
-67
-121
-setup
-stop-inspecting-dead-agents\nsetup
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-125
-88
-206
-121
-go-once
-go\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-68
-88
-123
-121
+16
+29
+79
+62
 NIL
 go
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-SLIDER
-6
-11
-178
-44
-n-households
-n-households
-10
-1000
-1000.0
-10
-1
-NIL
-HORIZONTAL
-
-PLOT
-1
-125
-201
-331
-Employed Households
-years
-NIL
-0.0
-10.0
-950.0
-1000.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count employment-links"
-
-PLOT
-652
-10
-975
-147
-Wage Rate Stats
-NIL
-NIL
-0.0
-10.0
-0.0
-60.0
-true
-true
-"" ""
-PENS
-"mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
-"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
-"max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
-"median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
-
-PLOT
-653
-455
-853
-605
-worker per firm distribution
-NIL
-NIL
-0.0
-20.0
-0.0
-20.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
-
-PLOT
-857
-300
-1057
-450
-liquidity of firms and households
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
-"households" 1.0 0 -13345367 true "" "plot  mean [liquidity] of households"
-"pen-2" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
-
-BUTTON
-992
-103
-1086
-136
-hide-links
-ask links [hide-link]
 NIL
 1
 T
@@ -196,266 +50,6 @@ NIL
 NIL
 NIL
 NIL
-1
-
-BUTTON
-987
-69
-1174
-102
-show random firm's links
-ask one-of firms [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-855
-454
-1055
-604
-customer per firm distribution
-NIL
-NIL
-0.0
-100.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
-
-PLOT
-856
-147
-1056
-297
-mean price
-NIL
-NIL
-0.0
-10.0
-0.98
-1.02
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
-
-BUTTON
-237
-10
-310
-43
-bmonth-f
-go-beginning-of-month-firms\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-391
-10
-486
-43
-go-month
-go-month\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-1
-333
-201
-483
-mean inventory/demand
-NIL
-NIL
-0.0
-10.0
-0.0
-0.65
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / demand] of firms"
-"pen-1" 1.0 0 -7500403 true "" "plotxy year ϕl"
-
-PLOT
-653
-300
-853
-450
-mean demand not satisfied
-NIL
-NIL
-0.0
-10.0
-0.0
-0.1
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
-
-PLOT
-653
-147
-853
-297
-mean demand
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
-
-BUTTON
-992
-21
-1112
-54
-NIL
-lengnick-tests
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-180
-10
-235
-43
-dsetup
-\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-487
-10
-631
-43
-go-end-of-month
-go-end-of-month\ntick\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-312
-10
-389
-43
-bmonth-h
-go-beginning-of-month-households\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-0
-486
-200
-636
-firms w/ high/low inventory 
-NIL
-NIL
-0.0
-10.0
-0.0
-100.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  ϕl * demand]"
-"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  ϕu * demand]"
-"pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
-
-TEXTBOX
-204
-514
-359
-570
-inventory < ϕl * demand \n(want to hire)
-11
-0.0
-1
-
-TEXTBOX
-204
-598
-354
-626
-inventory >  ϕu * demand (want to fire)
-11
-15.0
-1
-
-TEXTBOX
-4
-370
-46
-455
-above line we expect firing, below hiring
-10
-5.0
 1
 
 @#$#@#$#@
@@ -481,9 +75,7 @@ above line we expect firing, below hiring
 
 ## EXTENDING THE MODEL
 
-- Give firms some knowledge of the prices and wages of other firms.
-- Allow firms to go out of business and to be started and include population growth
-- create innovation in technology
+(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
 
 ## NETLOGO FEATURES
 
@@ -530,21 +122,6 @@ Circle -7500403 true true 110 127 80
 Circle -7500403 true true 110 75 80
 Line -7500403 true 150 100 80 30
 Line -7500403 true 150 100 220 30
-
-building store
-false
-0
-Rectangle -7500403 true true 30 45 45 240
-Rectangle -16777216 false false 30 45 45 165
-Rectangle -7500403 true true 15 165 285 255
-Rectangle -16777216 true false 120 195 180 255
-Line -7500403 true 150 195 150 255
-Rectangle -16777216 true false 30 180 105 240
-Rectangle -16777216 true false 195 180 270 240
-Line -16777216 false 0 165 300 165
-Polygon -7500403 true true 0 165 45 135 60 90 240 90 255 135 300 165
-Rectangle -7500403 true true 0 0 75 45
-Rectangle -16777216 false false 0 0 75 45
 
 butterfly
 true
