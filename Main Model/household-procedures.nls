@@ -3,7 +3,7 @@ to search-cheaper-vendor
   let current-trading-link one-of my-consumer-links
   let random-firm pick-random-consumer-firm
   let current-price [price] of [other-end] of current-trading-link
-  if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
+  if ([price] of random-firm) * (1 + price-diff-lower-bound) < current-price [  ; Switch if new price is at least ξ% lower
     ask current-trading-link [die]
     create-consumer-link-with random-firm [init-consumer-link]
   ]
@@ -96,7 +96,7 @@ end
 to-report ideal-consumption [money mean-price]
   let ic 0
   carefully [
-    set ic (money / mean-price) ^ α  ; is α in Lengnick. Consumption increases with wealth at decaying rate
+    set ic (money / mean-price) ^ price-diff-lower-bound  ; is α in Lengnick. Consumption increases with wealth at decaying rate
   ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
     print error-message
   ]

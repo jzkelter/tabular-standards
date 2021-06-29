@@ -61,19 +61,19 @@ globals [
   PROFITS-TO-ALLOCATE
   MIN-WAGE-RATE
   FIRM-STRUCTURE
-  δ
-  γ
-  ν
-  θ
-  ϕl
-  ϕu
-  φlb
-  φub
-  χ
-  α
-  Ψprice
-  Ψquant
-  ξ
+  max-wage-growth
+  months-to-lower-wage 
+  max-price-growth
+  prob-firm-changes-price
+  inventory-floor
+  inventory-ceiling 
+  price-floor 
+  price-ceiling 
+  buffer-labor-fraction 
+  diminishing-utility-constant 
+  prob-replace-firm-price
+  prob-replace-firm-quant 
+  price-diff-lower-bound
 ]
 
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
@@ -86,32 +86,39 @@ to setup
 
   create-households n-households [
     set shape "circle" ; "person"
-    set heading 0
-    rt (who - n-firms) * (360 / n-households)
-    fd 11 + random 5
+    set ycor min-pycor + 1 + random 10
+    
+    
+    ;set heading 0                                ORIGINAL LOCATION PROCEDURES
+    ;rt (who - n-firms) * (360 / n-households)     
+    ;fd 11 + random 5
     set color blue
 
     set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
-    set-house-size
+    ;set-house-size
   ]
 
 
   setup-firms
   initialize-framework-agreements
   ask households[
+    set xcor liquidity / mean [liquidity] of households
     create-consumer-links-with n-of n-trading-links firms with [consumer?][
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
     set reservation-wage [wage-rate] of my-employer
     set-consumption  ; this has to be set after households have trading connections to calculate mean price
+    if unemployed? [
+      set color red
+    ]
   ]
 
   ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
-    set-size
+    ;set-firm-size      ;this was the previous method to create firm sizes based on number of employees
     set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
     ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
-    set last-open-position -2 * γ  ; arbitrarily set > γ so firms don't try to immediately lower wage
+    set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
     set filled-position? false  ; just needs to be set to a boolean
     set open-position?  false  ; not trying to hire immediately by default
     set close-position? false  ; not firing immediately by default
@@ -129,19 +136,19 @@ end
 
 ;procedure to initialize all global constants
 to set-constants
-  set max-wage-growth 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02) //WILL June 2021, Does this mean his code was using different variables than outlined in the paper.
+  set max-wage-growth 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02) 
   set months-to-lower-wage 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages, paper uses 24
   set max-price-growth 0.02 ;  ν in Lengnick: the max amount a firm increases/decreases prices by, (paper uses 0.02)
   set prob-firm-changes-price 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
   set inventory-floor 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
-  set inventory-cieling 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
+  set inventory-ceiling 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
   set price-floor 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
-  set price-cieling 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
+  set price-ceiling 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
   set buffer-labor-fraction 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
   set diminishing-utility-constant .9  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
-  set prob-change-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
-  set prob-change-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
-  set price-diff-lower-bound 0  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
+  set prob-replace-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
+  set prob-replace-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
+  set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
   set month-length 21
   set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
 end
@@ -156,9 +163,11 @@ to setup-firms
     let is-consumer? table:get f "Consumer?"
     create-firms num-firms[
       set shape "building store"
-      set heading 0
-      rt who * (360 / n-firms)
-      fd 2 + random 6
+      set xcor 0
+      set ycor max-pycor - 1 - random 5
+      ;set heading 0             Original location procedure
+      ;rt who * (360 / n-firms)
+      ;fd 2 + random 6
       set color brown
       set tech-parameter firm-tech-parameter ; λ in Lengnick
       set price 1 * small-random-change ; arbitrary, set to 1 for convenience

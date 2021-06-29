@@ -4,10 +4,10 @@ to adjust-wage-rate
   ;; NOTE: this is how Nardin implements it. Lengnick implements it differently
   (ifelse
     last-open-position = (MONTH - 1) and not filled-position? [  ; firm had an open position last month and failed to fill
-      set wage-rate (1 + random-float δ) * wage-rate
+      set wage-rate (1 + random-float max-wage-growth) * wage-rate
     ]
-    (MONTH - last-open-position) >= γ [ ; If all hires in past γ months have succeded, lower wage rate.
-      set wage-rate max list ((1 - random-float δ) * wage-rate) MIN-WAGE-RATE  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
+    (MONTH - last-open-position) >= months-to-lower-wage [ ; If all hires in past γ months have succeded, lower wage rate.
+      set wage-rate max list ((1 - random-float max-wage-growth) * wage-rate) MIN-WAGE-RATE  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
     ])
 
 end
@@ -31,12 +31,12 @@ to adjust-job-positions
 ;  )
   set filled-position? false  ; reset this, because none of the firms have filled a position at the beginning of a month
   (ifelse
-    inventory <  ϕl * demand [  ; inventory is low
+    inventory <  inventory-floor * demand [  ; inventory is low
       set open-position? true  ; try to hire
       set close-position? false  ; don't fire anyone
       set last-open-position MONTH  ; this month is the last open position
     ]
-    inventory > ϕu * demand [  ; inventory is high
+    inventory > inventory-ceiling * demand [  ; inventory is high
       set open-position? false  ; don't hire
       set close-position? true  ; fire
     ] [  ; else if inventory is within desired range
@@ -63,12 +63,12 @@ to adjust-price
 
   (ifelse
     ; if inventory is low and price is below upper threshold, with probability θ increase prce
-    (inventory < ϕl * demand) and (price < marginal-costs * φub) and (random-float 1 < θ) [
-      set price price * (1 + random-float ν)
+    (inventory < inventory-floor * demand) and (price < marginal-costs * price-ceiling) and (random-float 1 < prob-firm-changes-price) [
+      set price price * (1 + random-float max-price-growth)
     ]
     ; if inventory is high and price is above lower threshold, with probability θ decrease price
-    (inventory > ϕu * demand) and (price > marginal-costs * φlb) and random-float 1 < θ [  ;
-      set price price * (1 - random-float ν)
+    (inventory > inventory-ceiling * demand) and (price > marginal-costs * price-floor) and random-float 1 < prob-firm-changes-price [  ;
+      set price price * (1 - random-float max-price-growth)
     ]
   )
 end
@@ -96,7 +96,7 @@ to decide-fire-worker
   ]
   set close-position? false
 
-  set-size
+  set-firm-size
 end
 
 ;firm procedure, searches for a cheaper supplier of a given input good
@@ -104,7 +104,7 @@ to search-cheaper-supplier [input-i]
   let current-framework-agreement one-of my-in-framework-agreements with [input-firm-type = input-i]
   let random-firm pick-random-input-firm input-i
   let current-price [price] of [other-end] of current-framework-agreement
-  if ([price] of random-firm) * (1 + ξ) < current-price [  ; Switch if new price is at least ξ% lower
+  if ([price] of random-firm) * (1 + price-diff-lower-bound) < current-price [  ; Switch if new price is at least ξ% lower
     ask current-framework-agreement [die]
     create-framework-agreement-from random-firm [
       init-framework-agreement input-i
@@ -236,7 +236,7 @@ end
 
 ;firm procedure, decides how much to hold for distribution to households and for savings
 to-report decide-reserve  
-  report χ * wage-rate * n-workers  ; 0.1 is χ in Lengnick
+  report buffer-labor-fraction * wage-rate * n-workers  ; 0.1 is χ in Lengnick
 end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock

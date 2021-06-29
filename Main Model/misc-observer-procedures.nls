@@ -19,14 +19,14 @@ to init-consumer-link
 end
 
 ;observer procedure, sets the size of firms based on the number of employees they have
-to set-size
-  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
-end
+;to set-firm-size
+;  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
+;end
 
 ;observer procedure, sets the size of households based on liquidity
-to set-house-size
-  set size .2 + (sqrt (abs liquidity) / 12)
-end
+;to set-house-size
+;  set size  (sqrt (abs liquidity) / 12)
+;end
 
 ;observer procedure, initializes a single employment link
 to init-employment-link

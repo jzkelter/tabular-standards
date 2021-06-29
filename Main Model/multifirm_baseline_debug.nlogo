@@ -11,6 +11,8 @@ __includes["lengnick-tests.nls"
            "misc-observer-procedures.nls"]
 
 
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -184,10 +186,10 @@ PENS
 "pen-2" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
 
 BUTTON
-1306
-10
-1400
-43
+992
+103
+1086
+136
 hide-links
 ask links [hide-link]
 NIL
@@ -201,10 +203,10 @@ NIL
 1
 
 BUTTON
-1114
-11
-1301
-44
+987
+69
+1174
+102
 show random firm's links
 ask one-of firms [ask my-links [show-link]]
 NIL
@@ -303,8 +305,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / max (list 1 demand)] of firms"
-"pen-1" 1.0 0 -7500403 true "" "plotxy year inventory-floor"
+"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / demand] of firms"
+"pen-1" 1.0 0 -7500403 true "" "plotxy year ϕl"
 
 PLOT
 653
@@ -343,10 +345,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
 
 BUTTON
-983
-11
-1103
-44
+992
+21
+1112
+54
 NIL
 lengnick-tests
 NIL
@@ -426,8 +428,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  inventory-floor * demand]"
-"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  inventory-ceiling * demand]"
+"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  ϕl * demand]"
+"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  ϕu * demand]"
 "pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
 
 TEXTBOX
@@ -459,21 +461,6 @@ above line we expect firing, below hiring
 10
 5.0
 1
-
-SLIDER
-1067
-148
-1247
-181
-transactions-per-month
-transactions-per-month
-0
-100
-50.0
-1
-1
-NIL
-HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

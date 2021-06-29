@@ -27,9 +27,10 @@ end
 
 ;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
 to go-beginning-of-month-households
+  
   ask households [
-    if random-float 1 < Ψprice  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
-    if random-float 1 < Ψquant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
+    if random-float 1 < prob-replace-firm-price  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
+    if random-float 1 < prob-replace-firm-quant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
     search-for-employement
     set-consumption
   ]
@@ -38,7 +39,7 @@ end
 ;runs the daily production cycle for one month
 to go-month
   ;;; during month
-  repeat month-length [
+  repeat transactions-per-month [
     ask households [buy-consumption-goods]
     ask firms [
       produce-goods
@@ -51,15 +52,28 @@ end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
-  ;;; end of month
+  ;;variables declared here to prevent recalculation every time a new household is asked
+  let liq-mean mean [liquidity] of households
+  let liq-stdev standard-deviation [liquidity] of households
+  let inv-mean mean [inventory] of firms
+  let inv-stdev standard-deviation [inventory] of firms
+  print liq-mean
+  print liq-stdev
   ask firms [
     pay-wages
     allocate-profits
+    set xcor 3 * (inventory - inv-mean) / inv-stdev
   ]
   distribute-profits
   ask households [
     adjust-reservation-wage
-    set-house-size
+    ;set-house-size
+    set xcor min (list max-pxcor (3 * (liquidity - liq-mean) / liq-stdev))
+    ifelse unemployed? [
+      set color red
+    ] [
+      set color blue
+    ]
   ]
   ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 

@@ -58,7 +58,7 @@ to-report test-adjust-wage-rate
       ;set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
       set last-open-position 9
       set filled-position? false 
-      let raised-wage (1 + seeded-random-float δ 1) * 10        
+      let raised-wage (1 + seeded-random-float max-wage-growth 1) * 10        
       adjust-wage-rate        
       assert-equals wage-rate raised-wage "Wage rate should have been raised (1)"
      
@@ -80,10 +80,10 @@ to-report test-adjust-wage-rate
       
       ;; test when wage should lower     
       ; set months-with-all-positions-filled 24
-      set last-open-position 10 - γ
+      set last-open-position 10 - months-to-lower-wage
       set filled-position? true
       set wage-rate 10
-      let lowered-wage (1 - seeded-random-float δ 1) * 10    
+      let lowered-wage (1 - seeded-random-float max-wage-growth 1) * 10    
       adjust-wage-rate
       assert-equals wage-rate lowered-wage "Wage rate should have lowered (4)"
     ]  
@@ -101,38 +101,38 @@ to-report test-adjust-price
       set tech-parameter 3
       set demand 5
       
-      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
-      set price marginal-costs * φub * .9 ; price is below upper bound cost --> okay to increaes price
+      set inventory (inventory-floor) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * price-ceiling * .9 ; price is below upper bound cost --> okay to increaes price
       let old-price price
       random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
       adjust-price      
       assert (price > old-price) "price should have gone up (5)"
       
-      set inventory (ϕl) * demand * .9  ; inventory is lower than lower bound -> increase price      
-      set price marginal-costs * φub ; price is at upper bound cost --> don't increase price      
+      set inventory (price-floor) * demand * .9  ; inventory is lower than lower bound -> increase price      
+      set price marginal-costs * price-ceiling ; price is at upper bound cost --> don't increase price      
       random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
       adjust-price      
-      assert-equals price (marginal-costs * φub) "price should have stayed at maximum (6)"                       
+      assert-equals price (marginal-costs * price-ceiling) "price should have stayed at maximum (6)"                       
       
-      set inventory demand * (ϕl + ϕu) / 2  ; inventory is between upper and lower bounds
-      set price marginal-costs * (φub + φlb) / 2; price is better upper and lower bounds
+      set inventory demand * (inventory-floor + inventory-ceiling) / 2  ; inventory is between upper and lower bounds
+      set price marginal-costs * (price-ceiling + price-floor) / 2; price is better upper and lower bounds
       set old-price price
       random-seed 1  ;; with this random seed (random-float 1 < θ) will be true      
       adjust-price      
       assert-equals price old-price "price should have stayed the same (7)"
       
-      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
-      set price marginal-costs * φlb * 1.1 ; price is above minimum --> okay to decrease price
+      set inventory (inventory-ceiling) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * price-floor * 1.1 ; price is above minimum --> okay to decrease price
       set old-price price
       random-seed 1  ;; with this random seed (random-float 1 < θ) will be true     
       adjust-price      
       assert (price < old-price) "price should have gone down (7)"
       
-      set inventory (ϕu) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
-      set price marginal-costs * φlb ; price is at lower bound cost --> don't decrease price      
+      set inventory (inventory-ceiling) * demand * 1.01  ; inventory is higher than upper bound -> decrease price      
+      set price marginal-costs * price-floor ; price is at lower bound cost --> don't decrease price      
       random-seed 1  ;; with this random seed (random-float 1 < θ) will be true 
       adjust-price      
-      assert-equals price (marginal-costs * φlb) "price should have stayed at minimum (7)"                  
+      assert-equals price (marginal-costs * price-floor) "price should have stayed at minimum (7)"                  
       
     ]
   ]  
@@ -170,8 +170,8 @@ to-report test-adjust-job-positions
     create-firms 1 [
       set last-open-position 8
       set demand 500
-      let inventory-upper-bound ϕu * demand
-      let inventory-lower-bound ϕl * demand
+      let inventory-upper-bound inventory-ceiling * demand
+      let inventory-lower-bound inventory-floor * demand
       
       set inventory (inventory-upper-bound + inventory-lower-bound) / 2
       adjust-job-positions
@@ -225,7 +225,7 @@ to-report test-decide-reserve
     create-firms 1 [
       ask households [create-employment-link-with myself]
       set wage-rate 1
-      assert-equals decide-reserve χ * 1 * 3 "(20)"
+      assert-equals decide-reserve buffer-labor-fraction * 1 * 3 "(20)"
       
       ask my-employment-links [die]
       assert-equals decide-reserve 0 "(21)"
@@ -614,7 +614,7 @@ to-report test-set-consumption
     ask one-of households[
       set liquidity 90
       set-consumption
-      assert-equals daily-consumption (((90 / 4.5) ^ α) / month-length) "Wrong daily demand (62)"
+      assert-equals daily-consumption (((90 / 4.5) ^ diminishing-utility-constant) / month-length) "Wrong daily demand (62)"
     ]
   ]
 end
