@@ -130,6 +130,15 @@ to setup
   ]
   initialize-input-firm-demands
   ask one-of firms [ask my-links [show-link]]
+  if include-visualizations? = False [
+    ask turtles [
+      hide-turtle
+    ]
+    ask links [
+      hide-link
+    ]
+  ]
+  
   reset-ticks
   tick
 end
@@ -150,7 +159,11 @@ to set-constants
   set prob-replace-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
   set month-length 21
-  set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
+  ifelse single-firm-type? [
+    set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
+  ] [
+    set FIRM-STRUCTURE table:get (table:from-json-file "Multi-Firm-structure.json") "Firms"
+  ]
 end
 
 ;setup procedure for firms, creates every firm in the model according to the specifications in a json file

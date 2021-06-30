@@ -10,7 +10,6 @@ __includes["lengnick-tests.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -467,13 +466,46 @@ SLIDER
 181
 transactions-per-month
 transactions-per-month
-0
-100
-50.0
+1
+21
+1.0
 1
 1
 NIL
 HORIZONTAL
+
+SWITCH
+1068
+184
+1245
+217
+include-visualizations?
+include-visualizations?
+0
+1
+-1000
+
+SWITCH
+1069
+222
+1243
+255
+allow-firm-exit?
+allow-firm-exit?
+1
+1
+-1000
+
+SWITCH
+1069
+260
+1217
+293
+single-firm-type?
+single-firm-type?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?

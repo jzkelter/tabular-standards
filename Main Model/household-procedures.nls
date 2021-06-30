@@ -1,4 +1,4 @@
-;household proceudre, searches for a cheaper consumer good vendor
+;household procedure, searches for a cheaper consumer good vendor
 to search-cheaper-vendor  
   let current-trading-link one-of my-consumer-links
   let random-firm pick-random-consumer-firm
@@ -89,7 +89,7 @@ end
 to set-consumption  
   let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
   let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
-  set daily-consumption total-consumption / month-length
+  set daily-consumption total-consumption / transactions-per-month
 end
 
 ;household procedure, reports ideal daily consumption based on some propensity to save, called by set-consumption

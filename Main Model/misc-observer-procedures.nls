@@ -8,7 +8,7 @@ to-report n-firms
   report count firms
 end
 
-;observer procedure, reports some random small number greater than 1, used for adjusting wage rates and prices
+;observer procedure, reports some random small number ranging from 0.99 to 1.01, used for adjusting wage rates and prices
 to-report small-random-change
   report (1 + (random-float 1 - 0.5) / 50)
 end

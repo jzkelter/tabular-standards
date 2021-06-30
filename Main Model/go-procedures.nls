@@ -1,10 +1,20 @@
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go
+  
+  ;;ran this to find where the complexity is leaking, it was about 80% in the go-month procedure (which is to be expected)
+  ;let complexity timer
   go-beginning-of-month-firms
+  ;print word "Beginning of month time complexity for firms is:   " (timer - complexity)
+  ;set complexity timer
   go-beginning-of-month-households
+  ;print word "Beginning of month time complexity for households is:   " (timer - complexity)
+  ;set complexity timer
   go-month
+  ;print word "Monthly transactions time complexity is:   " (timer - complexity)
+  ;set complexity timer
   go-end-of-month
+  ;print word "End of month time complexity is:   " (timer - complexity)
   tick
 end
 
@@ -40,31 +50,34 @@ end
 to go-month
   ;;; during month
   repeat transactions-per-month [
+    ;let complexity timer
     ask households [buy-consumption-goods]
+    ;print word "Household time complexity is:   " (timer - complexity)
+    ;set complexity timer
     ask firms [
       produce-goods
       if input-data != "None"[
         buy-input-goods
       ]
     ]
+    ;print word "Firm time complexity is:   " (timer - complexity)
   ]
 end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
   ;;variables declared here to prevent recalculation every time a new household is asked
-  let liq-mean mean [liquidity] of households
-  let liq-stdev standard-deviation [liquidity] of households
-  let inv-mean mean [inventory] of firms
-  let inv-stdev standard-deviation [inventory] of firms
-  print liq-mean
-  print liq-stdev
+  
+  let firm-liq-mean mean [liquidity] of firms
+  let firm-liq-stdev standard-deviation [liquidity] of firms
   ask firms [
     pay-wages
     allocate-profits
-    set xcor 3 * (inventory - inv-mean) / inv-stdev
+    set xcor min (list max-pxcor (3 * (inventory - firm-liq-mean) / firm-liq-stdev))
   ]
   distribute-profits
+  let liq-mean mean [liquidity] of households
+  let liq-stdev standard-deviation [liquidity] of households
   ask households [
     adjust-reservation-wage
     ;set-house-size
@@ -75,7 +88,10 @@ to go-end-of-month
       set color blue
     ]
   ]
-  ask firms [decide-fire-worker] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+  ask firms [
+    decide-fire-worker
+    determine-firm-exit
+  ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set month month + 1
 end

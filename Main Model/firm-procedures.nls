@@ -89,14 +89,29 @@ to decide-fire-worker
 ;    ]
 ;  )
 
-  if close-position? and n-workers > 1 [  ; firms won't fire their last worker
-    ask one-of my-employment-links [die]
+  if close-position? [  ; firms won't fire their last worker if firm-exit is disabled
+    if allow-firm-exit?  or n-workers > 1 [
+      ask one-of my-employment-links [die]
     ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
     ; set desired-labor-change 0  ; no longer want to fire ( I used this before using close-position?
+    ]
   ]
   set close-position? false
 
-  set-firm-size
+  ;set-firm-size
+end
+
+
+to determine-firm-exit
+  if count my-employment-links = 0 [
+    ask consumer-link-neighbors [
+      create-consumer-link-with one-of firms with [consumer?][
+        init-consumer-link
+      ]
+    ]
+    ask my-consumer-links [die]
+    die
+  ]
 end
 
 ;firm procedure, searches for a cheaper supplier of a given input good
