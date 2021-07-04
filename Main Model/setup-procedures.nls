@@ -1,12 +1,15 @@
 ;the following lines define all of the breeds, this includes breeds for housholds, firms, and every type of link between breeds
 breed [households household]
 breed [firms firm]
+breed [banks bank]
 
 ;links between firms and households for consumption
 undirected-link-breed [consumer-links consumer-link]
 
 ;links between firms and households for employment
 undirected-link-breed [employment-links employment-link]
+
+undirected-link-breed [credit-links credit-link]
 
 ;link between firms and other firms for supply distribution.
 directed-link-breed [framework-agreements framework-agreement] ;adjust these procedures too
@@ -43,6 +46,11 @@ firms-own [
   consumer?
 ]
 
+credit-links-own [
+  principal   ; initial amount of the loan
+  interest-rate   ; the assigned interest rate for this loan
+]
+
 ;defines consumer link specific fields
 consumer-links-own [
   demand-not-satisfied
@@ -74,6 +82,9 @@ globals [
   prob-replace-firm-price
   prob-replace-firm-quant 
   price-diff-lower-bound
+  capital-requirement-coefficient
+  policy-interest-rate
+  max-interest-markup
 ]
 
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
@@ -98,7 +109,7 @@ to setup
     ;set-house-size
   ]
 
-
+  setup-banks
   setup-firms
   initialize-framework-agreements
   ask households[
@@ -158,6 +169,10 @@ to set-constants
   set prob-replace-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
   set prob-replace-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
+  set capital-requirement-coefficient 0.1  ;ν in Gatti, this is the coefficient that allows banks to lend out a multiple of their liquidity
+  set policy-interest-rate 0.05    ;r_upperbar in Gatti, this is the interest rate set by the central bank with which banks ask for a markup
+  set max-interest-markup 0.1     ; φ_kt in Gatti, this is the maximum markup of the buyers leverage 
+  
   set month-length 21
   ifelse single-firm-type? [
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -189,6 +204,18 @@ to setup-firms
       set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
       set consumer? is-consumer?
+    ]
+  ]
+end
+
+
+to setup-banks
+  let num-banks 10     ;shamefully arbitrary
+  ask n-of num-banks patches with [pxcor = min-pxcor and pycor > -1 * num-banks / 2 and pycor < (num-banks + 1) / 2] [
+    sprout-banks 1 [
+      set shape "dollar bill"
+      set color green
+      set size 4
     ]
   ]
 end

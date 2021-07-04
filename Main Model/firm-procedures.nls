@@ -101,18 +101,17 @@ to decide-fire-worker
   ;set-firm-size
 end
 
-
-to determine-firm-exit
-  if count my-employment-links = 0 [
-    ask consumer-link-neighbors [
-      create-consumer-link-with one-of firms with [consumer?][
-        init-consumer-link
-      ]
+;firm procedure-determines whether exit is an appropriate response for the firm this period
+to remove-firm
+  ask consumer-link-neighbors [
+    create-consumer-link-with one-of firms with [consumer?][
+      init-consumer-link
     ]
-    ask my-consumer-links [die]
-    die
   ]
+  ask my-consumer-links [die]
+  die
 end
+
 
 ;firm procedure, searches for a cheaper supplier of a given input good
 to search-cheaper-supplier [input-i]
@@ -133,6 +132,54 @@ to search-delivery-capable-seller [input-i]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
     create-framework-agreement-from pick-random-input-firm input-i [init-framework-agreement input-i]
     ask link-failed-to-satisfy [die]
+  ]
+end
+
+;firm procedure, search for a loan to fufill difference between wages and liquidity, called by pay-wages at the beginning of the moth 
+to search-for-loan
+  let num-banks-contacted 5
+  let cur-low-interest-rate 100    ;initially extremely high to allow for adjustments hypothetical max interest rate
+  let loan-needed wage-rate * count employment-links - liquidity
+  let leverage loan-needed / liquidity
+  let curr-firm self
+  ask n-of num-banks-contacted banks [
+    let cur-interest-rate policy-interest-rate * (1 + (random-float max-interest-markup) * leverage)
+    if cur-low-interest-rate > cur-interest-rate [
+      set cur-low-interest-rate cur-interest-rate
+      if count credit-links > 0[
+        ask credit-links [die]
+      ]
+      create-credit-link-with curr-firm [
+        set principal loan-needed
+        set interest-rate cur-low-interest-rate
+        set color blue
+      ]
+    ]
+  ]
+  set liquidity liquidity + loan-needed
+  ask credit-link-neighbors [
+    set liquidity liquidity - loan-needed
+    
+  ]
+end
+
+;Firm procedure, called at end of month
+to pay-loan-back
+  let amount-to-be-repaid 0
+  ask one-of credit-links [       ;there should only be one bank that they can borrow from
+    set amount-to-be-repaid (principal + principal * interest-rate)
+  ]
+  ifelse liquidity > amount-to-be-repaid [
+    set liquidity liquidity - amount-to-be-repaid
+    ask credit-link-neighbors [
+      set liquidity liquidity + amount-to-be-repaid
+    ]
+  ] [
+    set amount-to-be-repaid liquidity    ;firm can't pay, bank takes remaining liquidity as payment
+    ask credit-link-neighbors [
+      set liquidity liquidity + amount-to-be-repaid
+    ]
+    remove-firm
   ]
 end
 
@@ -221,8 +268,9 @@ end
 ;firm procedure, pays wages to workers based on formula in Lengnick paper
 to pay-wages  
   if n-workers > 0 [
-    if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> immediate pay cut
-      set wage-rate liquidity / n-workers
+    if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> take out loan
+      ;set wage-rate liquidity / n-workers ... Previous implementation 
+      search-for-loan
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt"]
@@ -348,6 +396,13 @@ to buy-input-goods
       ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
     ]
   ]
+end
+
+;firm procedure to generate the correct location from the firms' liquidity
+to set-firm-xcor
+  let firm-liq-mean mean [liquidity] of firms
+  let  firm-liq-stdev max (list 0.01 standard-deviation [liquidity] of firms)
+  set xcor max (list min-pxcor (min (list max-pxcor (3 * (liquidity - firm-liq-mean) / firm-liq-stdev))))
 end
 
 ;firm procedure, reports the number of agreements a given firm has with firms of a given supplier type (how many suppliers a firm has for a given input)

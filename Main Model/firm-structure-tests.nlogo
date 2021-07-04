@@ -1,7 +1,7 @@
-extensions [table rnd gis]
+extensions [table rnd]
 
 to go
-  let test-structure gis:load-dataset "Firm-structure.json"
+  let test-structure table:from-json-file "Firm-structure.json"
   show test-structure
   let firms table:get test-structure "Firms"
   let firm1 item 0 firms

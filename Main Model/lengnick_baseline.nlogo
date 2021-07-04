@@ -86,7 +86,7 @@ to set-constants
   set ξ 0.01  ; A firm will switch firms based on price if the new firm is at least this fraction cheaper
   set month-length 21
   set FIRM-STRUCTURE table:get (table:from-json-file "Firm-structure.json") "Firms"
-  set n-firms 30     ;PREVIOUS IMPLEMENTATION: table:get (table:from-json-file "Firm-structure.json") "Total firms" (I don't understand why this is a table to begin with)
+  set n-firms table:get (table:from-json-file "Firm-structure.json") "Total firms"
 end
 
 to setup

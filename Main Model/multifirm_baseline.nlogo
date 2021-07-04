@@ -9,7 +9,6 @@ __includes["lengnick-tests.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -487,20 +486,20 @@ include-visualizations?
 
 SWITCH
 1069
-222
+220
 1243
-255
+253
 allow-firm-exit?
 allow-firm-exit?
-1
+0
 1
 -1000
 
 SWITCH
-1069
-260
-1217
-293
+1068
+257
+1216
+290
 single-firm-type?
 single-firm-type?
 0
@@ -639,6 +638,36 @@ cylinder
 false
 0
 Circle -7500403 true true 0 0 300
+
+dollar bill
+false
+0
+Rectangle -7500403 true true 15 90 285 210
+Rectangle -1 true false 30 105 270 195
+Circle -7500403 true true 120 120 60
+Circle -7500403 true true 120 135 60
+Circle -7500403 true true 254 178 26
+Circle -7500403 true true 248 98 26
+Circle -7500403 true true 18 97 36
+Circle -7500403 true true 21 178 26
+Circle -7500403 true true 66 135 28
+Circle -1 true false 72 141 16
+Circle -7500403 true true 201 138 32
+Circle -1 true false 209 146 16
+Rectangle -16777216 true false 64 112 86 118
+Rectangle -16777216 true false 90 112 124 118
+Rectangle -16777216 true false 128 112 188 118
+Rectangle -16777216 true false 191 112 237 118
+Rectangle -1 true false 106 199 128 205
+Rectangle -1 true false 90 96 209 98
+Rectangle -7500403 true true 60 168 103 176
+Rectangle -7500403 true true 199 127 230 133
+Line -7500403 true 59 184 104 184
+Line -7500403 true 241 189 196 189
+Line -7500403 true 59 189 104 189
+Line -16777216 false 116 124 71 124
+Polygon -1 true false 127 179 142 167 142 160 130 150 126 148 142 132 158 132 173 152 167 156 164 167 174 176 161 193 135 192
+Rectangle -1 true false 134 199 184 205
 
 dot
 false

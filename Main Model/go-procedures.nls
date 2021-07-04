@@ -18,6 +18,7 @@ to go
   tick
 end
 
+
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
   ask firms [
@@ -32,6 +33,7 @@ to go-beginning-of-month-firms
         search-delivery-capable-seller i
       ]
     ]
+    pay-wages
   ]
 end
 
@@ -67,21 +69,13 @@ end
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
   ;;variables declared here to prevent recalculation every time a new household is asked
-  
-  let firm-liq-mean mean [liquidity] of firms
-  let firm-liq-stdev standard-deviation [liquidity] of firms
   ask firms [
-    pay-wages
     allocate-profits
-    set xcor min (list max-pxcor (3 * (inventory - firm-liq-mean) / firm-liq-stdev))
   ]
   distribute-profits
-  let liq-mean mean [liquidity] of households
-  let liq-stdev standard-deviation [liquidity] of households
   ask households [
     adjust-reservation-wage
     ;set-house-size
-    set xcor min (list max-pxcor (3 * (liquidity - liq-mean) / liq-stdev))
     ifelse unemployed? [
       set color red
     ] [
@@ -90,9 +84,22 @@ to go-end-of-month
   ]
   ask firms [
     decide-fire-worker
-    determine-firm-exit
+    if count my-employment-links = 0 and allow-firm-exit?[
+      let new-firm-type firm-type
+      ask patch-here [
+        add-firm new-firm-type
+      ]
+      remove-firm
+    ]
   ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
+  ask firms [
+    set-firm-xcor
+  ]
+  ask households [
+    set-household-xcor
+  ]
+  
   set month month + 1
 end
 
