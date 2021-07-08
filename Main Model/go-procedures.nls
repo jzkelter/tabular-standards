@@ -33,6 +33,9 @@ to go-beginning-of-month-firms
         search-delivery-capable-seller i
       ]
     ]
+    if (liquidity <= 0 ) and allow-firm-exit?[    ;;safe to assume that a firm that nobody shops at goes out of business
+      remove-firm
+    ]
     pay-wages
   ]
 end
@@ -70,6 +73,9 @@ end
 to go-end-of-month
   ;;variables declared here to prevent recalculation every time a new household is asked
   ask firms [
+    if (count my-credit-links > 0) [
+      pay-loan-back
+    ]
     allocate-profits
   ]
   distribute-profits
@@ -84,13 +90,6 @@ to go-end-of-month
   ]
   ask firms [
     decide-fire-worker
-    if count my-employment-links = 0 and allow-firm-exit?[
-      let new-firm-type firm-type
-      ask patch-here [
-        add-firm new-firm-type
-      ]
-      remove-firm
-    ]
   ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   ask firms [

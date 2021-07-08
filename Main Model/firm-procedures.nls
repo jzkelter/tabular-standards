@@ -90,7 +90,7 @@ to decide-fire-worker
 ;  )
 
   if close-position? [  ; firms won't fire their last worker if firm-exit is disabled
-    if allow-firm-exit?  or n-workers > 1 [
+    if n-workers > 0 [
       ask one-of my-employment-links [die]
     ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
     ; set desired-labor-change 0  ; no longer want to fire ( I used this before using close-position?
@@ -103,13 +103,41 @@ end
 
 ;firm procedure-determines whether exit is an appropriate response for the firm this period
 to remove-firm
+  if replace-exited-firm? [
+    let f-type firm-type
+    add-firm f-type
+  ] 
   ask consumer-link-neighbors [
-    create-consumer-link-with one-of firms with [consumer?][
+    create-consumer-link-with one-of other firms with [consumer?][
       init-consumer-link
     ]
   ]
-  ask my-consumer-links [die]
+  
   die
+end
+
+
+;firm procedure, adds in another firm of a given firm type
+to add-firm [new-firm-type]
+  foreach FIRM-STRUCTURE[f ->
+    let group table:get f "Firm type"
+    if (group = new-firm-type) [
+      hatch 1[
+        set price 1 * small-random-change ; arbitrary, set to 1 for convenience
+        set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+        set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+        set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
+        set filled-position? false  ; just needs to be set to a boolean
+        set open-position?  true  ; entering firm would like to hire a new worker
+        set close-position? false  ; not firing immediately by default
+        if consumer? [
+          set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+          set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+          set-daily-input-demands
+        ]
+      ]
+    ]
+  ]
 end
 
 
@@ -137,17 +165,22 @@ end
 
 ;firm procedure, search for a loan to fufill difference between wages and liquidity, called by pay-wages at the beginning of the moth 
 to search-for-loan
-  let num-banks-contacted 5
-  let cur-low-interest-rate 100    ;initially extremely high to allow for adjustments hypothetical max interest rate
-  let loan-needed wage-rate * count employment-links - liquidity
-  let leverage loan-needed / liquidity
+  let num-banks-to-contact 5
+  let cur-low-interest-rate 10000    ;initially extremely high to allow for adjustments hypothetical max interest rate
+  let loan-needed wage-rate * n-workers - liquidity
+  let leverage 0
+  ifelse liquidity = 0 [
+    set leverage 99999    ;technically this value is infinite when liquidity is dividing by 0
+  ] [
+    set leverage loan-needed / liquidity
+  ]
   let curr-firm self
-  ask n-of num-banks-contacted banks [
+  ask n-of num-banks-to-contact banks [
     let cur-interest-rate policy-interest-rate * (1 + (random-float max-interest-markup) * leverage)
     if cur-low-interest-rate > cur-interest-rate [
       set cur-low-interest-rate cur-interest-rate
-      if count credit-links > 0[
-        ask credit-links [die]
+      if count my-credit-links > 0[
+        ask my-credit-links [die]
       ]
       create-credit-link-with curr-firm [
         set principal loan-needed
@@ -170,11 +203,13 @@ to pay-loan-back
     set amount-to-be-repaid (principal + principal * interest-rate)
   ]
   ifelse liquidity > amount-to-be-repaid [
+    print "Loan paid!"
     set liquidity liquidity - amount-to-be-repaid
     ask credit-link-neighbors [
       set liquidity liquidity + amount-to-be-repaid
     ]
   ] [
+    print "loan defaulted" 
     set amount-to-be-repaid liquidity    ;firm can't pay, bank takes remaining liquidity as payment
     ask credit-link-neighbors [
       set liquidity liquidity + amount-to-be-repaid
@@ -193,7 +228,7 @@ to-report marginal-costs
   report ((wage-rate /  month-length / tech-parameter) + input-cost-estimate)
 end
 
-;tfirm procedure, estimates the cost of inputs for framework agreement initialization, note there are multiple versions of this procedure
+;firm procedure, estimates the cost of inputs for framework agreement initialization, note there are multiple versions of this procedure
 ;this first version takes the average cost of all framework agreements
 to-report input-cost-estimate
   let mc 0
@@ -266,7 +301,7 @@ end
 ;end
 
 ;firm procedure, pays wages to workers based on formula in Lengnick paper
-to pay-wages  
+to pay-wages
   if n-workers > 0 [
     if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> take out loan
       ;set wage-rate liquidity / n-workers ... Previous implementation 

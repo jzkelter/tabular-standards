@@ -22,7 +22,7 @@ turtles-own [
 ;defines household specific fields
 households-own [
   reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
-  daily-consumption ; c_h^r / 21 in Lengnick
+  demanded-consumption ; c_h^r / 21 in Lengnick
 ]
 
 ;defines firm specific fields
@@ -85,6 +85,8 @@ globals [
   capital-requirement-coefficient
   policy-interest-rate
   max-interest-markup
+  prob-new-firm-enters
+  n-trading-links
 ]
 
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
@@ -93,7 +95,7 @@ to setup
 
   set-constants
   set MIN-WAGE-RATE 0
-  let n-trading-links 7
+  
 
   create-households n-households [
     set shape "circle" ; "person"
@@ -104,7 +106,7 @@ to setup
     ;rt (who - n-firms) * (360 / n-households)     
     ;fd 11 + random 5
     set color blue
-
+    set size 0.5
     set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
     ;set-house-size
   ]
@@ -120,9 +122,6 @@ to setup
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
     set reservation-wage [wage-rate] of my-employer
     set-consumption  ; this has to be set after households have trading connections to calculate mean price
-    if unemployed? [
-      set color red
-    ]
   ]
 
   ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
@@ -170,9 +169,10 @@ to set-constants
   set prob-replace-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
   set capital-requirement-coefficient 0.1  ;ν in Gatti, this is the coefficient that allows banks to lend out a multiple of their liquidity
-  set policy-interest-rate 0.05    ;r_upperbar in Gatti, this is the interest rate set by the central bank with which banks ask for a markup
+  set policy-interest-rate 0.01    ;r_upperbar in Gatti, this is the interest rate set by the central bank with which banks ask for a markup
   set max-interest-markup 0.1     ; φ_kt in Gatti, this is the maximum markup of the buyers leverage 
-  
+  set prob-new-firm-enters 0.3    ;arbitrary constant so that every tick there is this probability that a new firm will be added to the system. TO BE ADDED, UNCLEAR WHETHER WE STILL WANT THIS
+  set n-trading-links 7           ;Z in Gatti, number of firms contacted by consumers trying to buy consumer goods. Lengnick uses 7 Gatti uses 2
   set month-length 21
   ifelse single-firm-type? [
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -192,7 +192,7 @@ to setup-firms
     create-firms num-firms[
       set shape "building store"
       set xcor 0
-      set ycor max-pycor - 1 - random 5
+      set ycor 3 - random 5
       ;set heading 0             Original location procedure
       ;rt who * (360 / n-firms)
       ;fd 2 + random 6
@@ -211,11 +211,12 @@ end
 
 to setup-banks
   let num-banks 10     ;shamefully arbitrary
-  ask n-of num-banks patches with [pxcor = min-pxcor and pycor > -1 * num-banks / 2 and pycor < (num-banks + 1) / 2] [
+  ask n-of num-banks patches with [pxcor = 0 and pycor > max-pycor + -1 * num-banks] [
     sprout-banks 1 [
       set shape "dollar bill"
       set color green
-      set size 4
+      set size 3
+      set liquidity 100
     ]
   ]
 end

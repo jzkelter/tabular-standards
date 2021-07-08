@@ -97,7 +97,7 @@ n-households
 n-households
 10
 1000
-1000.0
+500.0
 10
 1
 NIL
@@ -108,18 +108,18 @@ PLOT
 125
 201
 331
-Employed Households
+Unemployment rate
 years
-NIL
+unemployment
 0.0
 10.0
-950.0
-1000.0
+0.0
+1.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count employment-links"
+"default" 1.0 0 -16777216 true "" "plotxy year 1 - (count employment-links / count households)"
 
 PLOT
 652
@@ -162,24 +162,22 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 PLOT
-857
+1064
 300
-1057
+1338
 450
-liquidity of firms and households
+Beveridge Curve
 NIL
 NIL
 0.0
-10.0
+1.0
 0.0
-10.0
-true
+1.0
+false
 false
 "" ""
 PENS
-"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
-"households" 1.0 0 -13345367 true "" "plot  mean [liquidity] of households"
-"pen-2" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"" 1.0 2 -6459832 true "" "plotxy (count firms with [open-position?] / n-households) (count employment-links / count households)"
 
 BUTTON
 1306
@@ -204,7 +202,7 @@ BUTTON
 1301
 44
 show random firm's links
-ask one-of firms [ask my-links [show-link]]
+ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
 NIL
 1
 T
@@ -234,10 +232,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
 
 PLOT
-856
-147
-1056
-297
+857
+300
+1057
+450
 mean price
 NIL
 NIL
@@ -491,20 +489,102 @@ SWITCH
 253
 allow-firm-exit?
 allow-firm-exit?
+1
+1
+-1000
+
+SWITCH
+8
+47
+156
+80
+single-firm-type?
+single-firm-type?
 0
 1
 -1000
 
 SWITCH
-1068
-257
-1216
-290
-single-firm-type?
-single-firm-type?
+1070
+256
+1236
+289
+replace-exited-firm?
+replace-exited-firm?
 0
 1
 -1000
+
+PLOT
+1063
+454
+1341
+604
+Output and Demand
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households"
+"output" 1.0 0 -2139308 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms"
+
+PLOT
+858
+147
+1058
+297
+mean wage
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+
+BUTTON
+1114
+47
+1275
+80
+show largest firm's links
+ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1114
+83
+1280
+116
+show smallest firm's links
+ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -67,43 +67,4 @@ to distribute-profits
   if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
 end
 
-;patch procedure, called any time remove-firm is called
-;I can't come up with a better way to do a general purpose function that can share code with the create-firms function in setup-firms
-to add-firm [new-firm-type]
-  foreach FIRM-STRUCTURE[f ->
-    let group table:get f "Firm type"
-    if (group = new-firm-type) [
-      let n-trading-links 7
-      let firm-input-data generate-input-data table:get f "Input data"
-      let firm-tech-parameter table:get f "Tech constant"
-      let is-consumer? table:get f "Consumer?"
-      sprout-firms 1[
-        set shape "building store"
-        set xcor 0
-        set ycor max-pycor - 1 - random 5
-        ; set heading 0             Original location procedure
-        ;rt who * (360 / n-firms)
-        ;fd 2 + random 6
-        set color brown
-        set tech-parameter firm-tech-parameter ; λ in Lengnick
-        set price 1 * small-random-change ; arbitrary, set to 1 for convenience
-        set firm-type group  ;replace with same type of firm that was just 
-        set input-data firm-input-data
-        set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
-        create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
-        set consumer? is-consumer?
-        set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
-      
-        set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
-        set filled-position? false  ; just needs to be set to a boolean
-        set open-position?  false  ; not trying to hire immediately by default
-        set close-position? false  ; not firing immediately by default
-        if consumer? [
-          set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
-          set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
-          set-daily-input-demands
-        ]
-      ]
-    ]
-  ]
-end
+

@@ -614,7 +614,7 @@ to-report test-set-consumption
     ask one-of households[
       set liquidity 90
       set-consumption
-      assert-equals daily-consumption (((90 / 4.5) ^ diminishing-utility-constant) / month-length) "Wrong daily demand (62)"
+      assert-equals demanded-consumption (((90 / 4.5) ^ diminishing-utility-constant) / month-length) "Wrong daily demand (62)"
     ]
   ]
 end
@@ -639,8 +639,8 @@ to-report test-buy-consumption-goods
     ask one-of households[
       set-consumption
       buy-consumption-goods      
-      assert-equals ([liquidity] of one-of firms) (daily-consumption * 3) "Firm liquidity is wrong (63)"
-      assert-equals (liquidity) (90 - (3 * daily-consumption)) "Household liquidity is wrong (64)"
+      assert-equals ([liquidity] of one-of firms) (demanded-consumption * 3) "Firm liquidity is wrong (63)"
+      assert-equals (liquidity) (90 - (3 * demanded-consumption)) "Household liquidity is wrong (64)"
     ]
 
 
@@ -661,7 +661,7 @@ to-report test-buy-consumption-goods
     ask one-of households[
       set-consumption
       buy-consumption-goods
-      assert-equals ([demand-not-satisfied] of one-of my-consumer-links) daily-consumption "Demand not satisfied wasn't set properly (65)"
+      assert-equals ([demand-not-satisfied] of one-of my-consumer-links) demanded-consumption "Demand not satisfied wasn't set properly (65)"
       assert-equals ([liquidity] of one-of firms) 0 "Firm gained liquidity and it should not have (66)"
       assert-equals liquidity 90 "Household liquidity should not have changed (67)"
       assert-equals ([inventory] of one-of firms) 0 "Firm inventory should not have changed (68)"
@@ -682,14 +682,14 @@ to-report test-buy-consumption-goods
     let daily-demand 0
     ask one-of households[      
       set-consumption      
-      set daily-demand daily-consumption
+      set daily-demand demanded-consumption
       ask firms[
         set inventory (daily-demand / 3)
         set liquidity 0
       ]
       buy-consumption-goods
       assert-equals (count my-links with [demand-not-satisfied > 0]) 2 "Wrong number of suppliers that failed to satisfy demand. (69)"
-      assert-equals (precision liquidity 10) (precision (90 - (3 * daily-consumption)) 10) "Wrong household liquidity (70)" 
+      assert-equals (precision liquidity 10) (precision (90 - (3 * demanded-consumption)) 10) "Wrong household liquidity (70)" 
       
       ask firms[
         assert-equals liquidity price * daily-demand / 3 "Firm liquidity is wrong. (71)"
@@ -711,7 +711,7 @@ to-report test-buy-consumption-goods
     let inventory-amount 0 
     ask one-of households[
       set-consumption
-      let household-dd daily-consumption
+      let household-dd demanded-consumption
       set inventory-amount (0.95 * (household-dd / 3))
       ask firms[
         set inventory inventory-amount
@@ -719,7 +719,7 @@ to-report test-buy-consumption-goods
       ]
       buy-consumption-goods
       assert-equals (count my-links with [demand-not-satisfied > 0]) 3 "Wrong number of suppliers that failed to satisfy demand. (72)"
-      assert (liquidity > (90 - (3 * daily-consumption))) "Wrong household liquidity (73)" 
+      assert (liquidity > (90 - (3 * demanded-consumption))) "Wrong household liquidity (73)" 
       ask firms[
         assert-equals liquidity inventory-amount * price  "Firm liquidity is wrong (74)"
       ]
@@ -737,7 +737,7 @@ to-report test-buy-consumption-goods
     ]
     ask one-of households[
       set-consumption
-      let household-dd daily-consumption
+      let household-dd demanded-consumption
       ask firms[
         set inventory (0.96 * (household-dd / 3))
         set liquidity 0
