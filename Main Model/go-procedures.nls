@@ -73,12 +73,9 @@ end
 to go-end-of-month
   ;;variables declared here to prevent recalculation every time a new household is asked
   ask firms [
-    if (count my-credit-links > 0) [
-      pay-loan-back
-    ]
     allocate-profits
+    distribute-profits    ;we can move this into a turtle variable since profits are firm specific-distributions
   ]
-  distribute-profits
   ask households [
     adjust-reservation-wage
     ;set-house-size

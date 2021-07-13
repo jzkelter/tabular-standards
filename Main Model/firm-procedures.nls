@@ -7,7 +7,7 @@ to adjust-wage-rate
       set wage-rate (1 + random-float max-wage-growth) * wage-rate
     ]
     (MONTH - last-open-position) >= months-to-lower-wage [ ; If all hires in past γ months have succeded, lower wage rate.
-      set wage-rate max list ((1 - random-float max-wage-growth) * wage-rate) MIN-WAGE-RATE  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
+      set wage-rate max (list ((1 - random-float max-wage-growth) * wage-rate) MIN-WAGE-RATE)  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
     ])
 
 end
@@ -71,17 +71,18 @@ to adjust-price
       set price price * (1 - random-float max-price-growth)
     ]
   )
+  
+  
 end
 
 ;firm procedure, decides whether or not to fire a worker at the end of the next time period
 to decide-fire-worker
-
 ;  (ifelse
 ;    desired-labor-change < 0 and n-workers > 1 [  ; firms won't fire their last worker
 ;      ask one-of my-employment-links [die]
 ;      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
 ;      set desired-labor-change 0  ; no longer want to fire
-;    ]
+;    
 ;    desired-labor-change = 0 [
 ;      set months-with-all-positions-filled months-with-all-positions-filled + 1
 ;    ] [  ; if the firm still wants to hire at the end of the month
@@ -108,7 +109,7 @@ to remove-firm
     add-firm f-type
   ] 
   ask consumer-link-neighbors [
-    create-consumer-link-with one-of other firms with [consumer?][
+    create-consumer-link-with one-of other firms with [consumer-good-firm?][
       init-consumer-link
     ]
   ]
@@ -123,21 +124,51 @@ to add-firm [new-firm-type]
     let group table:get f "Firm type"
     if (group = new-firm-type) [
       hatch 1[
-        set price 1 * small-random-change ; arbitrary, set to 1 for convenience
-        set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
-        set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+        set price mean [price] of firms 
+        set wage-rate mean [wage-rate] of firms
+        set liquidity 50 ; model begins at the beginning of a month, so start with the buffer amount
+        raise-funds liquidity
         set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
         set filled-position? false  ; just needs to be set to a boolean
         set open-position?  true  ; entering firm would like to hire a new worker
         set close-position? false  ; not firing immediately by default
-        if consumer? [
-          set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
-          set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+        if input-data != "None" [
+          set demand mean [demand] of firms / 2 ;start smaller
+          set inventory mean [inventory] of firms ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
           set-daily-input-demands
         ]
       ]
     ]
   ]
+end
+
+;firm procedure, firms search for the funding from households
+to raise-funds [startup-amount]
+  let to-be-raised startup-amount
+  let new-firm self
+  while [to-be-raised > 0] [
+    ask one-of households [   ;guarantees that we do not take the same investor twice
+      let liquidity-available liquidity * 0.5
+      ifelse liquidity-available > to-be-raised [
+        create-equity-link-with new-firm [
+          init-consumer-link
+          set equity-percent to-be-raised / startup-amount
+        ]
+        set liquidity liquidity - to-be-raised
+        set to-be-raised 0
+      ] [
+        create-equity-link-with new-firm [
+          init-consumer-link
+          set equity-percent liquidity-available / startup-amount
+        ]
+        set liquidity liquidity - liquidity-available
+        set to-be-raised to-be-raised - liquidity-available
+      ]
+    ]
+  ]
+;  if sum [equity-percent] of my-equity-links < 0.95 [
+;    error "funds were not raised"
+;  ]
 end
 
 
@@ -160,61 +191,6 @@ to search-delivery-capable-seller [input-i]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
     create-framework-agreement-from pick-random-input-firm input-i [init-framework-agreement input-i]
     ask link-failed-to-satisfy [die]
-  ]
-end
-
-;firm procedure, search for a loan to fufill difference between wages and liquidity, called by pay-wages at the beginning of the moth 
-to search-for-loan
-  let num-banks-to-contact 5
-  let cur-low-interest-rate 10000    ;initially extremely high to allow for adjustments hypothetical max interest rate
-  let loan-needed wage-rate * n-workers - liquidity
-  let leverage 0
-  ifelse liquidity = 0 [
-    set leverage 99999    ;technically this value is infinite when liquidity is dividing by 0
-  ] [
-    set leverage loan-needed / liquidity
-  ]
-  let curr-firm self
-  ask n-of num-banks-to-contact banks [
-    let cur-interest-rate policy-interest-rate * (1 + (random-float max-interest-markup) * leverage)
-    if cur-low-interest-rate > cur-interest-rate [
-      set cur-low-interest-rate cur-interest-rate
-      if count my-credit-links > 0[
-        ask my-credit-links [die]
-      ]
-      create-credit-link-with curr-firm [
-        set principal loan-needed
-        set interest-rate cur-low-interest-rate
-        set color blue
-      ]
-    ]
-  ]
-  set liquidity liquidity + loan-needed
-  ask credit-link-neighbors [
-    set liquidity liquidity - loan-needed
-    
-  ]
-end
-
-;Firm procedure, called at end of month
-to pay-loan-back
-  let amount-to-be-repaid 0
-  ask one-of credit-links [       ;there should only be one bank that they can borrow from
-    set amount-to-be-repaid (principal + principal * interest-rate)
-  ]
-  ifelse liquidity > amount-to-be-repaid [
-    print "Loan paid!"
-    set liquidity liquidity - amount-to-be-repaid
-    ask credit-link-neighbors [
-      set liquidity liquidity + amount-to-be-repaid
-    ]
-  ] [
-    print "loan defaulted" 
-    set amount-to-be-repaid liquidity    ;firm can't pay, bank takes remaining liquidity as payment
-    ask credit-link-neighbors [
-      set liquidity liquidity + amount-to-be-repaid
-    ]
-    remove-firm
   ]
 end
 
@@ -303,13 +279,13 @@ end
 ;firm procedure, pays wages to workers based on formula in Lengnick paper
 to pay-wages
   if n-workers > 0 [
-    if wage-rate * n-workers > liquidity [ ; if there isn't enough to pay workers -> take out loan
-      ;set wage-rate liquidity / n-workers ... Previous implementation 
-      search-for-loan
+    let temp-wr wage-rate
+    if wage-rate * n-workers > liquidity [ 
+      set temp-wr liquidity / n-workers 
     ]
-    set liquidity precision (liquidity - wage-rate * n-workers) 10
+    set liquidity precision (liquidity - temp-wr * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt"]
-    ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
+    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
   ]
 end
 
@@ -321,6 +297,24 @@ to allocate-profits
     set liquidity buffer
   ]
 end
+
+;firm procedure, distrubtes all profits allocated by firms to households
+to distribute-profits  
+  ;; distribute profits proportionately to initial investment
+  let profits-to-be-allocated profits-to-allocate
+  let my-firm self
+  ask my-equity-links [
+    let share-of-profits equity-percent * profits-to-be-allocated     ; distribute proportionately to wealth
+                                                                      ; let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
+    ask other-end [
+      set liquidity liquidity + share-of-profits
+    ]
+  ]
+  set profits-to-allocate 0
+  set liquidity liquidity - profits-to-allocate
+  if precision profits-to-allocate 1 != 0 [error "profits weren't fully distributed"]
+end
+
 
 ;firm procedure, sells a given amount of goods to a single consumer
 to-report sell-consumption-good [amount-wanted]  

@@ -51,20 +51,5 @@ to-report end-of-month?
   report ticks mod month-length = (month-length - 1)
 end
 
-;observer procedure, distrubtes all profits allocated by firms to households
-to distribute-profits  
-  let total-hh-liquidity sum [liquidity] of households
-
-  ;; distribute profits proportionately to current wealth.
-  let profits-to-be-allocated PROFITS-TO-ALLOCATE
-  ask households [
-    let share-of-profits (liquidity / total-hh-liquidity) * profits-to-be-allocated  ; distribute proportionately to wealth
-;    let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
-    set liquidity liquidity + share-of-profits
-    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE - share-of-profits
-  ]
-
-  if precision PROFITS-TO-ALLOCATE 1 != 0 [error "profits weren't fully distributed"]
-end
 
 

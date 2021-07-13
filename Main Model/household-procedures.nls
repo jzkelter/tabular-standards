@@ -15,7 +15,7 @@ end
 ;household procedure, searches for a vendor to replace a current vendor that was unable to satisfy demand
 to search-delivery-capable-vendor
   let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
-  if my-consumer-links = 0 or [demand-not-satisfied] of link-failed-to-satisfy > 0 [
+  if count my-consumer-links < n-trading-links or [demand-not-satisfied] of link-failed-to-satisfy > 0 [
     create-consumer-link-with pick-random-consumer-firm [init-consumer-link]
     ask link-failed-to-satisfy [die]
   ]
@@ -25,12 +25,12 @@ end
 to guarantee-trading-links
   let curr-trading-links count my-consumer-links
   if curr-trading-links > n-trading-links [
-    ask n-of curr-trading-links - n-trading-links my-consumer-links[
+    ask n-of (curr-trading-links - n-trading-links) my-consumer-links[
       die
     ]
   ]
   if curr-trading-links < n-trading-links [
-    create-consumer-links-with n-of n-trading-links firms with [consumer?][
+    create-consumer-links-with n-of n-trading-links firms with [consumer-good-firm?][
       init-consumer-link
     ]
   ]
@@ -39,7 +39,7 @@ end
 
 ;household procedure, picks a random consumer good firm that is not a current trading partner of this household, weighted by # of employees
 to-report pick-random-consumer-firm 
-  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer?] [count my-employment-links]
+  report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer-good-firm?] [count my-employment-links]
 end
 
 ;household procedure, searches for employment if unemployed or better paying employment if employed
@@ -106,23 +106,35 @@ end
 
 
 ;household procedure, sets daily consumption LENGNICK VERSION
+;to set-consumption
+;  let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
+;  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
+;  set demanded-consumption total-consumption / transactions-per-month
+;end
+
+;household procedure, sets daily consumption, our version
 to set-consumption
-  let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
-  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
+  let money-to-spend 0
+  ifelse unemployed? [
+    set money-to-spend min (list liquidity (autonomous-consumption - random-float 0.5) )     ;spend as much as they have up to autonomous consumption
+  ] [
+    set money-to-spend min (list liquidity (autonomous-consumption - random-float 0.5 + ([wage-rate] of one-of employment-link-neighbors ) ^ diminishing-utility-constant))
+  ]
+  let total-consumption money-to-spend / mean [price] of consumer-link-neighbors
   set demanded-consumption total-consumption / transactions-per-month
 end
 
 
-;household procedure, reports ideal daily consumption based on some propensity to save, called by set-consumption
-to-report ideal-consumption [money mean-price]
-  let ic 0
-  carefully [
-    set ic (money / mean-price) ^ diminishing-utility-constant  ; is α in Lengnick. Consumption increases with wealth at decaying rate
-  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
-    print error-message
-  ]
-  report ic
-end
+;;household procedure, reports ideal daily consumption based on some propensity to save, called by set-consumption
+;to-report ideal-consumption [money mean-price]
+;  let ic 0
+;  carefully [
+;    set ic (money / mean-price) ^ diminishing-utility-constant  ; is α in Lengnick. Consumption increases with wealth at decaying rate
+;  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
+;    print error-message
+;  ]
+;  report ic
+;end
 
 ; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
 ;to buy-consumption-goods  ; household procedure

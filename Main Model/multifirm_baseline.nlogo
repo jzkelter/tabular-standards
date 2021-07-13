@@ -132,7 +132,7 @@ NIL
 0.0
 10.0
 0.0
-60.0
+5.0
 true
 true
 "" ""
@@ -162,22 +162,22 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 PLOT
-1064
-300
-1338
-450
-Beveridge Curve
+857
+147
+1056
+297
 NIL
-NIL
+Unemployment
+Vacancy Rate
 0.0
-1.0
+0.2
 0.0
-1.0
+0.2
 false
 false
 "" ""
 PENS
-"" 1.0 2 -6459832 true "" "plotxy (count firms with [open-position?] / n-households) (count employment-links / count households)"
+"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [open-position?] / n-households)"
 
 BUTTON
 1306
@@ -299,7 +299,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / max (list 1 demand)] of firms"
+"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / max (list 0.00001 demand)] of firms"
 "pen-1" 1.0 0 -7500403 true "" "plotxy year inventory-floor"
 
 PLOT
@@ -325,7 +325,7 @@ PLOT
 147
 853
 297
-mean demand
+Inventory of firms
 NIL
 NIL
 0.0
@@ -336,7 +336,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
+"pen-1" 1.0 0 -2674135 true "" "plot mean [inventory] of firms"
 
 BUTTON
 983
@@ -489,7 +489,7 @@ SWITCH
 253
 allow-firm-exit?
 allow-firm-exit?
-1
+0
 1
 -1000
 
@@ -531,15 +531,15 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households"
+"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households / mean [price] of firms"
 "output" 1.0 0 -2139308 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms"
 
 PLOT
-858
-147
-1058
-297
-mean wage
+1063
+301
+1337
+451
+Liquidity
 NIL
 NIL
 0.0
@@ -547,10 +547,11 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
+"households" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
 
 BUTTON
 1114

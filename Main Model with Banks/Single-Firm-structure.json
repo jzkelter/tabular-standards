@@ -5,7 +5,7 @@
             "Input data": [],
             "Tech constant": 3,
             "Firm count": 100,
-            "Consumer?":true
+            "Consumer?":false
         }
     ]
 }

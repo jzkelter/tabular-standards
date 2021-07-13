@@ -9,10 +9,6 @@ __includes["lengnick-tests.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
-
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -101,7 +97,7 @@ n-households
 n-households
 10
 1000
-1000.0
+500.0
 10
 1
 NIL
@@ -112,18 +108,18 @@ PLOT
 125
 201
 331
-Employed Households
+Unemployment rate
 years
-NIL
+unemployment
 0.0
 10.0
-950.0
-1000.0
+0.0
+1.0
 true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count employment-links"
+"default" 1.0 0 -16777216 true "" "plotxy year 1 - (count employment-links / count households)"
 
 PLOT
 652
@@ -136,7 +132,7 @@ NIL
 0.0
 10.0
 0.0
-60.0
+5.0
 true
 true
 "" ""
@@ -148,48 +144,28 @@ PENS
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 
 PLOT
-653
-455
-853
-605
-worker per firm distribution
-NIL
-NIL
+854
+187
+1053
+337
+Beveridge Curve
+Unemployment
+Vacancy Rate
 0.0
-20.0
+0.15
 0.0
-20.0
-true
+0.1
+false
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
-
-PLOT
-857
-300
-1057
-450
-liquidity of firms and households
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
-"households" 1.0 0 -13345367 true "" "plot  mean [liquidity] of households"
-"pen-2" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [open-position?] / n-households)"
 
 BUTTON
-992
-103
-1086
-136
+1306
+10
+1400
+43
 hide-links
 ask links [hide-link]
 NIL
@@ -203,12 +179,12 @@ NIL
 1
 
 BUTTON
-987
-69
-1174
-102
+1114
+11
+1301
+44
 show random firm's links
-ask one-of firms [ask my-links [show-link]]
+ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
 NIL
 1
 T
@@ -218,42 +194,6 @@ NIL
 NIL
 NIL
 1
-
-PLOT
-855
-454
-1055
-604
-customer per firm distribution
-NIL
-NIL
-0.0
-100.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
-
-PLOT
-856
-147
-1056
-297
-mean price
-NIL
-NIL
-0.0
-10.0
-0.98
-1.02
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
 
 BUTTON
 237
@@ -305,50 +245,14 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / demand] of firms"
-"pen-1" 1.0 0 -7500403 true "" "plotxy year ϕl"
-
-PLOT
-653
-300
-853
-450
-mean demand not satisfied
-NIL
-NIL
-0.0
-10.0
-0.0
-0.1
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
-
-PLOT
-653
-147
-853
-297
-mean demand
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand] of firms"
+"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / max (list 1 demand)] of firms"
+"pen-1" 1.0 0 -7500403 true "" "plotxy year inventory-floor"
 
 BUTTON
-992
-21
-1112
-54
+983
+11
+1103
+44
 NIL
 lengnick-tests
 NIL
@@ -428,8 +332,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  ϕl * demand]"
-"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  ϕu * demand]"
+"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  inventory-floor * demand]"
+"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  inventory-ceiling * demand]"
 "pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
 
 TEXTBOX
@@ -461,6 +365,163 @@ above line we expect firing, below hiring
 10
 5.0
 1
+
+SLIDER
+1067
+148
+1247
+181
+transactions-per-month
+transactions-per-month
+1
+21
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+1068
+184
+1245
+217
+include-visualizations?
+include-visualizations?
+0
+1
+-1000
+
+SWITCH
+1069
+220
+1243
+253
+allow-firm-exit?
+allow-firm-exit?
+0
+1
+-1000
+
+SWITCH
+8
+47
+156
+80
+single-firm-type?
+single-firm-type?
+0
+1
+-1000
+
+SWITCH
+1070
+256
+1236
+289
+replace-exited-firm?
+replace-exited-firm?
+0
+1
+-1000
+
+BUTTON
+1114
+47
+1275
+80
+show largest firm's links
+ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+1114
+83
+1280
+116
+show smallest firm's links
+ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+PLOT
+651
+187
+851
+337
+Firm Size Distribution
+Output
+num. firms
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
+
+TEXTBOX
+651
+164
+861
+208
+Stylized Facts Below
+18
+0.0
+1
+
+PLOT
+653
+343
+853
+493
+GDP
+time
+Output
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count households with [not unemployed?]"
+
+PLOT
+857
+343
+1057
+493
+Productivity / real wage ratio
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [tech-parameter * n-workers / wage-rate] of firms"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -594,6 +655,36 @@ cylinder
 false
 0
 Circle -7500403 true true 0 0 300
+
+dollar bill
+false
+0
+Rectangle -7500403 true true 15 90 285 210
+Rectangle -1 true false 30 105 270 195
+Circle -7500403 true true 120 120 60
+Circle -7500403 true true 120 135 60
+Circle -7500403 true true 254 178 26
+Circle -7500403 true true 248 98 26
+Circle -7500403 true true 18 97 36
+Circle -7500403 true true 21 178 26
+Circle -7500403 true true 66 135 28
+Circle -1 true false 72 141 16
+Circle -7500403 true true 201 138 32
+Circle -1 true false 209 146 16
+Rectangle -16777216 true false 64 112 86 118
+Rectangle -16777216 true false 90 112 124 118
+Rectangle -16777216 true false 128 112 188 118
+Rectangle -16777216 true false 191 112 237 118
+Rectangle -1 true false 106 199 128 205
+Rectangle -1 true false 90 96 209 98
+Rectangle -7500403 true true 60 168 103 176
+Rectangle -7500403 true true 199 127 230 133
+Line -7500403 true 59 184 104 184
+Line -7500403 true 241 189 196 189
+Line -7500403 true 59 189 104 189
+Line -16777216 false 116 124 71 124
+Polygon -1 true false 127 179 142 167 142 160 130 150 126 148 142 132 158 132 173 152 167 156 164 167 174 176 161 193 135 192
+Rectangle -1 true false 134 199 184 205
 
 dot
 false

@@ -9,7 +9,7 @@ undirected-link-breed [consumer-links consumer-link]
 ;links between firms and households for employment
 undirected-link-breed [employment-links employment-link]
 
-undirected-link-breed [credit-links credit-link]
+undirected-link-breed [equity-links equity-link]
 
 ;link between firms and other firms for supply distribution.
 directed-link-breed [framework-agreements framework-agreement] ;adjust these procedures too
@@ -22,7 +22,7 @@ turtles-own [
 ;defines household specific fields
 households-own [
   reservation-wage  ; minimal claom on labor income, although households will work for less under certain conditions  (w_h in  Lengnick)
-  demanded-consumption ; c_h^r / 21 in Lengnick
+  demanded-consumption ; c_h^r / 21 in Lengnick, the amount of goods that are demanded by each household
 ]
 
 ;defines firm specific fields
@@ -43,17 +43,18 @@ firms-own [
 
   demand  ; the most recent demand this firm experienced for its goods
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
-  consumer?
+  consumer-good-firm?       ; defines whether they produce consumer goods
+  profits-to-allocate
 ]
 
-credit-links-own [
-  principal   ; initial amount of the loan
-  interest-rate   ; the assigned interest rate for this loan
+;defines consumers investment within a certain firm, equity links remain even if a household changes employment
+equity-links-own [
+  equity-percent      ;represents what perent of a firm is owned by a household
 ]
 
 ;defines consumer link specific fields
 consumer-links-own [
-  demand-not-satisfied
+  demand-not-satisfied   ;the amount that a firm was unable to satisfy when asked by a household
 ]
 
 ;defines framework-agreement specific fields
@@ -64,9 +65,10 @@ framework-agreements-own[
 
 ;defines all global variables, see Lengnick paper or "setup-constants" for a description of what each of these does
 globals [
+  EQUITY_AMOUNT
+  WAGE_AMOUNT
   month
   month-length  ; 21 to reflect number of business days
-  PROFITS-TO-ALLOCATE
   MIN-WAGE-RATE
   FIRM-STRUCTURE
   max-wage-growth
@@ -87,6 +89,7 @@ globals [
   max-interest-markup
   prob-new-firm-enters
   n-trading-links
+  autonomous-consumption
 ]
 
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
@@ -94,7 +97,7 @@ to setup
   ca
 
   set-constants
-  set MIN-WAGE-RATE 0
+  set MIN-WAGE-RATE 2.5
   
 
   create-households n-households [
@@ -110,13 +113,11 @@ to setup
     set liquidity 98.78  ; arbitrary initial condition taken from Nardin - I tried starting everyone with two months of wages in bank, but didn't work so well
     ;set-house-size
   ]
-
-  setup-banks
   setup-firms
   initialize-framework-agreements
   ask households[
     set xcor liquidity / mean [liquidity] of households
-    create-consumer-links-with n-of n-trading-links firms with [consumer?][
+    create-consumer-links-with n-of n-trading-links firms with [consumer-good-firm?][
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
@@ -126,19 +127,20 @@ to setup
 
   ask firms [  ; these parameters are set after the creation of households and creating of links so they can be estimated from the firm's current size
     ;set-firm-size      ;this was the previous method to create firm sizes based on number of employees
-    set liquidity decide-reserve  ; model begins at the beginning of a month, so start with the buffer amount
+    set liquidity decide-reserve + (wage-rate * count my-employment-links)  ; model begins at the beginning of a month, so start with the buffer amount  WILL: and adding in enough wage to pay employees
     ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
     set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
     set filled-position? false  ; just needs to be set to a boolean
     set open-position?  false  ; not trying to hire immediately by default
     set close-position? false  ; not firing immediately by default
-    if consumer? [
-      set demand (ideal-consumption wage-rate price) * (count consumer-link-neighbors / n-trading-links)  ; estimate demand from current trading-links (this will get set to 0 on tick 1, but it used to set initially inventory)
+    if input-data != "None" [  ;input-data being anything other than None implies that firm must take some sort of input
+      set demand count my-employment-links * tech-parameter;estimate demand as equal to the output when all workers are working
       set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
       set-daily-input-demands
     ]
   ]
-  initialize-input-firm-demands
+  initialize-input-firm-demands   ;needs to be after employment is set so that firms can calculate number of employees and buffer amount
+  setup-equity-links
   ask one-of firms [ask my-links [show-link]]
   if include-visualizations? = False [
     ask turtles [
@@ -157,23 +159,20 @@ end
 to set-constants
   set max-wage-growth 0.019  ; δ in Lengnick: max amount wages are increased or decreased by (his code has .02) 
   set months-to-lower-wage 12  ; γ in Lengnick: after this many months of having all positions filled, a firm will decrease wages, paper uses 24
-  set max-price-growth 0.02 ;  ν in Lengnick: the max amount a firm increases/decreases prices by, (paper uses 0.02)
-  set prob-firm-changes-price 0.75  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
-  set inventory-floor 0.25  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
-  set inventory-ceiling 1 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
+  set max-price-growth 0.2 ;  ν in Lengnick: the max amount a firm increases/decreases prices by, (paper uses 0.02)
+  set prob-firm-changes-price 0.25  ; θ in Lengnick: Prob that a firm changes prices, when the price is outside their range
+  set inventory-floor 0.5  ; ϕ_lowerbar in lengnick: if inventory is below this fraction of demand, the firm tries to hire
+  set inventory-ceiling 1.25 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
   set price-floor 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
   set price-ceiling 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
-  set buffer-labor-fraction 0.1  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
-  set diminishing-utility-constant .9  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
+  set buffer-labor-fraction 0.5  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set diminishing-utility-constant .1  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
   set prob-replace-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
-  set prob-replace-firm-quant 0.25  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
+  set prob-replace-firm-quant 0.5  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
-  set capital-requirement-coefficient 0.1  ;ν in Gatti, this is the coefficient that allows banks to lend out a multiple of their liquidity
-  set policy-interest-rate 0.01    ;r_upperbar in Gatti, this is the interest rate set by the central bank with which banks ask for a markup
-  set max-interest-markup 0.1     ; φ_kt in Gatti, this is the maximum markup of the buyers leverage 
-  set prob-new-firm-enters 0.3    ;arbitrary constant so that every tick there is this probability that a new firm will be added to the system. TO BE ADDED, UNCLEAR WHETHER WE STILL WANT THIS
   set n-trading-links 7           ;Z in Gatti, number of firms contacted by consumers trying to buy consumer goods. Lengnick uses 7 Gatti uses 2
   set month-length 21
+  set autonomous-consumption 1.7     ;represents a monetary amount of autonomous consumption among households (Average wage rate is 52, so 
   ifelse single-firm-type? [
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
   ] [
@@ -201,22 +200,24 @@ to setup-firms
       set price 1 * small-random-change ; arbitrary, set to 1 for convenience
       set firm-type group
       set input-data firm-input-data
-      set wage-rate 52 * small-random-change ; this was taken from https://sim4edu.com/sims/20/ ; start with same wage rate as reservation wage
+      set wage-rate tech-parameter * transactions-per-month * small-random-change ;start with same wage rate as output, which is the tech parameter times transactions per month
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
-      set consumer? is-consumer?
+      set consumer-good-firm? is-consumer?
     ]
   ]
 end
 
-
-to setup-banks
-  let num-banks 10     ;shamefully arbitrary
-  ask n-of num-banks patches with [pxcor = 0 and pycor > max-pycor + -1 * num-banks] [
-    sprout-banks 1 [
-      set shape "dollar bill"
-      set color green
-      set size 3
-      set liquidity 100
+to setup-equity-links
+  ask firms [
+    let num-employees count employment-link-neighbors
+    let equity-per-employee 1 / num-employees
+    let f self
+    ask employment-link-neighbors [
+      set liquidity liquidity - equity-per-employee     ;this forces all liquidity to be initialized with households
+      create-equity-link-with f [
+        init-consumer-link
+        set equity-percent equity-per-employee     ;all employees should have equal amounts of equity-percent invested in the firm
+      ]
     ]
   ]
 end
