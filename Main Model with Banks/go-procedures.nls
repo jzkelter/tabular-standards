@@ -1,0 +1,106 @@
+;;***************GO****************************
+;general go procedure, runs the beginning of the month, then the month, then the end of the month
+to go
+  
+  ;;ran this to find where the complexity is leaking, it was about 80% in the go-month procedure (which is to be expected)
+  ;let complexity timer
+  go-beginning-of-month-firms
+  ;print word "Beginning of month time complexity for firms is:   " (timer - complexity)
+  ;set complexity timer
+  go-beginning-of-month-households
+  ;print word "Beginning of month time complexity for households is:   " (timer - complexity)
+  ;set complexity timer
+  go-month
+  ;print word "Monthly transactions time complexity is:   " (timer - complexity)
+  ;set complexity timer
+  go-end-of-month
+  ;print word "End of month time complexity is:   " (timer - complexity)
+  tick
+end
+
+
+;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
+to go-beginning-of-month-firms
+  ask firms [
+    adjust-wage-rate
+    adjust-job-positions
+    adjust-price
+    set-daily-input-demands
+    set demand 0  ; reset demand for the month
+    if input-data != "None"[
+      foreach table:keys input-data[i ->
+        search-cheaper-supplier i
+        search-delivery-capable-seller i
+      ]
+    ]
+    if (liquidity <= 0 ) and allow-firm-exit?[    ;;safe to assume that a firm that nobody shops at goes out of business
+      remove-firm
+    ]
+    pay-wages
+  ]
+end
+
+;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
+to go-beginning-of-month-households
+  
+  ask households [
+    if random-float 1 < prob-replace-firm-price  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
+    if random-float 1 < prob-replace-firm-quant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
+    search-for-employement
+    set-consumption
+  ]
+end
+
+;runs the daily production cycle for one month
+to go-month
+  ;;; during month
+  repeat transactions-per-month [
+    ;let complexity timer
+    ask households [buy-consumption-goods]
+    ;print word "Household time complexity is:   " (timer - complexity)
+    ;set complexity timer
+    ask firms [
+      produce-goods
+      if input-data != "None"[
+        buy-input-goods
+      ]
+    ]
+    ;print word "Firm time complexity is:   " (timer - complexity)
+  ]
+end
+
+;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
+to go-end-of-month
+  ;;variables declared here to prevent recalculation every time a new household is asked
+  ask firms [
+    if (count my-credit-links > 0) [
+      pay-loan-back
+    ]
+    allocate-profits
+  ]
+  distribute-profits
+  ask households [
+    adjust-reservation-wage
+    ;set-house-size
+    ifelse unemployed? [
+      set color red
+    ] [
+      set color blue
+    ]
+  ]
+  ask firms [
+    decide-fire-worker
+  ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
+
+  ask firms [
+    set-firm-xcor
+  ]
+  ask households [
+    set-household-xcor
+  ]
+  
+  set month month + 1
+end
+
+
+

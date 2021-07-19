@@ -1,0 +1,12 @@
+{
+    "Firms":[
+        {
+            "Firm type": 1,
+            "Input data": [],
+            "Tech constant": 3,
+            "Firm count": 100,
+            "Consumer?":false
+        }
+    ]
+}
+

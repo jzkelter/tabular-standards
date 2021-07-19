@@ -1,0 +1,2 @@
+We changed the definition of consumer? to consumer-good-firm?, we had issues initially with this due to the fact that there were conflicting definitions for consumer? within the model.
+This change is reflected in "Main Model"

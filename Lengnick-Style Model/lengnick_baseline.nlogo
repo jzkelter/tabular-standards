@@ -389,7 +389,7 @@ to-report input-cost-estimate
         set sum-cost sum-cost + price
       ]
     ]
-    let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
+    let avg-cost (sum-cost /  (count my-framework-agreements with [input-firm-type = i]))
     set mc (mc + (avg-cost / month-length / marginal-productivity i))
   ]
   report mc

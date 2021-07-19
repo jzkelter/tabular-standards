@@ -2,9 +2,13 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["lengnick-tests.nls" "unit testing.nls" "household-procedures.nls" "firm-procedures.nls" "go-procedures.nls" "setup-procedures.nls" "misc-observer-procedures.nls"]
-
-
+__includes["lengnick-tests.nls"
+           "unit testing.nls"
+           "household-procedures.nls"
+           "firm-procedures.nls"
+           "go-procedures.nls"
+           "setup-procedures.nls"
+           "misc-observer-procedures.nls"]
 
 
 

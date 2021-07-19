@@ -1,0 +1,445 @@
+;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
+to adjust-wage-rate  
+
+  ;; NOTE: this is how Nardin implements it. Lengnick implements it differently
+  (ifelse
+    last-open-position = (MONTH - 1) and not filled-position? [  ; firm had an open position last month and failed to fill
+      set wage-rate (1 + random-float max-wage-growth) * wage-rate
+    ]
+    (MONTH - last-open-position) >= months-to-lower-wage [ ; If all hires in past γ months have succeded, lower wage rate.
+      set wage-rate max (list ((1 - random-float max-wage-growth) * wage-rate) MIN-WAGE-RATE)  ; wage rate cannot go below MIN-WAGE-RATE (0 in Lengnick)
+    ])
+
+end
+
+;to-report failed-to-hire?  ; firm procedure. Reports if firm failed to hire last month
+;  report months-with-all-positions-filled = 0 ;
+;end
+
+;firm procedure, adjusts boolean position variables to declare whether a firm has an open position or not based on the amount of inventory it has
+to adjust-job-positions 
+  ; This was my implementation, changing to match Nardin/Jake
+;  (ifelse
+;    inventory <  ϕl * demand [
+;      set desired-labor-change 1  ; try to hire
+;    ]
+;    inventory > ϕu * demand [
+;      set desired-labor-change -1  ; fire at the end of month
+;    ] [  ; else if inventory is within desired range
+;      set desired-labor-change 0  ; don't change labor
+;    ]
+;  )
+  set filled-position? false  ; reset this, because none of the firms have filled a position at the beginning of a month
+  (ifelse
+    inventory <  inventory-floor * demand [  ; inventory is low
+      set open-position? true  ; try to hire
+      set close-position? false  ; don't fire anyone
+      set last-open-position MONTH  ; this month is the last open position
+    ]
+    inventory > inventory-ceiling * demand [  ; inventory is high
+      set open-position? false  ; don't hire
+      set close-position? true  ; fire
+    ] [  ; else if inventory is within desired range
+      ;; Nardin doesn't have anything here
+      set open-position? false
+      set close-position? false
+    ]
+  )
+
+end
+
+;firm procedure to adjust the price of its good based on inventory, prices have a lower and upper bound
+to adjust-price
+;  (ifelse
+;    ;;
+;    inventory < (ϕl * demand) and random-float 1 < θ [  ; if inventory is low and price is below threshold, with probability θ:
+;      set price min list (price * (1 + random-float ν)) (marginal-costs * φub)  ;; increase price by random amount, but don't go above critical upper bound
+;    ]
+;
+;    inventory > (ϕu * demand) and random-float 1 < θ [  ; if inventory is high and price is above threshold, with probability θ:
+;      set price max list (price * (1 - random-float ν)) (marginal-costs * φlb)  ;; decrease price by random amount, but don't go below critical lower bound
+;    ]
+;  )
+
+  (ifelse
+    ; if inventory is low and price is below upper threshold, with probability θ increase prce
+    (inventory < inventory-floor * demand) and (price < marginal-costs * price-ceiling) and (random-float 1 < prob-firm-changes-price) [
+      set price price * (1 + random-float max-price-growth)
+    ]
+    ; if inventory is high and price is above lower threshold, with probability θ decrease price
+    (inventory > inventory-ceiling * demand) and (price > marginal-costs * price-floor) and random-float 1 < prob-firm-changes-price [  ;
+      set price price * (1 - random-float max-price-growth)
+    ]
+  )
+  
+  
+end
+
+;firm procedure, decides whether or not to fire a worker at the end of the next time period
+to decide-fire-worker
+;  (ifelse
+;    desired-labor-change < 0 and n-workers > 1 [  ; firms won't fire their last worker
+;      ask one-of my-employment-links [die]
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+;      set desired-labor-change 0  ; no longer want to fire
+;    
+;    desired-labor-change = 0 [
+;      set months-with-all-positions-filled months-with-all-positions-filled + 1
+;    ] [  ; if the firm still wants to hire at the end of the month
+;      set months-with-all-positions-filled 0
+;    ]
+;  )
+
+  if close-position? [  ; firms won't fire their last worker if firm-exit is disabled
+    if n-workers > 0 [
+      ask one-of my-employment-links [die]
+    ; set months-with-all-positions-filled months-with-all-positions-filled + 1  ; if they fired, this was a month with all positions filled
+    ; set desired-labor-change 0  ; no longer want to fire ( I used this before using close-position?
+    ]
+  ]
+  set close-position? false
+
+  ;set-firm-size
+end
+
+;firm procedure-determines whether exit is an appropriate response for the firm this period
+to remove-firm
+  if replace-exited-firm? [
+    let f-type firm-type
+    add-firm f-type
+  ] 
+  ask consumer-link-neighbors [
+    create-consumer-link-with one-of other firms with [consumer-good-firm?][
+      init-consumer-link
+    ]
+  ]
+  
+  die
+end
+
+
+;firm procedure, adds in another firm of a given firm type
+to add-firm [new-firm-type]
+  foreach FIRM-STRUCTURE[f ->
+    let group table:get f "Firm type"
+    if (group = new-firm-type) [
+      hatch 1[
+        set price mean [price] of firms 
+        set wage-rate mean [wage-rate] of firms
+        set liquidity 50 ; model begins at the beginning of a month, so start with the buffer amount
+        raise-funds liquidity
+        set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
+        set filled-position? false  ; just needs to be set to a boolean
+        set open-position?  true  ; entering firm would like to hire a new worker
+        set close-position? false  ; not firing immediately by default
+        if input-data != "None" [
+          set demand mean [demand] of firms / 2 ;start smaller
+          set inventory mean [inventory] of firms ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
+          set-daily-input-demands
+        ]
+      ]
+    ]
+  ]
+end
+
+;firm procedure, firms search for the funding from households
+to raise-funds [startup-amount]
+  let to-be-raised startup-amount
+  let new-firm self
+  while [to-be-raised > 0] [
+    ask one-of households [   ;guarantees that we do not take the same investor twice
+      let liquidity-available liquidity * 0.5
+      ifelse liquidity-available > to-be-raised [
+        create-equity-link-with new-firm [
+          init-consumer-link
+          set equity-percent to-be-raised / startup-amount
+        ]
+        set liquidity liquidity - to-be-raised
+        set to-be-raised 0
+      ] [
+        create-equity-link-with new-firm [
+          init-consumer-link
+          set equity-percent liquidity-available / startup-amount
+        ]
+        set liquidity liquidity - liquidity-available
+        set to-be-raised to-be-raised - liquidity-available
+      ]
+    ]
+  ]
+;  if sum [equity-percent] of my-equity-links < 0.95 [
+;    error "funds were not raised"
+;  ]
+end
+
+
+;firm procedure, searches for a cheaper supplier of a given input good
+to search-cheaper-supplier [input-i]
+  let current-framework-agreement one-of my-in-framework-agreements with [input-firm-type = input-i]
+  let random-firm pick-random-input-firm input-i
+  let current-price [price] of [other-end] of current-framework-agreement
+  if ([price] of random-firm) * (1 + price-diff-lower-bound) < current-price [  ; Switch if new price is at least ξ% lower
+    ask current-framework-agreement [die]
+    create-framework-agreement-from random-firm [
+      init-framework-agreement input-i
+    ]
+  ]
+end
+
+;firm procedure, searches for a new supplier of a given input good to replace a supplier that was unable to satisfy the firm's demand
+to search-delivery-capable-seller [input-i]
+  let link-failed-to-satisfy rnd:weighted-one-of my-in-framework-agreements with [input-firm-type = input-i][demand-not-satisfied]
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
+    create-framework-agreement-from pick-random-input-firm input-i [init-framework-agreement input-i]
+    ask link-failed-to-satisfy [die]
+  ]
+end
+
+;firm procedure, picks a random firm that produces a given input, weighted by the number of employees
+to-report pick-random-input-firm [input-i]
+  report rnd:weighted-one-of firms with [not member? myself out-framework-agreement-neighbors and firm-type = input-i] [count my-employment-links]
+end
+
+;firm procedure, reports the marginal cost of production for a firm
+to-report marginal-costs   
+  report ((wage-rate /  month-length / tech-parameter) + input-cost-estimate)
+end
+
+;firm procedure, estimates the cost of inputs for framework agreement initialization, note there are multiple versions of this procedure
+;this first version takes the average cost of all framework agreements
+to-report input-cost-estimate
+  let mc 0
+  if input-data != "None" [
+    foreach table:keys input-data [i ->
+      let sum-cost 0
+      ask my-framework-agreements with [input-firm-type = i][
+        ask other-end[
+          set sum-cost sum-cost + price
+        ]
+      ]
+      let avg-cost (sum-cost / (count my-framework-agreements with [input-firm-type = i]))
+      set mc (mc + (avg-cost / month-length / marginal-productivity i))
+    ]
+  ]
+  report mc
+end
+
+;this procedure will take the maximum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost max ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
+
+;this procedure will take the minimum cost
+;to-report input-cost-estimate
+;  let mc 0
+;  foreach table:keys input-data[i ->
+;    let cost min ([price] of [other-end] of my-framework-agreements)
+;    set mc (mc + (cost / month-length / (marginal-productivity i)))
+;  ]
+;end
+
+;firm procedure, reports the current stock of a given input
+to-report current-stock [i]
+  let input table:get input-data i
+  report table:get input "Current stock"
+end
+
+;firm procedure, sets the stock of a given input to a given value
+to set-stock [input value]
+  let current-input table:get input-data input
+  table:put current-input "Current-stock" value
+end
+
+;firm procedure, reports the marginal productivity of a given input as stored in the input information table
+to-report marginal-productivity [i]
+  let input table:get input-data i
+  report table:get input "Marginal productivity"
+end
+
+;firm procedure, reports the number of employees a firm has
+to-report n-workers
+  report count my-employment-links
+end
+
+;firm procedure, adjusts inventory by a calculated production amount and adjusts input stocks accordingly by calling use-inputs
+to produce-goods  
+  ;set inventory inventory + daily-production
+  let production-amount production-potential
+  set inventory inventory + production-amount
+  use-inputs production-amount
+end
+
+;to-report daily-production
+;  report tech-parameter * n-workers
+;end
+
+;firm procedure, pays wages to workers based on formula in Lengnick paper
+to pay-wages
+  if n-workers > 0 [
+    let temp-wr wage-rate
+    if wage-rate * n-workers > liquidity [ 
+      set temp-wr liquidity / n-workers 
+    ]
+    set liquidity precision (liquidity - temp-wr * n-workers) 10
+    if liquidity < 0 [error "firms aren't allowed to go into debt"]
+    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
+  ]
+end
+
+;firm procedure, allocates a certain portion of profits to distribute to households
+to allocate-profits  
+  let buffer decide-reserve
+  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
+    set PROFITS-TO-ALLOCATE PROFITS-TO-ALLOCATE + liquidity - buffer
+    set liquidity buffer
+  ]
+end
+
+;firm procedure, distrubtes all profits allocated by firms to households
+to distribute-profits  
+  ;; distribute profits proportionately to initial investment
+  let profits-to-be-allocated profits-to-allocate
+  let my-firm self
+  ask my-equity-links [
+    let share-of-profits equity-percent * profits-to-be-allocated     ; distribute proportionately to wealth
+                                                                      ; let share-of-profits  profits-to-be-allocated / n-households  ; distribute equally to everyone
+    ask other-end [
+      set liquidity liquidity + share-of-profits
+    ]
+  ]
+  set profits-to-allocate 0
+  set liquidity liquidity - profits-to-allocate
+  if precision profits-to-allocate 1 != 0 [error "profits weren't fully distributed"]
+end
+
+
+;firm procedure, sells a given amount of goods to a single consumer
+to-report sell-consumption-good [amount-wanted]  
+  set demand demand + amount-wanted
+  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  set inventory inventory - goods-sold
+  if inventory < 0 [error "inventory cannot be negative"]
+  set liquidity liquidity + goods-sold * price
+  report goods-sold
+end
+
+;firm procedure, decides how much to hold for distribution to households and for savings
+to-report decide-reserve  
+  report buffer-labor-fraction * wage-rate * n-workers  ; 0.1 is χ in Lengnick
+end
+
+;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
+to-report production-potential 
+  ;try to modify this using a table-to-list primitive
+  ;do a map through the keys
+  ifelse input-data = "None"[
+    report n-workers * tech-parameter
+  ][
+    let minimum-potential 1000000000
+    foreach table:keys input-data[ i ->
+      let input-potential ((marginal-productivity i) * (current-stock i))
+      if input-potential < minimum-potential[
+        set minimum-potential input-potential
+      ]
+    ]
+    report (min (list minimum-potential (n-workers * tech-parameter)))
+  ]
+end
+
+;firm procedure, takes in a production amount and adjusts input stocks accordingly
+to use-inputs [production-amount] 
+  if input-data != "None" [
+    foreach table:keys input-data[ i ->
+      let current-amount current-stock i
+      set-stock i (current-amount - ((production-amount) / (marginal-productivity i)))
+    ]
+  ]
+end
+
+;firm procedure, reports the daily demand for a given input 
+to-report daily-input-demand [i]
+  let input table:get input-data i
+  report table:get input "Daily demand"
+end
+
+;firm procedure, sets the daily demand for a given input
+to set-daily-demand [i value]
+  let input table:get input-data i
+  table:put input "Daily demand" value
+  table:put input-data i input
+end
+
+;firm procedure, sets the daily demands for all inputs by calling set-daily-demand, demand is determined by current stock and inventories
+to set-daily-input-demands
+  if input-data != "None"[
+    let estimated-demand demand
+    let estimated-production (estimated-demand - inventory)
+    ;currently there's no buffer for how much of an input a firm orders, they order exactly as much as they think they'll need
+    foreach table:keys input-data[i ->
+      let current-amount current-stock i
+      let amount-needed (estimated-production / (marginal-productivity i))
+      ifelse amount-needed > current-amount[
+        set-daily-demand i ((amount-needed - current-amount) / month-length)
+      ][
+        set-daily-demand i 0
+      ]
+    ]
+  ]
+end
+
+;firm procedure, returns true if a firm uses a given input
+to-report uses-input? [i]
+  if input-data = "None"[
+    report false
+  ]
+  report table:has-key? input-data i
+end
+
+;firm procedure, sells a given amount of an good to a single firm
+to-report sell-input-good [amount-wanted]
+  set demand demand + amount-wanted
+  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  set inventory inventory - goods-sold
+  if inventory < 0 [error "inventory cannot be negative"]
+  set liquidity liquidity + goods-sold * price
+  report goods-sold
+end
+
+;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
+to buy-input-goods
+  foreach table:keys input-data[i ->
+    let remaining-demand daily-input-demand i
+    let firms-to-try framework-agreement-neighbors with [firm-type = i]
+    while [remaining-demand >= (0.05 * daily-input-demand i) and any? firms-to-try][
+      let the-firm one-of firms-to-try
+      let goods-wanted min list (daily-input-demand i) (liquidity / [price] of the-firm)
+      let amount-bought [sell-input-good goods-wanted] of the-firm
+      set liquidity liquidity - amount-bought * [price] of the-firm
+      set remaining-demand remaining-demand - amount-bought
+      if remaining-demand > 1E-10 [  ; if the amount bought does not satisfy demand (either because the firm didn't have inventory or because it was too expensive and the house couldn't afford)
+        ask framework-agreement-with the-firm [set demand-not-satisfied remaining-demand]
+      ]
+      ask the-firm [ set firms-to-try other firms-to-try]  ; remove this firm from the available set of firms to try
+    ]
+  ]
+end
+
+;firm procedure to generate the correct location from the firms' liquidity
+to set-firm-xcor
+  let firm-liq-mean mean [liquidity] of firms
+  let  firm-liq-stdev max (list 0.01 standard-deviation [liquidity] of firms)
+  set xcor max (list min-pxcor (min (list max-pxcor (3 * (liquidity - firm-liq-mean) / firm-liq-stdev))))
+end
+
+;firm procedure, reports the number of agreements a given firm has with firms of a given supplier type (how many suppliers a firm has for a given input)
+to-report n-in-agreements [input]
+  report count my-in-framework-agreements with [input-firm-type = input]
+end
+
+;firm procedure, reports the number of outgoing framework agreements a firm has (how many firms a firm supplies)
+to-report n-out-agreements
+  report count my-out-framework-agreements
+end

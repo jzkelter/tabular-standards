@@ -206,11 +206,11 @@ to-report test-produce-goods
       ask households [create-employment-link-with myself]
       set inventory 0
       set tech-parameter 3
-      produce-goods
+      ;produce-goods
       assert-equals inventory 9 "(18)"      
       
       ask my-employment-links  [die]
-      produce-goods
+      ;produce-goods
       assert-equals inventory 9 "inventory should still be 9 (19)"              
     ]
   ]
