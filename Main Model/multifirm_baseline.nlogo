@@ -2,13 +2,15 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["lengnick-tests.nls"
-           "unit testing.nls"
+__includes["unit testing.nls"
            "household-procedures.nls"
            "firm-procedures.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
+
+
+;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -152,7 +154,7 @@ worker per firm distribution
 NIL
 NIL
 0.0
-20.0
+40.0
 0.0
 20.0
 true
@@ -160,24 +162,6 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
-
-PLOT
-857
-147
-1056
-297
-NIL
-Unemployment
-Vacancy Rate
-0.0
-0.2
-0.0
-0.2
-false
-false
-"" ""
-PENS
-"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [open-position?] / n-households)"
 
 BUTTON
 1306
@@ -232,10 +216,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
 
 PLOT
-857
-300
-1057
-450
+1062
+147
+1336
+297
 mean price
 NIL
 NIL
@@ -244,10 +228,11 @@ NIL
 0.98
 1.02
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
+"cg-firms" 1.0 0 -6459832 true "" "plot mean [price] of firms with [consumer-good-firm?]"
+"pg-firms" 1.0 0 -2570826 true "" "plot mean [price] of firms with [not consumer-good-firm?]"
 
 BUTTON
 237
@@ -325,7 +310,7 @@ PLOT
 147
 853
 297
-Inventory of firms
+Inventory
 NIL
 NIL
 0.0
@@ -336,24 +321,8 @@ true
 false
 "" ""
 PENS
-"pen-1" 1.0 0 -2674135 true "" "plot mean [inventory] of firms"
-
-BUTTON
-983
-11
-1103
-44
-NIL
-lengnick-tests
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"consumer firms" 1.0 0 -2674135 true "" "plot mean [inventory] of firms with [consumer-good-firm?]"
+"producer firms" 1.0 0 -11033397 true "" "plot mean [inventory] of firms with [not consumer-good-firm?]"
 
 BUTTON
 180
@@ -427,26 +396,6 @@ PENS
 "pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
 
 TEXTBOX
-204
-514
-359
-570
-inventory < ϕl * demand \n(want to hire)
-11
-0.0
-1
-
-TEXTBOX
-204
-598
-354
-626
-inventory >  ϕu * demand (want to fire)
-11
-15.0
-1
-
-TEXTBOX
 4
 370
 46
@@ -457,10 +406,10 @@ above line we expect firing, below hiring
 1
 
 SLIDER
-1067
-148
-1247
-181
+859
+153
+1048
+186
 transactions-per-month
 transactions-per-month
 1
@@ -472,10 +421,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1068
-184
-1245
-217
+860
+189
+1048
+222
 include-visualizations?
 include-visualizations?
 0
@@ -483,10 +432,10 @@ include-visualizations?
 -1000
 
 SWITCH
-1069
-220
-1243
-253
+861
+225
+1049
+258
 allow-firm-exit?
 allow-firm-exit?
 0
@@ -500,15 +449,15 @@ SWITCH
 80
 single-firm-type?
 single-firm-type?
-0
+1
 1
 -1000
 
 SWITCH
-1070
-256
-1236
-289
+862
+261
+1050
+294
 replace-exited-firm?
 replace-exited-firm?
 0
@@ -531,15 +480,17 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households / mean [price] of firms"
-"output" 1.0 0 -2139308 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms"
+"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
+"cg-output" 1.0 0 -6459832 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms with [consumer-good-firm?]"
+"full output" 1.0 0 -7500403 true "" "plot n-households * mean [tech-parameter] of firms with [consumer-good-firm?]"
+"pg-output" 1.0 0 -3889007 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms with [not consumer-good-firm?]"
 
 PLOT
 1063
 301
 1337
 451
-Liquidity
+Mean Liquidity
 NIL
 NIL
 0.0
@@ -550,8 +501,9 @@ true
 true
 "" ""
 PENS
-"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
-"households" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
+"firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms "
+"household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
+"agents" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
 
 BUTTON
 1114
@@ -586,6 +538,64 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+204
+500
+353
+545
+Firms Added This Month
+count firms with [color = yellow]
+4
+1
+11
+
+PLOT
+352
+495
+636
+645
+Firm Money Outflow/Inflow
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"money inflow" 1.0 0 -13791810 true "" "plot mean [price] of firms with [consumer-good-firm?] * sum [demanded-consumption] of households"
+"money outflow" 1.0 0 -2674135 true "" "plot sum [count my-employment-links * wage-rate] of firms with [consumer-good-firm?]"
+
+PLOT
+853
+301
+1053
+451
+Total Bankrupt Firms
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
+
+CHOOSER
+977
+12
+1111
+57
+Index
+Index
+"Pringle" "Coats" "Ussher" "Potvin"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -34,6 +34,11 @@ to init-employment-link
   hide-link
 end
 
+;observer procedure, initializes a single equity link
+to init-equity-link
+  hide-link
+end
+
 ;observer procedure, initializes a single framework agreement
 to init-framework-agreement [input-type]
   set input-firm-type input-type
@@ -50,6 +55,4 @@ end
 to-report end-of-month?  
   report ticks mod month-length = (month-length - 1)
 end
-
-
 

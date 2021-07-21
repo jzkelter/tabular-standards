@@ -2,13 +2,14 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["lengnick-tests.nls"
-           "unit testing.nls"
+__includes["unit testing.nls"
            "household-procedures.nls"
            "firm-procedures.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
+
+;"lengnick-tests.nls"
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -159,7 +160,7 @@ false
 false
 "" ""
 PENS
-"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [open-position?] / n-households)"
+"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [desired-n-workers > n-workers] / n-households)"
 
 BUTTON
 1306

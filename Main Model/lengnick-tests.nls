@@ -57,7 +57,7 @@ to-report test-adjust-wage-rate
       set wage-rate 10      
       ;set months-with-all-positions-filled  0 ; 0 months with unfilled positions means failed to hire this past month   
       set last-open-position 9
-      set filled-position? false 
+      ;set filled-position? false 
       let raised-wage (1 + seeded-random-float max-wage-growth 1) * 10        
       adjust-wage-rate        
       assert-equals wage-rate raised-wage "Wage rate should have been raised (1)"
@@ -74,14 +74,14 @@ to-report test-adjust-wage-rate
       ;set months-with-all-positions-filled 23
       set wage-rate 10
       set last-open-position 9.5 ; 10 - (γ / 2)
-      set filled-position? false      
+      ;set filled-position? false      
       adjust-wage-rate
       assert-equals wage-rate 10 "Wage rate should have stayed the same (3)"
       
       ;; test when wage should lower     
       ; set months-with-all-positions-filled 24
       set last-open-position 10 - months-to-lower-wage
-      set filled-position? true
+      ;set filled-position? true
       set wage-rate 10
       let lowered-wage (1 - seeded-random-float max-wage-growth 1) * 10    
       adjust-wage-rate
@@ -175,21 +175,21 @@ to-report test-adjust-job-positions
       
       set inventory (inventory-upper-bound + inventory-lower-bound) / 2
       adjust-job-positions
-      assert-equals open-position? false  "position should not have been opened (9)"
-      assert-equals close-position? false  "position should not have been closed (10)"
+      ;assert-equals open-position? false  "position should not have been opened (9)"
+      ;assert-equals close-position? false  "position should not have been closed (10)"
       assert-equals last-open-position 8 "last-open-position should have stayed = 8 (11)"
       
       
       set inventory (inventory-upper-bound + 1)
       adjust-job-positions
-      assert-equals open-position? false  "position should not have been opened (12)"
-      assert-equals close-position? true  "position should be getting closed (13)"
+      ;assert-equals open-position? false  "position should not have been opened (12)"
+      ;assert-equals close-position? true  "position should be getting closed (13)"
       assert-equals last-open-position 8 "last-open-position should have stayed = 8 (14)"
       
       set inventory (inventory-lower-bound - 1)
       adjust-job-positions
-      assert-equals open-position? true  "position should have been opened (15)"
-      assert-equals close-position? false  "position should not be getting closed (16)"
+      ;assert-equals open-position? true  "position should have been opened (15)"
+      ;assert-equals close-position? false  "position should not be getting closed (16)"
       assert-equals last-open-position 10 "last-open-position should now be 10 (17)"
       
     ]
@@ -440,7 +440,7 @@ to-report test-search-job
     ca
     set-constants
     create-firms 10[
-      set open-position? false
+      ;set open-position? false
     ]
     create-households 1[
       search-job
@@ -452,7 +452,7 @@ to-report test-search-job
     ca
     set-constants
     create-firms 10[
-      set open-position? true
+      ;set open-position? true
       set wage-rate 1
     ]
     create-households 1[
@@ -466,12 +466,12 @@ to-report test-search-job
     ca
     set-constants
     create-firms 1[
-      set open-position? true
+     ; set open-position? true
       set wage-rate 1
     ]
     
     create-firms 9[
-      set open-position? false
+      ;set open-position? false
       set wage-rate 1
     ]
     
@@ -480,7 +480,7 @@ to-report test-search-job
       search-job
       assert (employed?) "Household should have found employment (46)"
       assert-equals firm 0 my-employer "Emloyer should be firm 0 that had open-position (47)"
-      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (48)"
+      ;assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (48)"
       
     ]
     
@@ -489,19 +489,19 @@ to-report test-search-job
     set-constants
     create-firms 1[
       set wage-rate 7
-      set open-position? true
+      ;set open-position? true
     ]
     create-firms 4[
       set wage-rate 4
-      set open-position? true
+      ;set open-position? true
     ]
     create-households 1 [
       set reservation-wage 5
       search-job
       assert employed? "Household should have found employment (49)"
       assert-equals firm 0 my-employer "Emloyer should be firm 0 that had high enough wage (50)"
-      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (51)"
-      assert-equals (count firms with [open-position?]) 4 "There should still be 4 firms with open positions (52)"
+      ;assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (51)"
+      ;assert-equals (count firms with [open-position?]) 4 "There should still be 4 firms with open positions (52)"
     ]
   ]
 end
@@ -516,12 +516,12 @@ to-report test-search-better-paid-job
     ]
     create-firms 1[
       set wage-rate 1
-      set open-position? false
+      ;set open-position? false
       create-employment-link-with one-of households[
       ]
     ]
     create-firms 3[
-      set open-position? true
+      ;set open-position? true
       set wage-rate 4
     ]
     let old-firm one-of firms with [wage-rate = 1]    
@@ -544,11 +544,11 @@ to-report test-search-better-paid-job
     ]
     create-firms 1[
       create-employment-links-with households      
-      set open-position? true
+      ;set open-position? true
       set wage-rate 8
     ]
     create-firms 1[
-      set open-position? true
+      ;set open-position? true
       set wage-rate 10
     ]
      
@@ -557,7 +557,7 @@ to-report test-search-better-paid-job
     ask households with [reservation-wage = 7][
       search-better-paid-job      
       assert-equals (count my-employment-links) 1 "There should still be one employment link (55)"            
-      assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (56)"
+      ;assert [open-position? = false] of my-employer  "The new employer should no longer have an open position (56)"
       assert-equals my-employer (one-of firms with [wage-rate = 10]) "Household should have changed to new employer (57)"      
     ]
     
@@ -579,11 +579,11 @@ to-report test-search-better-paid-job
     ]
     create-firms 1[
       create-employment-links-with households      
-      set open-position? true
+      ;set open-position? true
       set wage-rate 8
     ]
     create-firms 1[
-      set open-position? true
+      ;set open-position? true
       set wage-rate 10
     ]    
     

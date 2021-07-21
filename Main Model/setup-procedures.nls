@@ -32,19 +32,15 @@ firms-own [
   inventory  ; # amount of goods stored and ready to be sold (i_f in Lengnick)
   price  ; the price of goods (p_f in Lengnick)
   wage-rate ; w_f in Lengnick
-  ; desired-labor-change  ; 1 if the firm wants to hire, -1 if it wants to fire, 0 otherwise
-  ;months-with-all-positions-filled  ; keeps track of how many full months the firm has gone without an unfilled position
 
   last-open-position  ; the month that the firm last had an open position
-  filled-position?  ; if the firm had an open position last month, whether or not it was filled
-
-  open-position?  ; trying to hire?
-  close-position?  ; firing at the end of the month?
+  
+  desired-n-workers ;represents the desired number of workers for the month
+  previous-sales
 
   demand  ; the most recent demand this firm experienced for its goods
   tech-parameter  ; This multiplies the number of workers to determine how much inventory is produced (lambda in Lengnick)
   consumer-good-firm?       ; defines whether they produce consumer goods
-  profits-to-allocate
 ]
 
 ;defines consumers investment within a certain firm, equity links remain even if a household changes employment
@@ -61,14 +57,17 @@ consumer-links-own [
 framework-agreements-own[
   input-firm-type
   demand-not-satisfied
+  worth
 ]
 
 ;defines all global variables, see Lengnick paper or "setup-constants" for a description of what each of these does
 globals [
   EQUITY_AMOUNT
   WAGE_AMOUNT
+  TOTAL-BANKRUPT-FIRMS
   month
   month-length  ; 21 to reflect number of business days
+  index-value
   MIN-WAGE-RATE
   FIRM-STRUCTURE
   max-wage-growth
@@ -79,7 +78,7 @@ globals [
   inventory-ceiling 
   price-floor 
   price-ceiling 
-  buffer-labor-fraction 
+  buffer-labor-fraction
   diminishing-utility-constant 
   prob-replace-firm-price
   prob-replace-firm-quant 
@@ -89,6 +88,7 @@ globals [
   max-interest-markup
   prob-new-firm-enters
   n-trading-links
+  n-framework-agreements
   autonomous-consumption
 ]
 
@@ -98,6 +98,7 @@ to setup
 
   set-constants
   set MIN-WAGE-RATE 2.5
+  set TOTAL-BANKRUPT-FIRMS 0
   
 
   create-households n-households [
@@ -130,16 +131,14 @@ to setup
     set liquidity decide-reserve + (wage-rate * count my-employment-links)  ; model begins at the beginning of a month, so start with the buffer amount  WILL: and adding in enough wage to pay employees
     ; set months-with-all-positions-filled 2  ; arbitrary. Want it to be > 0 so they don't try to immediately lower wage
     set last-open-position -2 * months-to-lower-wage  ; arbitrarily set > γ so firms don't try to immediately lower wage
-    set filled-position? false  ; just needs to be set to a boolean
-    set open-position?  false  ; not trying to hire immediately by default
-    set close-position? false  ; not firing immediately by default
     if input-data != "None" [  ;input-data being anything other than None implies that firm must take some sort of input
-      set demand count my-employment-links * tech-parameter;estimate demand as equal to the output when all workers are working
       set inventory 50 ; I tried (.5 * demand) to start with inventory such that firms won't want to hire or fire on the first tick, but didn't seem to work
       set-daily-input-demands
     ]
+    set demand n-workers * tech-parameter
+    set desired-n-workers n-workers
   ]
-  initialize-input-firm-demands   ;needs to be after employment is set so that firms can calculate number of employees and buffer amount
+  ;initialize-input-firm-demands   ;needs to be after employment is set so that firms can calculate number of employees and buffer amount
   setup-equity-links
   ask one-of firms [ask my-links [show-link]]
   if include-visualizations? = False [
@@ -150,7 +149,6 @@ to setup
       hide-link
     ]
   ]
-  
   reset-ticks
   tick
 end
@@ -165,14 +163,15 @@ to set-constants
   set inventory-ceiling 1.25 ; ϕ_upperbar in lengnick: if inventory is above this fraction of demand, the firm fires a worker
   set price-floor 1.025  ; φ_lowerbar in lengnick: if price is below this fraction of marginal-costs (along with other conditions) increase price
   set price-ceiling 1.15  ; φ_upperbar in Lengnick: if price is above this fraction of marginal-costs (along with other conditions), decrease price
-  set buffer-labor-fraction 0.5  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
-  set diminishing-utility-constant .1  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
+  set buffer-labor-fraction 2  ; χ in Lengnick: the fraction of labor costs to keep as a buffer  (in the future this could be a firm specific parameter depending on the firm's risk/aggression)
+  set diminishing-utility-constant 0.5  ; α in Lengnick: the decay rate of how much wealth is used on consumption by households
   set prob-replace-firm-price 0.25  ;this is Ψprice in Lengnick, the probability of switching trading firms based on price
   set prob-replace-firm-quant 0.5  ;this is Ψquant in Lengnick, the probability of switching trading firms based on lack of quantity
   set price-diff-lower-bound 0  ; ξ in Lengnick, A consumer will switch firms based on price if the new firm is at least this fraction cheaper, his code uses 0.01 //WILL June 2021, we changed this to 0 because 0.01 seems equally as arbitrary
   set n-trading-links 7           ;Z in Gatti, number of firms contacted by consumers trying to buy consumer goods. Lengnick uses 7 Gatti uses 2
+  set n-framework-agreements 5
   set month-length 21
-  set autonomous-consumption 1.7     ;represents a monetary amount of autonomous consumption among households (Average wage rate is 52, so 
+  set autonomous-consumption 1.6     ;represents a monetary amount of autonomous consumption among households 1.9 tends to work well
   ifelse single-firm-type? [
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
   ] [
@@ -190,8 +189,6 @@ to setup-firms
     let is-consumer? table:get f "Consumer?"
     create-firms num-firms[
       set shape "building store"
-      set xcor 0
-      set ycor 3 - random 5
       ;set heading 0             Original location procedure
       ;rt who * (360 / n-firms)
       ;fd 2 + random 6
@@ -203,6 +200,9 @@ to setup-firms
       set wage-rate tech-parameter * transactions-per-month * small-random-change ;start with same wage rate as output, which is the tech parameter times transactions per month
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
       set consumer-good-firm? is-consumer?
+      set xcor 0
+      set ycor 12 - random 5
+      if consumer-good-firm? [set ycor ycor - 9]
     ]
   ]
 end
@@ -215,7 +215,7 @@ to setup-equity-links
     ask employment-link-neighbors [
       set liquidity liquidity - equity-per-employee     ;this forces all liquidity to be initialized with households
       create-equity-link-with f [
-        init-consumer-link
+        init-equity-link
         set equity-percent equity-per-employee     ;all employees should have equal amounts of equity-percent invested in the firm
       ]
     ]
@@ -243,16 +243,16 @@ end
 ;creates a single firm's framework agreements to all necessary suppliers
 to initialize-framework-agreements
   ask firms with [input-data != "None"][
+    let temp-n-framework-agreements n-framework-agreements
     foreach table:keys input-data[i ->
-      let num-agreements 5
       if any? firms with [firm-type = i and n-out-agreements = 0][
-        set num-agreements num-agreements - 1
+        set temp-n-framework-agreements temp-n-framework-agreements - 1
         create-framework-agreement-from one-of firms with [firm-type = i and n-out-agreements = 0][
           init-framework-agreement i
         ]
       ]
       let current-firm self
-      ask n-of num-agreements firms with [firm-type = i and not out-framework-agreement-neighbor? self][
+      ask n-of temp-n-framework-agreements firms with [firm-type = i and not out-framework-agreement-neighbor? self][
         create-framework-agreement-to current-firm[
           init-framework-agreement i
         ]
@@ -268,7 +268,7 @@ to initialize-input-firm-demands
   let firms-ready-to-set-demand (list)
   foreach FIRM-STRUCTURE[t ->
     set firm-types fput table:get t "Firm type" firm-types
-    if table:get t "Consumer?"[
+    if not table:get t "Consumer?"[
       set firms-done-setting-demand fput table:get t "Firm type" firms-done-setting-demand
       let input-firms table:get t "Input data"
       foreach input-firms[f ->

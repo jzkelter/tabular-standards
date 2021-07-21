@@ -22,19 +22,21 @@ end
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
   ask firms [
+    set color brown
+    if (liquidity <= 0 ) and allow-firm-exit?[    ;;safe to assume that a firm that nobody shops at goes out of business
+      remove-firm
+    ]
     adjust-wage-rate
-    adjust-job-positions
-    adjust-price
+    adjust-labor-and-price
     set-daily-input-demands
     set demand 0  ; reset demand for the month
+    set previous-sales 0 ; reset how many goods were sold from the previous month
     if input-data != "None"[
       foreach table:keys input-data[i ->
+        guarantee-framework-links i
         search-cheaper-supplier i
         search-delivery-capable-seller i
       ]
-    ]
-    if (liquidity <= 0 ) and allow-firm-exit?[    ;;safe to assume that a firm that nobody shops at goes out of business
-      remove-firm
     ]
     pay-wages
   ]
@@ -42,7 +44,10 @@ end
 
 ;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
 to go-beginning-of-month-households
-  
+  ask households [
+    if liquidity < 0 [set liquidity 0] ;we kept getting a rounding error where households would have a liquidity of 1.6 x 10 ^ -16 due to a rounding error. This corrects for that.
+    guarantee-consumer-links
+  ]
   ask households [
     if random-float 1 < prob-replace-firm-price  [search-cheaper-vendor]  ; with probability Ψprice, search for a cheaper vendor
     if random-float 1 < prob-replace-firm-quant [search-delivery-capable-vendor]  ; with probability Ψquant, search for a vendor that has ineventory
@@ -56,7 +61,6 @@ to go-month
   ;;; during month
   repeat transactions-per-month [
     ;let complexity timer
-    ask households [buy-consumption-goods]
     ;print word "Household time complexity is:   " (timer - complexity)
     ;set complexity timer
     ask firms [
@@ -65,25 +69,21 @@ to go-month
         buy-input-goods
       ]
     ]
+    ask households [
+      buy-consumption-goods
+    ]
     ;print word "Firm time complexity is:   " (timer - complexity)
   ]
 end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
-  ;;variables declared here to prevent recalculation every time a new household is asked
   ask firms [
-    allocate-profits
-    distribute-profits    ;we can move this into a turtle variable since profits are firm specific-distributions
+    distribute-profits 
   ]
   ask households [
     adjust-reservation-wage
     ;set-house-size
-    ifelse unemployed? [
-      set color red
-    ] [
-      set color blue
-    ]
   ]
   ask firms [
     decide-fire-worker
@@ -94,8 +94,12 @@ to go-end-of-month
   ]
   ask households [
     set-household-xcor
+    ifelse unemployed? [
+      set color red
+    ] [
+      set color blue
+    ]
   ]
-  
   set month month + 1
 end
 
