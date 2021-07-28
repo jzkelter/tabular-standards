@@ -91,10 +91,10 @@ NIL
 0
 
 SLIDER
-6
-11
-178
-44
+4
+10
+176
+43
 n-households
 n-households
 10
@@ -147,9 +147,9 @@ PENS
 
 PLOT
 653
-455
+461
 853
-605
+611
 worker per firm distribution
 NIL
 NIL
@@ -164,10 +164,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 BUTTON
-1306
-10
-1400
-43
+1113
+117
+1207
+150
 hide-links
 ask links [hide-link]
 NIL
@@ -181,10 +181,10 @@ NIL
 1
 
 BUTTON
-1114
-11
-1301
-44
+1113
+10
+1275
+43
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
 NIL
@@ -199,9 +199,9 @@ NIL
 
 PLOT
 855
-454
+460
 1055
-604
+610
 customer per firm distribution
 NIL
 NIL
@@ -216,10 +216,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
 
 PLOT
-1062
-147
-1336
-297
+1060
+152
+1334
+302
 mean price
 NIL
 NIL
@@ -231,8 +231,9 @@ true
 true
 "" ""
 PENS
-"cg-firms" 1.0 0 -6459832 true "" "plot mean [price] of firms with [consumer-good-firm?]"
-"pg-firms" 1.0 0 -2570826 true "" "plot mean [price] of firms with [not consumer-good-firm?]"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
+"ig-firms" 1.0 0 -6459832 true "" "plot mean [price] of INTERMEDIATE-GOOD-FIRMS"
+"pg-firms" 1.0 0 -7500403 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
 237
@@ -289,9 +290,9 @@ PENS
 
 PLOT
 653
-300
+306
 853
-450
+456
 mean demand not satisfied
 NIL
 NIL
@@ -307,9 +308,9 @@ PENS
 
 PLOT
 653
-147
+153
 853
-297
+303
 Inventory
 NIL
 NIL
@@ -321,8 +322,9 @@ true
 false
 "" ""
 PENS
-"consumer firms" 1.0 0 -2674135 true "" "plot mean [inventory] of firms with [consumer-good-firm?]"
-"producer firms" 1.0 0 -11033397 true "" "plot mean [inventory] of firms with [not consumer-good-firm?]"
+"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"intermediate firms" 1.0 0 -7500403 true "" "plot mean [inventory] of INTERMEDIATE-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
 180
@@ -380,7 +382,7 @@ PLOT
 486
 200
 636
-firms w/ high/low inventory 
+Last Two Years Inventory
 NIL
 NIL
 0.0
@@ -391,9 +393,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  inventory-floor * demand]"
-"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  inventory-ceiling * demand]"
-"pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
+"default" 1.0 0 -16777216 true "" "plotxy year mean LAST-TWO-YEARS-INVENTORY"
+"pen-1" 1.0 0 -8431303 true "" "plotxy year sum [inventory] of PRIMARY-GOOD-FIRMS"
 
 TEXTBOX
 4
@@ -407,13 +408,13 @@ above line we expect firing, below hiring
 
 SLIDER
 859
-153
+159
 1048
-186
+192
 transactions-per-month
 transactions-per-month
 1
-21
+month-length
 1.0
 1
 1
@@ -422,9 +423,9 @@ HORIZONTAL
 
 SWITCH
 860
-189
+195
 1048
-222
+228
 include-visualizations?
 include-visualizations?
 0
@@ -433,9 +434,9 @@ include-visualizations?
 
 SWITCH
 861
-225
+231
 1049
-258
+264
 allow-firm-exit?
 allow-firm-exit?
 0
@@ -443,21 +444,10 @@ allow-firm-exit?
 -1000
 
 SWITCH
-8
-47
-156
-80
-single-firm-type?
-single-firm-type?
-1
-1
--1000
-
-SWITCH
 862
-261
+267
 1050
-294
+300
 replace-exited-firm?
 replace-exited-firm?
 0
@@ -465,10 +455,10 @@ replace-exited-firm?
 -1000
 
 PLOT
-1063
-454
-1341
-604
+1061
+459
+1339
+609
 Output and Demand
 NIL
 NIL
@@ -481,15 +471,14 @@ true
 "" ""
 PENS
 "demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -6459832 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms with [consumer-good-firm?]"
-"full output" 1.0 0 -7500403 true "" "plot n-households * mean [tech-parameter] of firms with [consumer-good-firm?]"
-"pg-output" 1.0 0 -3889007 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms with [not consumer-good-firm?]"
+"cg-output" 1.0 0 -5509967 true "" "plot sum [(count my-employment-links)* tech-parameter] of CONSUMER-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [(count my-employment-links)* tech-parameter] of PRIMARY-GOOD-FIRMS"
 
 PLOT
-1063
-301
-1337
-451
+1061
+306
+1335
+456
 Mean Liquidity
 NIL
 NIL
@@ -501,15 +490,16 @@ true
 true
 "" ""
 PENS
-"firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms "
+"primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"agents" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-1114
-47
-1275
-80
+1113
+46
+1274
+79
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
 NIL
@@ -523,10 +513,10 @@ NIL
 1
 
 BUTTON
-1114
-83
-1280
-116
+1113
+82
+1273
+115
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
 NIL
@@ -566,14 +556,14 @@ true
 true
 "" ""
 PENS
-"money inflow" 1.0 0 -13791810 true "" "plot mean [price] of firms with [consumer-good-firm?] * sum [demanded-consumption] of households"
-"money outflow" 1.0 0 -2674135 true "" "plot sum [count my-employment-links * wage-rate] of firms with [consumer-good-firm?]"
+"money inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
+"money outflow" 1.0 0 -2674135 true "" "plot sum [count my-employment-links * wage-rate] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 853
-301
+307
 1053
-451
+457
 Total Bankrupt Firms
 NIL
 NIL
@@ -587,15 +577,69 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
 
-CHOOSER
+SWITCH
 977
-12
-1111
-57
-Index
-Index
-"Pringle" "Coats" "Ussher" "Potvin"
+10
+1109
+43
+use-index?
+use-index?
 0
+1
+-1000
+
+CHOOSER
+976
+47
+1109
+92
+setup-structure
+setup-structure
+"single-firm" "two-layer" "three-layer" "diamond" "looped-diamond" "skipped-center"
+1
+
+MONITOR
+1279
+10
+1426
+55
+# Primary Good Firms
+count PRIMARY-GOOD-FIRMS
+17
+1
+11
+
+MONITOR
+1279
+57
+1425
+102
+# Intermediate Good Firms
+count INTERMEDIATE-GOOD-FIRMS
+17
+1
+11
+
+MONITOR
+1278
+105
+1424
+150
+# Consumer Good Firms
+count CONSUMER-GOOD-FIRMS
+17
+1
+11
+
+TEXTBOX
+1343
+154
+1484
+238
+# Primary Good Firms          + # Intermediate Good Firms  + # Consumer Good Firms   = # Total Firms\n\nfor more than 1 firm type
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

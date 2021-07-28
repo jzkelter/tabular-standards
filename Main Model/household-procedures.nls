@@ -6,7 +6,7 @@ to search-cheaper-vendor
   let current-trading-link one-of my-consumer-links
   let random-firm pick-random-consumer-firm
   let current-price [price] of [other-end] of current-trading-link
-  if ([price] of random-firm) * (1 + price-diff-lower-bound) < current-price [  ; Switch if new price is at least ξ% lower
+  if ([price] of random-firm) < current-price [
     ask current-trading-link [die]
     create-consumer-link-with random-firm [init-consumer-link]
   ]
@@ -30,7 +30,7 @@ to guarantee-consumer-links
     ]
   ]
   if curr-trading-links < n-trading-links [
-    create-consumer-links-with n-of n-trading-links firms with [consumer-good-firm?][
+    create-consumer-links-with n-of (n-trading-links - curr-trading-links) firms with [consumer-good-firm?][
       init-consumer-link
     ]
   ]
@@ -49,7 +49,6 @@ to search-for-employement
   ] [
     search-better-paid-job
   ]
-
 end
 
 ;household proceudre, searches for a potential employer under the condition that this household is unemployed, a more rigorous search than "search better paid job"
@@ -96,15 +95,7 @@ to quit-job
   ask my-employment-links [die]
 end
 
-
-;household procedure, sets daily consumption LENGNICK VERSION
-;to set-consumption
-;  let mean-price mean [price] of consumer-link-neighbors  ; households only know prices of their trading firms
-;  let total-consumption min list (liquidity / mean-price) (ideal-consumption liquidity  mean-price)  ; if liquidity/mean-price < 1, then they don't have enough money for ideal consumption
-;  set demanded-consumption total-consumption / transactions-per-month
-;end
-
-;household procedure, sets daily consumption, our version
+;household procedure, sets daily consumption
 to set-consumption
   let money-to-spend 0
   ifelse unemployed? [
@@ -118,52 +109,6 @@ to set-consumption
   ]
   set demanded-consumption total-consumption / transactions-per-month
 end
-
-
-;;household procedure, reports ideal daily consumption based on some propensity to save, called by set-consumption
-;to-report ideal-consumption [money mean-price]
-;  let ic 0
-;  carefully [
-;    set ic (money / mean-price) ^ diminishing-utility-constant  ; is α in Lengnick. Consumption increases with wealth at decaying rate
-;  ] [  ; sometimes with really low money, NetLogo throws an error that (money / mean-price) ^ 0.9 is not a number
-;    print error-message
-;  ]
-;  report ic
-;end
-
-; This was my original version. I changed to the version below which looks equivalent to me but yields different behavior.
-;to buy-consumption-goods  ; household procedure
-;  ask my-consumer-links [set demand-not-satisfied 0]
-;  let total-bought 0
-;  let firms-to-try consumer-link-neighbors with [inventory > 0]  ; in Lengnick, all 7 firms are tried if necesary.
-;  while [total-bought < 0.95 * demanded-consumption and any? firms-to-try] [
-;    ; figure out the transaction
-;    let the-firm one-of firms-to-try
-;
-;    let my-demand min list demanded-consumption (liquidity / [price] of the-firm) ; demand was demanded-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
-;    let relevant-inventory min list demanded-consumption ([inventory] of the-firm)
-;    let total-cost min list liquidity (relevant-inventory * [price] of the-firm)
-;
-;    ; set whether demand was met from this firm
-;    ask consumer-link-with the-firm [
-;      set demand-not-satisfied max list 0 (my-demand - relevant-inventory)  ; must be >= 0 Lengnick uses this to probabilistically determine firms to cut ties with, but doesn't say exactly how he calculates it
-;    ]
-;
-;    ; adjust household variables
-;    set liquidity liquidity - total-cost
-;    let goods-sold total-cost / [price] of the-firm
-;    set total-bought total-bought + goods-sold
-;
-;    ; adjust firm variables
-;    ask the-firm [
-;      set demand demand + my-demand
-;      set inventory precision (inventory - goods-sold) 10
-;      if inventory < 0 [error "inventory cannot be negative"]
-;      set liquidity liquidity + total-cost
-;      set firms-to-try other firms-to-try  ; remove this firm from the available set
-;    ]
-;  ]
-;end
 
 ;household procedure, purchases consumption goods by purchasing the maximum amount possible from trading partners until either demand is satisfied or no partners remain
 to buy-consumption-goods  ; household procedure
@@ -203,14 +148,6 @@ to adjust-reservation-wage
       set reservation-wage [wage-rate] of my-employer
     ]
   )
-end
-
-;household procedure, realligns households visually to represent liquidity
-to set-household-xcor
-  let house-liq-dev (max [liquidity] of households - min [liquidity] of households) / (max-pxcor - min-pxcor)   ;the difference in liquidity between patches 
-  let house-num-dev liquidity - min [liquidity] of households    ;the current households liquidity above the minimum
-  set xcor min-pxcor + (house-num-dev / house-liq-dev)
-  
 end
 
 ;household procedure, reports the employer of a household

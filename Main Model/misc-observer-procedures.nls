@@ -1,32 +1,8 @@
-;observer procedure, reports the current year of the model
-to-report year
-  report month / 12
-end
-
-;observer procedure, reports the number of firms in the model
-to-report n-firms
-  report count firms
-end
-
-;observer procedure, reports some random small number ranging from 0.99 to 1.01, used for adjusting wage rates and prices
-to-report small-random-change
-  report (1 + (random-float 1 - 0.5) / 50)
-end
 
 ;observer procedure, initializes a single consumer link
 to init-consumer-link
   hide-link
 end
-
-;observer procedure, sets the size of firms based on the number of employees they have
-;to set-firm-size
-;  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
-;end
-
-;observer procedure, sets the size of households based on liquidity
-;to set-house-size
-;  set size  (sqrt (abs liquidity) / 12)
-;end
 
 ;observer procedure, initializes a single employment link
 to init-employment-link
@@ -41,18 +17,91 @@ end
 
 ;observer procedure, initializes a single framework agreement
 to init-framework-agreement [input-type]
-  set input-firm-type input-type
   set demand-not-satisfied 0
   hide-link
 end
 
-;obsersver procedure, reports whether it is the beginning of a month
-to-report beginning-of-month?  
-  report ticks mod month-length = 0
+;observer procedure, recalculates the current index
+to recalculate-index-pringle
+  set pringle-index-value sum [equity] of equity-links         ;fixed firm implementation fixes index to be equal to firm number
+  ;NEED UPDATE
 end
 
-;observer procedure, reports whether it is the end of a month
-to-report end-of-month?  
-  report ticks mod month-length = (month-length - 1)
+;observer procedure, recalculates the current index
+to recalculate-index-coats
+  set coats-index-value sum [price] of firms 
 end
 
+;observer procedure, recalculates the current index
+to recalculate-index-ussher
+  ;IF WE DO ROLLING INVENTORY, ADD IN LIST OF 24 INVENTORIES AND AVERAGE OVER WHOLE 
+  set ussher-index-value sum [inventory * price] of firms
+end
+
+;observer procedure, recalculates the current index
+to recalculate-index-potvin
+  set potvin-index-value 1
+  ;implementation TBD
+end
+
+to set-colors
+  ask CONSUMER-GOOD-FIRMS [
+    set color lime + 3
+  ]
+  ask PRIMARY-GOOD-FIRMS [
+    set color brown
+  ]
+  
+  ask INTERMEDIATE-GOOD-FIRMS [
+    set color gray
+  ]
+  ask households [
+    ifelse unemployed? [
+      set color red
+    ] [
+      set color blue
+    ]
+  ]
+end
+
+;observer procedure, recalculates rolling average of the sum of past two years inventory
+to update-rolling-mean-inventory
+  ifelse month < 24 [
+    set LAST-TWO-YEARS-INVENTORY lput (sum [inventory] of firms) LAST-TWO-YEARS-INVENTORY 
+  ] [
+    set LAST-TWO-YEARS-INVENTORY replace-item (month mod 24) LAST-TWO-YEARS-INVENTORY (sum [inventory] of firms)
+  ]
+end
+
+;observer procedure to generate the correct location from the firms' liquidity
+to set-firm-xcor
+  ask firms [
+    let firm-liq-dev (max [liquidity] of firms - min [liquidity] of firms) / (max-pxcor - min-pxcor)   ;the difference in liquidity between patches 
+    let firm-num-dev liquidity - min [liquidity] of firms    ;the current households liquidity above the minimum
+    set xcor min-pxcor + (firm-num-dev / firm-liq-dev)
+  ]
+end
+
+;observer procedure, realligns households visually to represent liquidity
+to set-household-xcor
+  ask households [
+    let house-liq-dev (max [liquidity] of households - min [liquidity] of households) / (max-pxcor - min-pxcor)   ;the difference in liquidity between patches 
+    let house-num-dev liquidity - min [liquidity] of households    ;the current households liquidity above the minimum
+    set xcor min-pxcor + (house-num-dev / house-liq-dev)
+  ]
+end
+
+;observer procedure, reports the current year of the model
+to-report year
+  report month / 12
+end
+
+;observer procedure, reports the number of firms in the model
+to-report n-firms
+  report count firms
+end
+
+;observer procedure, reports some random small number ranging from 0.99 to 1.01, used for adjusting wage rates and prices
+to-report small-random-change
+  report (1 + (random-float 1 - 0.5) / 50)
+end
