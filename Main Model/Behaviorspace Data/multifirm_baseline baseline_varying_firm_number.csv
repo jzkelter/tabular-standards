@@ -1,0 +1,10 @@
+[run number],replace-exited-firm?,allow-firm-exit?,n-firms,transactions-per-month,n-households,setup-structure,use-index?,[reporter],[final],[min],[max],[mean],[steps]
+0,TRUE,TRUE,40,1,500,two-layer,TRUE,count firms with [color = yellow],5,0,39,10.4079602,200
+0,TRUE,TRUE,60,1,500,two-layer,TRUE,count firms with [color = yellow],0,0,49,14.18905473,200
+3,TRUE,TRUE,80,1,500,two-layer,TRUE,count firms with [color = yellow],17,0,40,9.880597015,200
+4,TRUE,TRUE,100,1,500,two-layer,TRUE,count firms with [color = yellow],10,1,62,18.01492537,200
+5,TRUE,TRUE,120,1,500,two-layer,TRUE,count firms with [color = yellow],46,0,71,17.66169154,200
+6,TRUE,TRUE,140,1,500,two-layer,TRUE,count firms with [color = yellow],31,1,95,22.97512438,200
+7,TRUE,TRUE,160,1,500,two-layer,TRUE,count firms with [color = yellow],11,1,94,25.10945274,200
+8,TRUE,TRUE,180,1,500,two-layer,TRUE,count firms with [color = yellow],6,2,134,27.8358209,200
+9,TRUE,TRUE,200,1,500,two-layer,TRUE,count firms with [color = yellow],200,9,200,93.35323383,200

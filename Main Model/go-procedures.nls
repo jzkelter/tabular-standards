@@ -22,22 +22,19 @@ end
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
   ask firms [
-    if (liquidity <= 0 ) and allow-firm-exit?[    ;;safe to assume that a firm that nobody shops at goes out of business
+    update-soil-health
+    if (liquidity <= 0 ) and allow-firm-exit?[
       remove-firm
     ]
-    if input-data != "None"[
-      set-daily-input-demands
-    ]
+    set-input-demands
     adjust-wage-rate
     adjust-labor-and-price
     set demand 0  ; reset demand for the month
-    set previous-sales 0 ; reset how many goods were sold from the previous month
-    if input-data != "None"[
-      foreach table:keys input-data[i ->
-        guarantee-framework-links i
-        search-cheaper-supplier i
-        search-delivery-capable-seller i
-      ]
+    set previous-sales 0 ; reset how many goods were sold from the previous month  
+    foreach table:keys input-data[i ->
+      guarantee-framework-links i
+      ;search-cheaper-supplier i
+      ;search-delivery-capable-seller i
     ]
     pay-wages
   ]
@@ -46,10 +43,10 @@ end
 ;general beginning of the month procedure for households, see household-procedures.nls for descriptions of each of these procedures
 to go-beginning-of-month-households
   ask households [
-    if liquidity < 0 [set liquidity 0] ;we kept getting a rounding error where households would have a liquidity of 1.6 x 10 ^ -16 due to a rounding error. This corrects for that.
+    if liquidity < 0 [error "negative liquidity beginning of month"] 
     guarantee-consumer-links
-    if random-float 1 < prob-replace-firm-price  [search-cheaper-vendor]
-    if random-float 1 < prob-replace-firm-quant [search-delivery-capable-vendor]  
+    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [search-cheaper-vendor]
+    if random-float 1 < PROB-REPLACE-FIRM-QUANT [search-delivery-capable-vendor]  
     search-for-employement
     set-consumption
   ]
@@ -59,9 +56,7 @@ end
 to go-month
   repeat transactions-per-month [
     ask firms [
-      if input-data != "None"[
-        buy-input-goods
-      ]
+      buy-input-goods
       produce-goods
     ]
     ask households [
@@ -80,7 +75,7 @@ to go-end-of-month
       set months-failed-to-hire 0    
     ])
   ]
-  ask households [
+  ask households [ 
     adjust-reservation-wage
   ]
   ask firms [

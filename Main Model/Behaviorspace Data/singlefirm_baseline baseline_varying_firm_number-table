@@ -1,0 +1,10 @@
+[run number]	replace-exited-firm?	allow-firm-exit?	n-firms	transactions-per-month	n-households	setup-structure	use-index?	[reporter]	[final]	[min]	[max]	[mean]	[steps]
+1	TRUE	TRUE	40	1	500	single-firm	TRUE	count firms with [color = yellow]	1	0	5	1.582089552	200
+2	TRUE	TRUE	60	1	500	single-firm	TRUE	count firms with [color = yellow]	3	0	13	4.671641791	200
+3	TRUE	TRUE	80	1	500	single-firm	TRUE	count firms with [color = yellow]	7	3	17	8.213930348	200
+4	TRUE	TRUE	100	1	500	single-firm	TRUE	count firms with [color = yellow]	21	6	22	13.9800995	200
+5	TRUE	TRUE	120	1	500	single-firm	TRUE	count firms with [color = yellow]	19	10	34	20.09452736	200
+6	TRUE	TRUE	140	1	500	single-firm	TRUE	count firms with [color = yellow]	29	15	40	27.48258706	200
+7	TRUE	TRUE	160	1	500	single-firm	TRUE	count firms with [color = yellow]	39	22	55	36.27363184	200
+8	TRUE	TRUE	180	1	500	single-firm	TRUE	count firms with [color = yellow]	42	30	170	111.2885572	200
+9	TRUE	TRUE	200	1	500	single-firm	TRUE	count firms with [color = yellow]	168	37	168	61.46268657	200

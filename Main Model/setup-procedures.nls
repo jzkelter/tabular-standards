@@ -1,8 +1,3 @@
-;the following lines define all of the breeds, this includes breeds for housholds, firms, and every type of link between breeds
-breed [households household]
-breed [firms firm]
-breed [banks bank]
-
 ;links between firms and households for consumption
 undirected-link-breed [consumer-links consumer-link]
 
@@ -17,30 +12,6 @@ directed-link-breed [framework-agreements framework-agreement]
 ;defines fields that apply to all turtles
 turtles-own [
   liquidity                       ; i.e. money currently available
-]
-
-;defines household specific fields
-households-own [
-  reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
-  demanded-consumption            ; the amount of goods that are demanded by each household
-]
-
-;defines firm specific fields
-firms-own [
-  firm-type                        ; # a label for the firm
-  input-data                       ; the firm types and productivity that firms need to buy from
-  inventory                        ; # amount of goods stored and ready to be sold
-  price                            
-  wage-rate                        
-  
-  months-failed-to-hire            ; consecutive months that firms failed to hire
-  
-  desired-n-workers                ; represents the desired number of workers for the month
-  previous-sales
-
-  demand                           ; the most recent demand this firm experienced for its goods     (previous-sales used in calculations instead, so we can remove this variable if we want)
-  tech-parameter                   ; determines how much each worker produces given a 
-  consumer-good-firm?              ; defines whether they produce consumer goods
 ]
 
 ;defines consumers investment within a certain firm, equity links remain even if a household changes employment
@@ -58,32 +29,33 @@ framework-agreements-own[
   demand-not-satisfied
   index-multiplier                 ; relating index to price, used to find price from a given index
   index-type                       ; identifies which index the framework agreement is based on, index-type = 0 indicates price should be used 
+  expiration-date                  ; tick when framework-agreement will expire
 ]
 
 ;defines all global variables, see "setup-constants" for a description of what each of these does
 globals [
   CONSUMER-GOOD-FIRMS              ; defined as firms that produce goods purchased by households                    (firms with [consumer-good-firm?])
-  PRIMARY-GOOD-FIRMS               ; defined as firms that produce goods without needing an input                   (firms with [input-data = "None"])
-  INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             (firms with [not consumer-good-firm? and not input-data = "None"])
-  TOTAL-BANKRUPT-FIRMS
-  LAST-TWO-YEARS-INVENTORY
-  MONTH-LENGTH 
+  PRIMARY-GOOD-FIRMS               ; defined as firms that produce goods without needing an input                   (firms with [table:length input-data = 0])
+  INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             (firms with [not consumer-good-firm? and not table:length input-data = 0])
+  TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
+  LAST-TWO-YEARS-PRIMARY-INVENTORY ; defined as the rolling average of the total inventory of the last two years of the primary good firms
   
-  MIN-WAGE-RATE
-  FIRM-STRUCTURE
-  max-wage-growth
-  months-to-lower-wage 
-  max-price-growth
-  buffer-labor-fraction
-  diminishing-utility-constant 
-  prob-replace-firm-price
-  prob-replace-firm-quant 
-  n-trading-links
-  n-framework-agreements
-  autonomous-consumption
-  startup-liquidity
+  MIN-WAGE-RATE                    ; max amount wages are increased or decreased by if firm decides to change wage
+  FIRM-STRUCTURE                   ; global data holding how many firms are initialized
+  MAX-WAGE-GROWTH                  ; defined as the max amount a firm can increase or decrease their wage if they decide to change their wage
+  MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
+  MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by
+  BUFFER-LABOR-FRACTION            ; the fraction of labor costs to keep as a buffer
+  DIMINISHING-UTILITY-CONSTANT     ; the decay rate of how much wealth is used on consumption by households, used in consumption function
+  PROB-REPLACE-FIRM-PRICE          ; the probability of switching trading firms to a new firm with a better price
+  PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
+  N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
+  N-FRAMEWORK-AGREEMENTS           ; number of firms contacted by non-primary firms trying to buy input goods
+  AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
+  STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
+  BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
   
-  month
+  month                            ; the current tick
   pringle-index-value              ; index id: 1
   coats-index-value                ; index id: 2
   ussher-index-value               ; index id: 3
@@ -101,14 +73,23 @@ to setup
     set shape "circle" 
     set ycor min-pycor + 1 + random 10
     set size 0.5
-    set liquidity startup-liquidity  
+    set liquidity STARTUP-LIQUIDITY  
   ]
   setup-firms
+  
+  set pringle-index-value 1
+  set coats-index-value 1            
+  set ussher-index-value 1              
+  set potvin-index-value 1
+  
+  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
+  set PRIMARY-GOOD-FIRMS firms with [table:length input-data = 0]
+  set INTERMEDIATE-GOOD-FIRMS firms with [not consumer-good-firm? and table:length input-data != 0]
   initialize-framework-agreements
   
   ask households[
     set xcor liquidity / mean [liquidity] of households
-    create-consumer-links-with n-of n-trading-links firms with [consumer-good-firm?][
+    create-consumer-links-with n-of N-TRADING-LINKS firms with [consumer-good-firm?][
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
@@ -117,30 +98,22 @@ to setup
   ]
 
   ask firms [
-    set liquidity startup-liquidity
+    set liquidity STARTUP-LIQUIDITY
     set months-failed-to-hire 0
-    set demand n-workers * tech-parameter
+    set demand max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers
-    if input-data != "None" [ 
+    if table:length input-data != 0 [
       set inventory 50
-      set-daily-input-demands
+      set-input-demands
     ]
   ]
-  set LAST-TWO-YEARS-INVENTORY (list (sum [inventory] of firms))
-  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
-  set PRIMARY-GOOD-FIRMS firms with [input-data = "None"]
-  set INTERMEDIATE-GOOD-FIRMS firms with [not consumer-good-firm? and input-data != "None"]
+  set LAST-TWO-YEARS-PRIMARY-INVENTORY (list (sum [inventory] of firms))
   setup-equity-links
   set-colors
   ask one-of firms [ask my-links [show-link]]
-  if include-visualizations? = False [
-    ask turtles [
-      hide-turtle
-    ]
-    ask links [
-      hide-link
-    ]
-  ]
+  
+  setup-patches
+  
   reset-ticks
   tick
 end
@@ -148,20 +121,20 @@ end
 ;procedure to initialize all global constants
 to set-constants
   set MIN-WAGE-RATE 2.5
-  set max-wage-growth 0.019                ; max amount wages are increased or decreased by if firm decides to change wage
-  set months-to-lower-wage 12              ; after this many months of having all positions filled, a firm will decrease wages
-  set max-price-growth 0.2                 ; max amount a firm increases/decreases prices by
-  set buffer-labor-fraction 2              ; the fraction of labor costs to keep as a buffer 
-  set diminishing-utility-constant 0.5     ; the decay rate of how much wealth is used on consumption by households, used in consumption function
-  set prob-replace-firm-price 0.25         ; the probability of switching trading firms to a new firm with a better price
-  set prob-replace-firm-quant 0.5          ; the probability of switching trading firms based on lack of quantity
-  set n-trading-links 7                    ; number of firms contacted by consumers trying to buy consumer goods
-  set n-framework-agreements 5             ; number of firms contacted by non-primary firms trying to buy input goods
-  set MONTH-LENGTH 21                      ; tied to number of business days in a month
-  set autonomous-consumption 1.6           ; represents a monetary amount of autonomous consumption among households, regardless of wage
-  set startup-liquidity 100                ; agents are initialized to a constant liquidity
+  set MAX-WAGE-GROWTH 0.019                
+  set MONTHS-TO-LOWER-WAGE 12              
+  set MAX-PRICE-GROWTH 0.2                 
+  set BUFFER-LABOR-FRACTION 2               
+  set DIMINISHING-UTILITY-CONSTANT 0.7     
+  set PROB-REPLACE-FIRM-PRICE 0.25         
+  set PROB-REPLACE-FIRM-QUANT 0.5          
+  set N-TRADING-LINKS 7                    
+  set N-FRAMEWORK-AGREEMENTS 7             
+  set AUTONOMOUS-CONSUMPTION 0.2         
+  set STARTUP-LIQUIDITY 100                
+  set BACKGROUND-IMPROVEMENT 10
   
-  (ifelse setup-structure = "single-firm" [
+  (ifelse setup-structure = "single-firm" [   ;autonomous consumption = 0.5 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
   ] 
   setup-structure = "two-layer" [
@@ -175,22 +148,23 @@ to set-constants
   ]
   setup-structure = "looped-diamond" [
     set FIRM-STRUCTURE table:get (table:from-json-file "Looped-Diamond-Firm-structure.json") "Firms"
-  ]
-  setup-structure = "skipped-center" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "Skipped-Center-Firm-structure.json") "Firms"
   ])
   
 end
 
 ;setup procedure for firms, creates every firm in the model according to the specifications in a json file
 to setup-firms
+  let firm-ratio-sum 0
+  foreach FIRM-STRUCTURE[ f ->     ; we need to first find out how many firms to create
+    set firm-ratio-sum firm-ratio-sum + table:get f "Firm count"  ; final sum should be 
+  ]
   foreach FIRM-STRUCTURE[ f ->
     let group table:get f "Firm type"
-    let num-firms table:get f "Firm count"
-    let firm-input-data generate-input-data table:get f "Input data"
+    let firm-ratio table:get f "Firm count"
+    let firm-input-data make-input-data-table table:get f "Input data"
     let firm-tech-parameter table:get f "Tech constant"
     let is-consumer? table:get f "Consumer?"
-    create-firms num-firms[
+    create-firms ceiling ((firm-ratio / firm-ratio-sum) * n-firms)[
       set shape "building store"
       set tech-parameter firm-tech-parameter 
       set price 1 * small-random-change
@@ -201,7 +175,7 @@ to setup-firms
       set consumer-good-firm? is-consumer?
       set xcor 0
       set ycor 12 - random 5
-      if input-data != "None" [set ycor ycor - 9]
+      if table:length input-data != 0 [set ycor ycor - 9]
     ]
   ]
 end
@@ -222,9 +196,9 @@ to setup-equity-links
 end
 
 ;generates the input data for a specific firm based on the structure specified in a json file
-to-report generate-input-data [original-data]
-  ifelse length original-data = 0 [  ;;empty list means default settings
-    report "None"
+to-report make-input-data-table [original-data]
+  ifelse length original-data = 0 [  ;;empty list means default settings of empty table
+    report table:make
   ][
     let data-table table:make
     foreach original-data [i ->
@@ -240,21 +214,27 @@ end
 
 ;creates a single firm's framework agreements to all necessary suppliers
 to initialize-framework-agreements
-  ask firms with [input-data != "None"][
+  ask firms[
     foreach table:keys input-data[i ->
-      let temp-n-framework-agreements n-framework-agreements
-      if any? firms with [firm-type = i and n-out-agreements = 0][
-        set temp-n-framework-agreements temp-n-framework-agreements - 1
-        create-framework-agreement-from one-of firms with [firm-type = i and n-out-agreements = 0][
-          init-framework-agreement i
-        ]
+      ask up-to-n-of n-framework-agreements firms with [firm-type = i] [ ; some firms might not get a framework agreement, but they will be replaced
+        (ifelse use-index? [
+          create-framework-agreement-to myself [init-framework-agreement ((random 4) + 1) framework-duration]
+        ] [ 
+          create-framework-agreement-to myself [init-framework-agreement 0 framework-duration]
+        ])
+            
       ]
-      let current-firm self
-      ask n-of temp-n-framework-agreements firms with [firm-type = i and not out-framework-agreement-neighbor? self][
-        create-framework-agreement-to current-firm[
-          init-framework-agreement i
-        ]
-      ]
+    ]
+  ]
+end
+
+to setup-patches
+  ask firms [
+    set firm-location (patch (((who - n-households) mod world-width) + min-pycor) (max-pxcor - (floor ((who - n-households) / world-width))))
+    set soil-health random 50
+    let patch-health soil-health
+    ask firm-location [
+      set pcolor scale-color black patch-health 0 200
     ]
   ]
 end
