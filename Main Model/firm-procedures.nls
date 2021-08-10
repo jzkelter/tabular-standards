@@ -63,6 +63,17 @@ end
 ;firm procedure, determines whether exit is an appropriate response for the firm this period
 to remove-firm
   add-lifetime-profits
+  
+  ;; give any liquidity back to investors
+  let firm-liquidity liquidity  
+  let total-equity sum [equity] of my-equity-links
+  ask my-equity-links [
+    let my-share firm-liquidity  * equity / total-equity
+    ask other-end [
+      set liquidity liquidity + my-share
+    ]
+  ]  
+  
   if replace-exited-firm? [
     add-firm
   ]
