@@ -19,6 +19,8 @@ firms-own [
   
   firm-location                    ; the patch tied to the firm, relevant for the potvin index
   soil-health                      ; the soil health located under the firm, possible change to patch variable?
+  
+  lifetime-profits                 ; the total sum of profits - startup costs
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
@@ -58,12 +60,18 @@ to decide-fire-worker
   ]
 end
 
-;firm procedure-determines whether exit is an appropriate response for the firm this period
+;firm procedure, determines whether exit is an appropriate response for the firm this period
 to remove-firm
+  add-lifetime-profits
   if replace-exited-firm? [
     add-firm
   ]
   die
+end
+
+;firm procedure, adds the firms lifetime-profits to the list of total lifetime-profits
+to add-lifetime-profits
+  set LIFETIME-PROFITS-LIST (lput lifetime-profits LIFETIME-PROFITS-LIST)
 end
 
 
@@ -74,7 +82,8 @@ to add-firm
     set color yellow                    ; set color to yellow for one month to visually indicate which firms are going bankrupt
     set price mean [price] of firms-with-my-type
     set wage-rate mean [wage-rate] of firms-with-my-type
-    raise-funds 
+    set liquidity raise-funds
+    set lifetime-profits liquidity * -1
     set desired-n-workers (floor (mean [demand] of firms-with-my-type / tech-parameter))
     set demand desired-n-workers * tech-parameter
     set months-failed-to-hire 0
@@ -123,9 +132,8 @@ to guarantee-framework-links [input-i]
 end
 
 ;firm procedure, firms search for the funding from households
-to raise-funds
-  set liquidity STARTUP-LIQUIDITY
-  let to-be-raised liquidity
+to-report raise-funds
+  let to-be-raised STARTUP-LIQUIDITY
   let new-firm self
   let current-price mean [price] of CONSUMER-GOOD-FIRMS
   while [to-be-raised > 0] [
@@ -150,9 +158,10 @@ to raise-funds
       ]
     ]
   ]
-  if precision sum [equity] of my-equity-links 2 != liquidity [
+  if precision sum [equity] of my-equity-links 2 != STARTUP-LIQUIDITY [
     error "funds were not raised"
   ]
+  report STARTUP-LIQUIDITY
 end
 
 
@@ -227,13 +236,12 @@ end
 ;firm procedure, pays wages to workers based on formula in Lengnick paper
 to pay-wages
   if n-workers > 0 [
-    let temp-wr wage-rate
-    if wage-rate * n-workers > liquidity [ 
-      set temp-wr liquidity / n-workers 
+    while [wage-rate * n-workers > liquidity] [ 
+      ask one-of my-employment-links [die]                   ; no change to desired-n-workers
     ]
-    set liquidity precision (liquidity - temp-wr * n-workers) 10
-    if liquidity < 0 [error "firms aren't allowed to go into debt"]
-    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
+    set liquidity precision (liquidity - wage-rate * n-workers) 10
+    if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
+    ask employment-link-neighbors [set liquidity liquidity + wage-rate]
   ]
 end
 
@@ -246,6 +254,7 @@ to distribute-profits
     set liquidity buffer
     ;; distribute profits proportionately to initial investment
     let profits-to-be-allocated profits-to-allocate
+    set lifetime-profits lifetime-profits + profits-to-be-allocated
     let total-equity sum [equity] of my-equity-links
     ask my-equity-links [
       if equity < 0 [error "equity must be positive"]
