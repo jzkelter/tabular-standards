@@ -105,7 +105,7 @@ to set-consumption
     set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of CONSUMER-GOOD-FIRMS + ([wage-rate] of my-employer ) ^ DIMINISHING-UTILITY-CONSTANT))
   ]
   let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
-  if count consumer-link-neighbors > 0) [
+  if count consumer-link-neighbors > 0 [
     set total-consumption money-to-spend / mean [price] of consumer-link-neighbors
   ]
   set demanded-consumption total-consumption / transactions-per-month

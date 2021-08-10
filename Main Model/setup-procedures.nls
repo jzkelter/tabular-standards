@@ -108,10 +108,11 @@ to setup
       set inventory 50
       set-input-demands
     ]
+    setup-equity-links
   ]
+  
   set LAST-TWO-YEARS-PRIMARY-INVENTORY (list (sum [inventory] of firms))
-  set LIFETIME-PROFITS-LIST (list)
-  setup-equity-links
+  set LIFETIME-PROFITS-LIST (list)  
   set-colors
   ask one-of firms [ask my-links [show-link]]
   
@@ -183,19 +184,16 @@ to setup-firms
   ]
 end
 
-to setup-equity-links
-  ask firms [
-    let num-employees count employment-link-neighbors
-    let equity-per-employee 1 / num-employees
-    let f self
-    ask employment-link-neighbors [
-      set liquidity liquidity - (equity-per-employee * [liquidity] of f)   ;this forces all liquidity to be initialized with households
-      create-equity-link-with f [
-        init-equity-link
-        set equity equity-per-employee * [liquidity] of f    ;all employees should have equal amounts of equity-percent invested in the firm
-      ]
+to setup-equity-links  ; firm procedure    
+  let equity-per-employee 1 / count employment-link-neighbors
+  let f self
+  ask employment-link-neighbors [
+    set liquidity liquidity - (equity-per-employee * [liquidity] of f)   ; this forces all liquidity to be initialized with households
+    create-equity-link-with f [
+      init-equity-link
+      set equity equity-per-employee * [liquidity] of f    ;all employees should have equal amounts of equity-percent invested in the firm
     ]
-  ]
+  ]  
 end
 
 ;generates the input data for a specific firm based on the structure specified in a json file
