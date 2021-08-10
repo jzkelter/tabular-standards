@@ -100,14 +100,14 @@ to set-consumption
   if liquidity < 0 [error "no money to consume"]
   let money-to-spend 0
   ifelse unemployed? [
-    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of CONSUMER-GOOD-FIRMS) )     ;spend as much as they have up to autonomous consumption
+    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors) )     ;spend as much as they have up to autonomous consumption
   ] [
-    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of CONSUMER-GOOD-FIRMS + ([wage-rate] of my-employer ) ^ DIMINISHING-UTILITY-CONSTANT))
+    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors + ([wage-rate] of my-employer ) ^ DIMINISHING-UTILITY-CONSTANT))
   ]
-  let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
-  if count consumer-link-neighbors > 0 [
-    set total-consumption money-to-spend / mean [price] of consumer-link-neighbors
-  ]
+  ;let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
+  ;if count consumer-link-neighbors > 0 [
+   let total-consumption money-to-spend / mean [price] of consumer-link-neighbors
+  ;]
   set demanded-consumption total-consumption / transactions-per-month
 end
 
