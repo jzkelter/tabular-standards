@@ -5,18 +5,18 @@
             "Input data": [
                 {
                     "Input firm type": 2,
-                    "Marginal productivity": 5
+                    "Marginal productivity": 4
                 }
             ],
             "Tech constant": 3,
-            "Firm count": 70,
+            "Firm count": 1,
             "Consumer?": true
         },
         {
             "Firm type": 2,
             "Input data":[],
             "Tech constant": 3,
-            "Firm count": 30,
+            "Firm count": 0.25,
             "Consumer?":false
         }
     ]

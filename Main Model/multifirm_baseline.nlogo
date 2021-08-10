@@ -2,13 +2,15 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["lengnick-tests.nls"
-           "unit testing.nls"
+__includes["unit testing.nls"
            "household-procedures.nls"
            "firm-procedures.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
            "misc-observer-procedures.nls"]
+
+
+;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
 @#$#@#$#@
 GRAPHICS-WINDOW
 207
@@ -89,10 +91,10 @@ NIL
 0
 
 SLIDER
-6
-11
-178
-44
+4
+10
+176
+43
 n-households
 n-households
 10
@@ -109,7 +111,7 @@ PLOT
 201
 331
 Unemployment rate
-years
+NIL
 unemployment
 0.0
 10.0
@@ -119,7 +121,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year 1 - (count employment-links / count households)"
+"default" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
 
 PLOT
 652
@@ -145,14 +147,14 @@ PENS
 
 PLOT
 653
-455
+461
 853
-605
+611
 worker per firm distribution
 NIL
 NIL
 0.0
-20.0
+40.0
 0.0
 20.0
 true
@@ -161,29 +163,11 @@ false
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
-PLOT
-857
-147
-1056
-297
-NIL
-Unemployment
-Vacancy Rate
-0.0
-0.2
-0.0
-0.2
-false
-false
-"" ""
-PENS
-"" 1.0 2 -6459832 true "" "plotxy  1 - (count employment-links / n-households) (count firms with [open-position?] / n-households)"
-
 BUTTON
-1306
-10
-1400
-43
+1113
+117
+1207
+150
 hide-links
 ask links [hide-link]
 NIL
@@ -197,10 +181,10 @@ NIL
 1
 
 BUTTON
-1114
-11
-1301
-44
+1113
+10
+1275
+43
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
 NIL
@@ -215,10 +199,10 @@ NIL
 
 PLOT
 855
-454
+460
 1055
-604
-customer per firm distribution
+610
+household liquidity
 NIL
 NIL
 0.0
@@ -229,13 +213,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [count employment-link-neighbors] of firms"
+"default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-857
-300
-1057
-450
+1060
+152
+1334
+302
 mean price
 NIL
 NIL
@@ -244,10 +228,11 @@ NIL
 0.98
 1.02
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [price] of firms"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
 237
@@ -288,7 +273,7 @@ PLOT
 333
 201
 483
-mean inventory/demand
+monthly firm turnover
 NIL
 NIL
 0.0
@@ -299,14 +284,13 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year mean [inventory / max (list 0.00001 demand)] of firms"
-"pen-1" 1.0 0 -7500403 true "" "plotxy year inventory-floor"
+"default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
 653
-300
+306
 853
-450
+456
 mean demand not satisfied
 NIL
 NIL
@@ -322,10 +306,10 @@ PENS
 
 PLOT
 653
-147
+153
 853
-297
-Inventory of firms
+303
+Inventory
 NIL
 NIL
 0.0
@@ -336,24 +320,9 @@ true
 false
 "" ""
 PENS
-"pen-1" 1.0 0 -2674135 true "" "plot mean [inventory] of firms"
-
-BUTTON
-983
-11
-1103
-44
-NIL
-lengnick-tests
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
+"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 180
@@ -411,7 +380,7 @@ PLOT
 486
 200
 636
-firms w/ high/low inventory 
+Last Two Years Inventory
 NIL
 NIL
 0.0
@@ -422,29 +391,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plotxy year count firms with [inventory <  inventory-floor * demand]"
-"pen-1" 1.0 0 -2674135 true "" "plotxy year count firms with [inventory >  inventory-ceiling * demand]"
-"pen-2" 1.0 0 -7500403 true "" "plotxy year n-firms"
-
-TEXTBOX
-204
-514
-359
-570
-inventory < ϕl * demand \n(want to hire)
-11
-0.0
-1
-
-TEXTBOX
-204
-598
-354
-626
-inventory >  ϕu * demand (want to fire)
-11
-15.0
-1
+"default" 1.0 0 -16777216 true "" "plot mean LAST-TWO-YEARS-PRIMARY-INVENTORY"
+"pen-1" 1.0 0 -8431303 true "" "plot sum [inventory] of PRIMARY-GOOD-FIRMS"
 
 TEXTBOX
 4
@@ -457,10 +405,10 @@ above line we expect firing, below hiring
 1
 
 SLIDER
-1067
-148
-1247
-181
+859
+159
+1048
+192
 transactions-per-month
 transactions-per-month
 1
@@ -472,21 +420,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1068
-184
-1245
-217
-include-visualizations?
-include-visualizations?
-0
-1
--1000
-
-SWITCH
-1069
-220
-1243
-253
+861
+231
+1049
+264
 allow-firm-exit?
 allow-firm-exit?
 0
@@ -494,21 +431,10 @@ allow-firm-exit?
 -1000
 
 SWITCH
-8
-47
-156
-80
-single-firm-type?
-single-firm-type?
-0
-1
--1000
-
-SWITCH
-1070
-256
-1236
-289
+862
+267
+1050
+300
 replace-exited-firm?
 replace-exited-firm?
 0
@@ -516,10 +442,10 @@ replace-exited-firm?
 -1000
 
 PLOT
-1063
-454
-1341
-604
+1061
+459
+1335
+609
 Output and Demand
 NIL
 NIL
@@ -531,15 +457,16 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households / mean [price] of firms"
-"output" 1.0 0 -2139308 true "" "plot sum [(count my-employment-links)* tech-parameter] of firms"
+"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
+"cg-output" 1.0 0 -5509967 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [max-production] of PRIMARY-GOOD-FIRMS"
 
 PLOT
-1063
-301
-1337
-451
-Liquidity
+1061
+306
+1335
+456
+Mean Liquidity
 NIL
 NIL
 0.0
@@ -550,14 +477,16 @@ true
 true
 "" ""
 PENS
-"firms" 1.0 0 -6459832 true "" "plot mean [liquidity] of firms"
-"households" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
+"primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
+"household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
+"mean-liquidity" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-1114
-47
-1275
-80
+1113
+46
+1274
+79
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
 NIL
@@ -571,10 +500,10 @@ NIL
 1
 
 BUTTON
-1114
-83
-1280
-116
+1113
+82
+1273
+115
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
 NIL
@@ -586,6 +515,166 @@ NIL
 NIL
 NIL
 1
+
+MONITOR
+205
+493
+348
+538
+Firms Added This Month
+count firms with [color = yellow]
+4
+1
+11
+
+PLOT
+352
+495
+636
+645
+Firm Money Outflow/Inflow
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"money inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
+"money outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+
+PLOT
+854
+307
+1053
+457
+Total Bankrupt Firms
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
+
+CHOOSER
+977
+11
+1110
+56
+setup-structure
+setup-structure
+"single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
+1
+
+MONITOR
+1279
+10
+1426
+55
+# Primary Good Firms
+count PRIMARY-GOOD-FIRMS
+17
+1
+11
+
+MONITOR
+1279
+57
+1425
+102
+# Intermediate Good Firms
+count INTERMEDIATE-GOOD-FIRMS
+17
+1
+11
+
+MONITOR
+1278
+105
+1424
+150
+# Consumer Good Firms
+count CONSUMER-GOOD-FIRMS
+17
+1
+11
+
+TEXTBOX
+1343
+154
+1484
+238
+# Primary Good Firms          + # Intermediate Good Firms  + # Consumer Good Firms   = # Total Firms\n\nfor more than 1 firm type
+11
+0.0
+1
+
+SLIDER
+5
+49
+177
+82
+n-firms
+n-firms
+0
+500
+40.0
+10
+1
+NIL
+HORIZONTAL
+
+SLIDER
+859
+195
+1048
+228
+framework-duration
+framework-duration
+1
+60
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+979
+60
+1095
+93
+use-index?
+use-index?
+0
+1
+-1000
+
+PLOT
+1338
+307
+1498
+457
+index distribution
+NIL
+NIL
+1.0
+5.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [index-type] of framework-agreements"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -980,6 +1069,100 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup
+repeat 100 [go]</setup>
+    <go>go</go>
+    <final>ask firms [add-lifetime-profits]</final>
+    <timeLimit steps="200"/>
+    <metric>count firms with [color = yellow]</metric>
+    <metric>mean LIFETIME-PROFITS-LIST</metric>
+    <metric>count households with [employed?]</metric>
+    <metric>mean [price] of firms</metric>
+    <enumeratedValueSet variable="replace-exited-firm?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="allow-firm-exit?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-index?">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup
+repeat 100 [go]</setup>
+    <go>go</go>
+    <final>ask firms [add-lifetime-profits]</final>
+    <timeLimit steps="200"/>
+    <metric>count firms with [color = yellow]</metric>
+    <metric>mean LIFETIME-PROFITS-LIST</metric>
+    <metric>count households with [employed?]</metric>
+    <metric>mean [price] of firms</metric>
+    <enumeratedValueSet variable="replace-exited-firm?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="allow-firm-exit?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-index?">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="test" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup
+repeat 100 [go]</setup>
+    <go>go</go>
+    <final>ask firms [add-lifetime-profits]</final>
+    <timeLimit steps="200"/>
+    <metric>count firms with [color = yellow]</metric>
+    <metric>mean LIFETIME-PROFITS-LIST</metric>
+    <metric>count households with [employed?]</metric>
+    <metric>mean [price] of firms</metric>
+    <enumeratedValueSet variable="replace-exited-firm?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="allow-firm-exit?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="40"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-index?">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default

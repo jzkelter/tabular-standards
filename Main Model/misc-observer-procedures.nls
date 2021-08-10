@@ -1,32 +1,8 @@
-;observer procedure, reports the current year of the model
-to-report year
-  report month / 12
-end
-
-;observer procedure, reports the number of firms in the model
-to-report n-firms
-  report count firms
-end
-
-;observer procedure, reports some random small number ranging from 0.99 to 1.01, used for adjusting wage rates and prices
-to-report small-random-change
-  report (1 + (random-float 1 - 0.5) / 50)
-end
 
 ;observer procedure, initializes a single consumer link
 to init-consumer-link
   hide-link
 end
-
-;observer procedure, sets the size of firms based on the number of employees they have
-;to set-firm-size
-;  set size (count employment-link-neighbors / 10) ; sqrt (count employment-link-neighbors / 3)
-;end
-
-;observer procedure, sets the size of households based on liquidity
-;to set-house-size
-;  set size  (sqrt (abs liquidity) / 12)
-;end
 
 ;observer procedure, initializes a single employment link
 to init-employment-link
@@ -34,22 +10,101 @@ to init-employment-link
   hide-link
 end
 
-;observer procedure, initializes a single framework agreement
-to init-framework-agreement [input-type]
-  set input-firm-type input-type
-  set demand-not-satisfied 0
+;observer procedure, initializes a single equity link
+to init-equity-link
   hide-link
 end
 
-;obsersver procedure, reports whether it is the beginning of a month
-to-report beginning-of-month?  
-  report ticks mod month-length = 0
+;observer procedure, initializes a single framework agreement
+to init-framework-agreement [index-id duration]
+  set demand-not-satisfied 0
+  set index-type index-id          ; index-type = 0 is default
+  (ifelse index-type = 0 [
+    set index-multiplier [price] of end1
+  ] 
+  index-type = 1 [
+    set index-multiplier [price] of end1 / pringle-index-value
+  ] 
+  index-type = 2 [
+    set index-multiplier [price] of end1 / coats-index-value
+  ] 
+  index-type = 3 [
+    set index-multiplier [price] of end1 / ussher-index-value
+  ] 
+  index-type = 4 [
+    set index-multiplier [price] of end1 / potvin-index-value
+  ]) 
+  set expiration-date (month + duration)
+  hide-link
 end
 
-;observer procedure, reports whether it is the end of a month
-to-report end-of-month?  
-  report ticks mod month-length = (month-length - 1)
+;observer procedure, recalculates the current index
+to recalculate-index-pringle
+  set pringle-index-value sum [equity] of equity-links         ;fixed firm implementation fixes index to be equal to firm number
 end
 
+;observer procedure, recalculates the current index
+to recalculate-index-coats
+  set coats-index-value sum [price] of firms 
+end
 
+;observer procedure, recalculates the current index
+to recalculate-index-ussher
+  ;IF WE DO ROLLING INVENTORY, ADD IN LIST OF 24 INVENTORIES AND AVERAGE OVER WHOLE 
+  set ussher-index-value sum [price] of PRIMARY-GOOD-FIRMS * mean LAST-TWO-YEARS-PRIMARY-INVENTORY
+end
 
+;observer procedure, recalculates the current index
+to recalculate-index-potvin
+  set potvin-index-value 1
+  ;implementation TBD
+end
+
+to set-colors
+  let firm-colors (list black green brown red orange blue gray yellow pink)
+  ask firms [
+    set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types
+  ]
+  ask households [
+    ifelse unemployed? [
+      set color red
+    ] [
+      set color blue
+    ]
+  ]
+end
+
+;observer procedure, recalculates rolling average of the sum of past two years inventory
+to update-rolling-mean-inventory
+  ifelse month < 24 [
+    set LAST-TWO-YEARS-PRIMARY-INVENTORY lput (sum [inventory] of firms) LAST-TWO-YEARS-PRIMARY-INVENTORY 
+  ] [
+    set LAST-TWO-YEARS-PRIMARY-INVENTORY replace-item (month mod 24) LAST-TWO-YEARS-PRIMARY-INVENTORY (sum [inventory] of firms)
+  ]
+end
+
+;observer procedure to generate the correct location from the firms' liquidity
+to set-firm-xcor
+  let firm-liq-dev max (list 1 (max [liquidity] of firms)) / (world-width - 2)
+  ask firms [
+    set xcor min-pxcor + (liquidity / firm-liq-dev)
+  ]
+end
+
+;observer procedure, realligns households visually to represent liquidity
+to set-household-xcor
+  let max-house-liq (max [liquidity] of households) 
+  ask households [
+    set xcor min-pxcor + (liquidity) / max-house-liq * (world-width - 1)
+  ]
+end
+
+;observer procedure, reports the current year of the model
+to-report year
+  report month / 12
+end
+
+;observer procedure, reports some random small number ranging from 0.99 to 1.01, used for adjusting wage rates and prices
+to-report small-random-change
+  report (1 + (random-float 1 - 0.5) / 50)
+end

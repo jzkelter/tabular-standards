@@ -1,0 +1,18 @@
+"BehaviorSpace results (NetLogo 6.2.0)"
+"multifirm_baseline.nlogo"
+"test"
+"08/09/2021 18:42:08:315 -0600"
+"min-pxcor","max-pxcor","min-pycor","max-pycor"
+"-16","16","-16","16"
+"[run number]","1","1","1","1"
+"replace-exited-firm?","true",,,
+"allow-firm-exit?","true",,,
+"n-firms","40",,,
+"transactions-per-month","1",,,
+"n-households","500",,,
+"setup-structure","single-firm",,,
+"use-index?","true",,,
+"[steps]","200","200","200","200"
+
+"[initial & final values]","count firms with [color = yellow]","mean LIFETIME-PROFITS-LIST","count households with [employed?]","mean [price] of firms"
+,"2","-11.613603781540046","285","0.7046837527114278"
