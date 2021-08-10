@@ -25,7 +25,7 @@ to go-beginning-of-month-firms
   ask firms [
     update-soil-health
     
-    if (liquidity <= wage-rate ) and allow-firm-exit? [  
+    if liquidity <= wage-rate [  
       remove-firm
     ]
     set-input-demands

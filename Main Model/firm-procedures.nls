@@ -74,10 +74,9 @@ to remove-firm
       set liquidity liquidity + my-share
     ]
   ]    
+    
+  add-firm
   
-  if replace-exited-firm? [
-    add-firm
-  ]
   die
 end
 
