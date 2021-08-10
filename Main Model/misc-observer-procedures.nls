@@ -93,9 +93,9 @@ end
 
 ;observer procedure, realligns households visually to represent liquidity
 to set-household-xcor
-  let house-liq-dev (max [liquidity] of households - 1) / (world-width - 1)
+  let max-house-liq (max [liquidity] of households) 
   ask households [
-    set xcor min-pxcor + (liquidity / house-liq-dev)
+    set xcor min-pxcor + (liquidity) / max-house-liq * (world-width - 1)
   ]
 end
 
