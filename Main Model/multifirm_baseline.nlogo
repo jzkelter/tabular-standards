@@ -99,7 +99,7 @@ n-households
 n-households
 10
 1000
-1000.0
+500.0
 10
 1
 NIL
@@ -572,7 +572,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 1279
@@ -626,7 +626,7 @@ n-firms
 n-firms
 0
 500
-150.0
+40.0
 10
 1
 NIL
@@ -1122,6 +1122,38 @@ repeat 100 [go]</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
       <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use-index?">
+      <value value="true"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="test" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup
+repeat 100 [go]</setup>
+    <go>go</go>
+    <final>ask firms [add-lifetime-profits]</final>
+    <timeLimit steps="200"/>
+    <metric>count firms with [color = yellow]</metric>
+    <metric>mean LIFETIME-PROFITS-LIST</metric>
+    <metric>count households with [employed?]</metric>
+    <metric>mean [price] of firms</metric>
+    <enumeratedValueSet variable="replace-exited-firm?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="allow-firm-exit?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="40"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;two-layer&quot;"/>

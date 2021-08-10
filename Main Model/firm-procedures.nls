@@ -241,7 +241,8 @@ to pay-wages
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
-    ask employment-link-neighbors [set liquidity liquidity + wage-rate]
+    let temp-wr wage-rate
+    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
   ]
 end
 
