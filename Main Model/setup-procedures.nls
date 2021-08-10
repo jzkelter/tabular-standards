@@ -9,11 +9,6 @@ undirected-link-breed [equity-links equity-link]
 ;link between firms and other firms for supply distribution.
 directed-link-breed [framework-agreements framework-agreement]
 
-;defines fields that apply to all turtles
-turtles-own [
-  liquidity                       ; i.e. money currently available
-]
-
 ;defines consumers investment within a certain firm, equity links remain even if a household changes employment
 equity-links-own [
   equity                           ; represents what perent of a firm is owned by a household

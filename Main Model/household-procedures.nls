@@ -4,6 +4,7 @@ breed [households household]
 households-own [
   reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
   demanded-consumption            ; the amount of goods that are demanded by each household
+  liquidity                       ; i.e. money currently available
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
