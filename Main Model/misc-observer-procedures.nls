@@ -16,9 +16,9 @@ to init-equity-link
 end
 
 ;observer procedure, initializes a single framework agreement
-to init-framework-agreement [index-id duration]
+to init-framework-agreement 
   set demand-not-satisfied 0
-  set index-type index-id          ; index-type = 0 is default
+  set index-type choose-index
   (ifelse index-type = 0 [
     set index-multiplier [price] of end1
   ] 
@@ -34,7 +34,7 @@ to init-framework-agreement [index-id duration]
   index-type = 4 [
     set index-multiplier [price] of end1 / potvin-index-value
   ]) 
-  set expiration-date (month + duration)
+  set expiration-date (month + framework-duration)
   hide-link
 end
 

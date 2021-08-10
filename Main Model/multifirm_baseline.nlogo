@@ -572,7 +572,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
 1279
@@ -626,7 +626,7 @@ n-firms
 n-firms
 0
 500
-40.0
+20.0
 10
 1
 NIL
@@ -647,17 +647,6 @@ framework-duration
 NIL
 HORIZONTAL
 
-SWITCH
-979
-60
-1095
-93
-use-index?
-use-index?
-0
-1
--1000
-
 PLOT
 1338
 307
@@ -675,6 +664,27 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [index-type] of framework-agreements"
+
+MONITOR
+664
+623
+826
+668
+NIL
+sum [liquidity] of turtles
+2
+1
+11
+
+CHOOSER
+977
+61
+1109
+106
+index-in-use
+index-in-use
+"no index" "coates" "pringle" "ussher" "potvin"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?

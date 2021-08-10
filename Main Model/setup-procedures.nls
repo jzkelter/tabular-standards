@@ -220,15 +220,10 @@ end
 
 ;creates a single firm's framework agreements to all necessary suppliers
 to initialize-framework-agreements
-  ask firms[
-    foreach table:keys input-data[i ->
-      ask up-to-n-of n-framework-agreements firms with [firm-type = i] [ ; some firms might not get a framework agreement, but they will be replaced
-        (ifelse use-index? [
-          create-framework-agreement-to myself [init-framework-agreement ((random 4) + 1) framework-duration]
-        ] [ 
-          create-framework-agreement-to myself [init-framework-agreement 0 framework-duration]
-        ])
-            
+  ask firms [
+    foreach table:keys input-data [ i ->
+      ask up-to-n-of n-framework-agreements firms with [firm-type = i] [  ; some firms might not get a framework agreement using this procedure, but that is okay. they will be replaced if they can't make stuff
+        create-framework-agreement-to myself [init-framework-agreement]        
       ]
     ]
   ]
