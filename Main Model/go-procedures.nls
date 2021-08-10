@@ -1,16 +1,16 @@
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
-to go
-  go-beginning-of-month-observer
-  go-beginning-of-month-firms
-  go-beginning-of-month-households
-  go-month
+to go  
+  go-beginning-of-month-observer  
+  go-beginning-of-month-firms  
+  go-beginning-of-month-households  
+  go-month  
   go-end-of-month
   tick
 end
 
 ;egeneral beginning of the month procedure for resetting all model-wide varibales 
-to go-beginning-of-month-observer
+to go-beginning-of-month-observer  
   recalculate-index-pringle 
   recalculate-index-coats
   recalculate-index-ussher
@@ -21,13 +21,11 @@ end
 
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
+  
   ask firms [
     update-soil-health
-    if (liquidity <= wage-rate ) and allow-firm-exit?[
-      let remaining-liquidity liquidity
-      ask one-of equity-link-neighbors [             ; currently gives the remaining money to a single investor, this can be changed to an even distribution if needed
-        set liquidity remaining-liquidity
-      ]
+    
+    if (liquidity <= wage-rate ) and allow-firm-exit? [  
       remove-firm
     ]
     set-input-demands
