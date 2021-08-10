@@ -176,7 +176,7 @@ end
 ;firm procedure, searches for a cheaper supplier of a given input good
 to search-cheaper-supplier [input-i]
   if count my-in-framework-agreements with [input-firm-type = input-i] = 0 [error "must have at least one framework agreement"]
-  let current-framework-agreement max-one-of my-in-framework-agreements with [input-firm-type = input-i] [[price] of end1]
+  let current-framework-agreement max-one-of my-in-framework-agreements with [input-firm-type = input-i] [framework-price]
   let random-firm pick-random-input-firm input-i
   let current-price [price] of [other-end] of current-framework-agreement
   if ([price] of random-firm)  < current-price [
