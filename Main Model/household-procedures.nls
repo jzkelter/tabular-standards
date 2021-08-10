@@ -126,7 +126,7 @@ to buy-consumption-goods  ; household procedure
     
     let goods-wanted min list demanded-consumption (liquidity / [price] of the-firm)  ; demand is demanded-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
     if goods-wanted < 0 [ error "must want more than 0 goods"]
-    let amount-bought [sell-consumption-good goods-wanted] of the-firm
+    let amount-bought [sell-good goods-wanted price] of the-firm
 
     ; adjust household variables
     set liquidity max (list 0 (liquidity - amount-bought * [price] of the-firm))

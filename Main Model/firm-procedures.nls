@@ -271,17 +271,6 @@ to distribute-profits
 end
 
 
-;firm procedure, sells a given amount of goods to a single consumer
-to-report sell-consumption-good [amount-wanted]
-  if amount-wanted < 0 [error "you cant want less than 0"]
-  set demand demand + amount-wanted
-  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
-  set inventory inventory - goods-sold
-  set previous-sales previous-sales + goods-sold
-  if inventory < 0 [error "inventory cannot be negative"]
-  set liquidity liquidity + goods-sold * price
-  report goods-sold
-end
 
 ;firm procedure, decides how much to hold for distribution to households and for savings
 to-report decide-reserve  
@@ -319,6 +308,9 @@ to set-demand-per-period [i value]
   table:put input-data i input
 end
 
+
+
+
 ;firm procedure, sets the daily demands for all inputs by calling set-daily-demand, demand is determined by current stock and inventories
 to set-input-demands
   let estimated-demand demand
@@ -340,17 +332,19 @@ to-report uses-input? [i]
   report table:has-key? input-data i
 end
 
-;firm procedure, sells a given amount of an good to a single firm
-to-report sell-input-good [amount-wanted]
+;firm procedure, sells a given amount of goods to a single consumer
+to-report sell-good [amount-wanted current-price]  ; need to input current-price, because for input good firms it can be different for each framework agreement
   if amount-wanted < 0 [error "you cant want less than 0"]
   set demand demand + amount-wanted
   let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
-  set previous-sales previous-sales + goods-sold
   set inventory inventory - goods-sold
+  set previous-sales previous-sales + goods-sold
   if inventory < 0 [error "inventory cannot be negative"]
-  set liquidity liquidity + goods-sold * price
+  set liquidity liquidity + goods-sold * current-price
   report goods-sold
 end
+
+
 
 ;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
 to buy-input-goods
@@ -362,7 +356,7 @@ to buy-input-goods
       let current-price 0
       ask the-framework [set current-price framework-price]
       let goods-wanted min (list (input-demand-per-period i) (liquidity / current-price))
-      let amount-bought [sell-input-good goods-wanted] of [end1] of the-framework
+      let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
       let current-amount current-stock i  
       set-stock i (current-amount + amount-bought)
