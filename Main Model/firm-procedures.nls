@@ -7,6 +7,7 @@ firms-own [
   inventory                        ; # amount of goods stored and ready to be sold
   price                            
   wage-rate                        
+  liquidity                        ; i.e. money currently available
   
   months-failed-to-hire            ; consecutive months that firms failed to hire
   
@@ -62,10 +63,20 @@ end
 
 ;firm procedure, determines whether exit is an appropriate response for the firm this period
 to remove-firm
-  add-lifetime-profits
-  if replace-exited-firm? [
-    add-firm
-  ]
+  add-lifetime-profits    
+  
+  ;; give any liquidity back to investors
+  let firm-liquidity liquidity  
+  let total-equity sum [equity] of my-equity-links
+  ask my-equity-links [
+    let my-share firm-liquidity  * equity / total-equity
+    ask other-end [
+      set liquidity liquidity + my-share
+    ]
+  ]    
+    
+  add-firm
+  
   die
 end
 
@@ -117,16 +128,12 @@ end
 ;firm procedure, guarantees the correct number of trading links per consumer good firm after removing any expired 
 to guarantee-framework-links [input-i]
   ask my-framework-agreements with [expiration-date >= month] [
-    init-framework-agreement index-type framework-duration    ; "renegotiate" we currently use the same input type
+    init-framework-agreement      ; when framework agreement expires, renegotiate it
   ]
   let curr-framework-links count my-framework-agreements with [input-firm-type = input-i]
   if curr-framework-links < N-FRAMEWORK-AGREEMENTS [
     create-framework-agreements-from n-of (N-FRAMEWORK-AGREEMENTS - curr-framework-links) firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself][
-      (ifelse use-index? [
-        init-framework-agreement ((random 4) + 1) framework-duration
-      ] [
-        init-framework-agreement 0 framework-duration
-      ])
+      init-framework-agreement        
     ]
   ]
 end
@@ -139,7 +146,7 @@ to-report raise-funds
   while [to-be-raised > 0] [
     ask one-of households with [not equity-link-neighbor? new-firm][ 
       let liquidity-available (liquidity - AUTONOMOUS-CONSUMPTION * current-price) * 0.5
-      if liquidity-available > 0 [
+      if liquidity-available >= 0.1 * STARTUP-LIQUIDITY [  ; only accept investments that are at least 10% of the total
         ifelse liquidity-available > to-be-raised [
           create-equity-link-with new-firm [
             init-equity-link
@@ -168,17 +175,13 @@ end
 ;firm procedure, searches for a cheaper supplier of a given input good
 to search-cheaper-supplier [input-i]
   if count my-in-framework-agreements with [input-firm-type = input-i] = 0 [error "must have at least one framework agreement"]
-  let current-framework-agreement max-one-of my-in-framework-agreements with [input-firm-type = input-i] [[price] of end1]
+  let current-framework-agreement max-one-of my-in-framework-agreements with [input-firm-type = input-i] [framework-price]
   let random-firm pick-random-input-firm input-i
   let current-price [price] of [other-end] of current-framework-agreement
   if ([price] of random-firm)  < current-price [
     ask current-framework-agreement [die]
-    create-framework-agreement-from random-firm [
-      (ifelse use-index? [
-        init-framework-agreement ((random 4) + 1) framework-duration
-      ] [
-        init-framework-agreement 0 framework-duration
-      ])
+    create-framework-agreement-from random-firm [      
+      init-framework-agreement       
     ]
   ]
 end
@@ -187,12 +190,8 @@ end
 to search-delivery-capable-seller [input-i]
   let link-failed-to-satisfy rnd:weighted-one-of my-in-framework-agreements with [input-firm-type = input-i][demand-not-satisfied]
   if [demand-not-satisfied] of link-failed-to-satisfy > 0  [
-    create-framework-agreement-from pick-random-input-firm input-i [
-      (ifelse use-index? [
-        init-framework-agreement ((random 4) + 1) framework-duration
-      ] [
-        init-framework-agreement 0 framework-duration
-      ])
+    create-framework-agreement-from pick-random-input-firm input-i [      
+      init-framework-agreement        
     ]
     ask link-failed-to-satisfy [die]
   ]
@@ -271,17 +270,6 @@ to distribute-profits
 end
 
 
-;firm procedure, sells a given amount of goods to a single consumer
-to-report sell-consumption-good [amount-wanted]
-  if amount-wanted < 0 [error "you cant want less than 0"]
-  set demand demand + amount-wanted
-  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
-  set inventory inventory - goods-sold
-  set previous-sales previous-sales + goods-sold
-  if inventory < 0 [error "inventory cannot be negative"]
-  set liquidity liquidity + goods-sold * price
-  report goods-sold
-end
 
 ;firm procedure, decides how much to hold for distribution to households and for savings
 to-report decide-reserve  
@@ -292,8 +280,7 @@ end
 to-report production-potential 
   (ifelse table:length input-data = 0[
     report max-production
-  ][
-    let minimum-potential 1000000000
+  ][    
     let input-potential min map [i -> ((marginal-productivity i) * (current-stock i))] table:keys input-data
     report (min (list input-potential (max-production)))
   ])
@@ -320,6 +307,9 @@ to set-demand-per-period [i value]
   table:put input-data i input
 end
 
+
+
+
 ;firm procedure, sets the daily demands for all inputs by calling set-daily-demand, demand is determined by current stock and inventories
 to set-input-demands
   let estimated-demand demand
@@ -341,17 +331,19 @@ to-report uses-input? [i]
   report table:has-key? input-data i
 end
 
-;firm procedure, sells a given amount of an good to a single firm
-to-report sell-input-good [amount-wanted]
+;firm procedure, sells a given amount of goods to a single consumer
+to-report sell-good [amount-wanted current-price]  ; need to input current-price, because for input good firms it can be different for each framework agreement
   if amount-wanted < 0 [error "you cant want less than 0"]
   set demand demand + amount-wanted
   let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
-  set previous-sales previous-sales + goods-sold
   set inventory inventory - goods-sold
+  set previous-sales previous-sales + goods-sold
   if inventory < 0 [error "inventory cannot be negative"]
-  set liquidity liquidity + goods-sold * price
+  set liquidity liquidity + goods-sold * current-price
   report goods-sold
 end
+
+
 
 ;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
 to buy-input-goods
@@ -363,7 +355,7 @@ to buy-input-goods
       let current-price 0
       ask the-framework [set current-price framework-price]
       let goods-wanted min (list (input-demand-per-period i) (liquidity / current-price))
-      let amount-bought [sell-input-good goods-wanted] of [end1] of the-framework
+      let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
       let current-amount current-stock i  
       set-stock i (current-amount + amount-bought)
@@ -400,9 +392,8 @@ to-report max-production
 end
 
 ;firm procedure, reports an agentset of firms with the same firm-type as the caller
-to-report firms-with-my-type
-  let curr-firm self
-  report firms with [firm-type = [firm-type] of curr-firm]
+to-report firms-with-my-type  
+  report firms with [firm-type = [firm-type] of myself]
 end
 
 ;framework-agreement procedure, reports the price given the index-type and the price multiplier
@@ -422,4 +413,9 @@ to-report framework-price
   index-type = 4 [
     report index-multiplier * potvin-index-value
   ])
+end
+
+to-report choose-index
+  let indices (list "no index"  "pringle" "coates" "ussher" "potvin")
+  report position index-in-use indices ; right now we always use the same index determined by the index-in-use chooser
 end

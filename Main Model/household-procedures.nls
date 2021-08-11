@@ -4,6 +4,7 @@ breed [households household]
 households-own [
   reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
   demanded-consumption            ; the amount of goods that are demanded by each household
+  liquidity                       ; i.e. money currently available
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
@@ -85,8 +86,7 @@ to check-random-firm-for-job [min-wage]  ; household procedure
 
     if employed? [quit-job]
 
-    create-employment-link-with the-firm [init-employment-link]
-    ;ask the-firm [set desired-labor-change desired-labor-change - 1]
+    create-employment-link-with the-firm [init-employment-link]    
 
   ]
 end
@@ -101,14 +101,14 @@ to set-consumption
   if liquidity < 0 [error "no money to consume"]
   let money-to-spend 0
   ifelse unemployed? [
-    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of CONSUMER-GOOD-FIRMS) )     ;spend as much as they have up to autonomous consumption
+    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors) )     ;spend as much as they have up to autonomous consumption
   ] [
-    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of CONSUMER-GOOD-FIRMS + ([wage-rate] of one-of employment-link-neighbors ) ^ DIMINISHING-UTILITY-CONSTANT))
+    set money-to-spend min (list liquidity (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors + ([wage-rate] of my-employer ) ^ DIMINISHING-UTILITY-CONSTANT))
   ]
-  let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
-  if not (count consumer-link-neighbors = 0) [
-    set total-consumption money-to-spend / mean [price] of consumer-link-neighbors
-  ]
+  ;let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
+  ;if count consumer-link-neighbors > 0 [
+   let total-consumption money-to-spend / mean [price] of consumer-link-neighbors
+  ;]
   set demanded-consumption total-consumption / transactions-per-month
 end
 
@@ -126,7 +126,7 @@ to buy-consumption-goods  ; household procedure
     
     let goods-wanted min list demanded-consumption (liquidity / [price] of the-firm)  ; demand is demanded-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
     if goods-wanted < 0 [ error "must want more than 0 goods"]
-    let amount-bought [sell-consumption-good goods-wanted] of the-firm
+    let amount-bought [sell-good goods-wanted price] of the-firm
 
     ; adjust household variables
     set liquidity max (list 0 (liquidity - amount-bought * [price] of the-firm))

@@ -40,10 +40,10 @@ months
 30.0
 
 BUTTON
-1
-88
-67
-121
+0
+259
+66
+292
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -57,10 +57,10 @@ NIL
 1
 
 BUTTON
-125
-88
-206
-121
+124
+259
+205
+292
 go-once
 go\n
 NIL
@@ -74,10 +74,10 @@ NIL
 0
 
 BUTTON
-68
-88
-123
-121
+67
+259
+122
+292
 NIL
 go
 T
@@ -91,10 +91,10 @@ NIL
 0
 
 SLIDER
-4
-10
-176
-43
+0
+108
+172
+141
 n-households
 n-households
 10
@@ -106,10 +106,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1
-125
-201
-331
+0
+298
+200
+446
 Unemployment rate
 NIL
 unemployment
@@ -146,10 +146,10 @@ PENS
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 
 PLOT
-653
-461
-853
-611
+855
+460
+1055
+610
 worker per firm distribution
 NIL
 NIL
@@ -159,14 +159,14 @@ NIL
 20.0
 true
 false
-"" ""
+"" "set-plot-x-range 0 max [n-workers] of firms\nset-plot-y-range 0 10"
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 BUTTON
-1113
+983
 117
-1207
+1077
 150
 hide-links
 ask links [hide-link]
@@ -181,9 +181,9 @@ NIL
 1
 
 BUTTON
-1113
+983
 10
-1275
+1145
 43
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
@@ -198,11 +198,11 @@ NIL
 1
 
 PLOT
-855
-460
-1055
-610
-household liquidity
+0
+450
+200
+600
+household liquidity distribution
 NIL
 NIL
 0.0
@@ -211,7 +211,7 @@ NIL
 10.0
 true
 false
-"" ""
+"" "set-plot-x-range 0 max [liquidity] of households\nset-plot-y-range 0 30\n"
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
@@ -235,9 +235,9 @@ PENS
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
-237
+252
 10
-310
+325
 43
 bmonth-f
 go-beginning-of-month-firms\n
@@ -252,9 +252,9 @@ NIL
 1
 
 BUTTON
-391
+406
 10
-486
+501
 43
 go-month
 go-month\n
@@ -269,10 +269,10 @@ NIL
 1
 
 PLOT
-1
-333
-201
-483
+855
+150
+1055
+300
 monthly firm turnover
 NIL
 NIL
@@ -287,10 +287,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
-653
-306
-853
-456
+650
+460
+850
+610
 mean demand not satisfied
 NIL
 NIL
@@ -305,10 +305,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
 
 PLOT
-653
-153
-853
-303
+650
+150
+850
+300
 Inventory
 NIL
 NIL
@@ -325,9 +325,9 @@ PENS
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-180
+195
 10
-235
+250
 43
 dsetup
 \nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
@@ -342,9 +342,9 @@ NIL
 1
 
 BUTTON
-487
+502
 10
-631
+646
 43
 go-end-of-month
 go-end-of-month\ntick\n
@@ -359,9 +359,9 @@ NIL
 1
 
 BUTTON
-312
+327
 10
-389
+404
 43
 bmonth-h
 go-beginning-of-month-households\n
@@ -376,11 +376,11 @@ NIL
 1
 
 PLOT
-0
-486
-200
-636
-Last Two Years Inventory
+650
+305
+850
+455
+Last 2 Years Primary Inventory
 NIL
 NIL
 0.0
@@ -394,21 +394,11 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean LAST-TWO-YEARS-PRIMARY-INVENTORY"
 "pen-1" 1.0 0 -8431303 true "" "plot sum [inventory] of PRIMARY-GOOD-FIRMS"
 
-TEXTBOX
-4
-370
-46
-455
-above line we expect firing, below hiring
-10
-5.0
-1
-
 SLIDER
-859
-159
-1048
-192
+0
+180
+173
+213
 transactions-per-month
 transactions-per-month
 1
@@ -418,28 +408,6 @@ transactions-per-month
 1
 NIL
 HORIZONTAL
-
-SWITCH
-861
-231
-1049
-264
-allow-firm-exit?
-allow-firm-exit?
-0
-1
--1000
-
-SWITCH
-862
-267
-1050
-300
-replace-exited-firm?
-replace-exited-firm?
-0
-1
--1000
 
 PLOT
 1061
@@ -483,9 +451,9 @@ PENS
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-1113
+983
 46
-1274
+1144
 79
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
@@ -500,9 +468,9 @@ NIL
 1
 
 BUTTON
-1113
+983
 82
-1273
+1143
 115
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
@@ -517,10 +485,10 @@ NIL
 1
 
 MONITOR
-205
-493
-348
-538
+905
+170
+1048
+215
 Firms Added This Month
 count firms with [color = yellow]
 4
@@ -547,10 +515,10 @@ PENS
 "money outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
 
 PLOT
-854
-307
-1053
-457
+855
+305
+1054
+455
 Total Bankrupt Firms
 NIL
 NIL
@@ -565,19 +533,19 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
 
 CHOOSER
-977
-11
-1110
-56
+0
+10
+133
+55
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
-1279
+1186
 10
-1426
+1333
 55
 # Primary Good Firms
 count PRIMARY-GOOD-FIRMS
@@ -586,9 +554,9 @@ count PRIMARY-GOOD-FIRMS
 11
 
 MONITOR
-1279
+1186
 57
-1425
+1332
 102
 # Intermediate Good Firms
 count INTERMEDIATE-GOOD-FIRMS
@@ -597,9 +565,9 @@ count INTERMEDIATE-GOOD-FIRMS
 11
 
 MONITOR
-1278
+1185
 105
-1424
+1331
 150
 # Consumer Good Firms
 count CONSUMER-GOOD-FIRMS
@@ -618,10 +586,10 @@ TEXTBOX
 1
 
 SLIDER
-5
-49
-177
-82
+0
+145
+172
+178
 n-firms
 n-firms
 0
@@ -633,10 +601,10 @@ NIL
 HORIZONTAL
 
 SLIDER
-859
-195
-1048
-228
+0
+217
+172
+250
 framework-duration
 framework-duration
 1
@@ -646,17 +614,6 @@ framework-duration
 1
 NIL
 HORIZONTAL
-
-SWITCH
-979
-60
-1095
-93
-use-index?
-use-index?
-0
-1
--1000
 
 PLOT
 1338
@@ -675,6 +632,16 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [index-type] of framework-agreements"
+
+CHOOSER
+0
+58
+132
+103
+index-in-use
+index-in-use
+"no index" "coates" "pringle" "ussher" "potvin"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1176,5 +1143,5 @@ true
 Line -7500403 true 150 150 90 180
 Line -7500403 true 150 150 210 180
 @#$#@#$#@
-0
+1
 @#$#@#$#@
