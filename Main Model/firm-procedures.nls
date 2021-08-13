@@ -84,7 +84,7 @@ end
 
 ;firm procedure, adds the firms lifetime-profits to the list of total lifetime-profits
 to add-lifetime-profits
-  set LIFETIME-PROFITS-LIST (lput lifetime-profits LIFETIME-PROFITS-LIST)
+  set ALL-FIRM-PROFITS (lput lifetime-profits ALL-FIRM-PROFITS)
 end
 
 
@@ -241,6 +241,7 @@ to pay-wages
       ask one-of my-employment-links [die]                   ; no change to desired-n-workers
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
+    set lifetime-profits lifetime-profits - (wage-rate * n-workers)
     if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
     let temp-wr wage-rate
     ask employment-link-neighbors [set liquidity liquidity + temp-wr]
@@ -256,7 +257,6 @@ to distribute-profits
     set liquidity buffer
     ;; distribute profits proportionately to initial investment
     let profits-to-be-allocated profits-to-allocate
-    set lifetime-profits lifetime-profits + profits-to-be-allocated
     let total-equity sum [equity] of my-equity-links
     ask my-equity-links [
       if equity < 0 [error "equity must be positive"]
@@ -309,9 +309,6 @@ to set-demand-per-period [i value]
   table:put input-data i input
 end
 
-
-
-
 ;firm procedure, sets the daily demands for all inputs by calling set-daily-demand, demand is determined by current stock and inventories
 to set-input-demands
   let estimated-demand demand
@@ -342,6 +339,7 @@ to-report sell-good [amount-wanted current-price]  ; need to input current-price
   set previous-sales previous-sales + goods-sold
   if inventory < 0 [error "inventory cannot be negative"]
   set liquidity liquidity + goods-sold * current-price
+  set lifetime-profits lifetime-profits + goods-sold * current-price
   report goods-sold
 end
 
@@ -359,6 +357,7 @@ to buy-input-goods
       let goods-wanted min (list (input-demand-per-period i) (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
+      set lifetime-profits lifetime-profits - amount-bought * current-price
       let current-amount current-stock i  
       set-stock i (current-amount + amount-bought)
       if liquidity < 0 and liquidity > -1E-5 [set liquidity 0]                   ; only fix rounding errors that go slightly under liquidity

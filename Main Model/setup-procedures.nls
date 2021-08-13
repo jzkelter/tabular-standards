@@ -34,7 +34,8 @@ globals [
   INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             
   TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
   LAST-TWO-YEARS-PRIMARY-INVENTORY ; defined as the rolling average of the total inventory of the last two years of the primary good firms
-  LIFETIME-PROFITS-LIST            ; list of all lifetime profits from firms. A "profit" is added to the list if the firm goes bankrupt, behaviorspace tests need to add active firms at end
+  ALL-FIRM-PROFITS                 ; list of all lifetime profits from firms. A "profit" is added to the list if the firm goes bankrupt, behaviorspace tests need to add active firms at end
+  BANKRUPT-FIRM-PROFITS            ; functionally identical to all-firm-profits DURING the run, however behaviorspace experiments should NOT add active firms at the end of this 
   
   MIN-WAGE-RATE                    ; max amount wages are increased or decreased by if firm decides to change wage
   FIRM-STRUCTURE                   ; global data holding how many firms are initialized
@@ -87,7 +88,8 @@ to setup
   set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
   set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
   set LAST-TWO-YEARS-PRIMARY-INVENTORY (list (sum [inventory] of firms))
-  set LIFETIME-PROFITS-LIST (list)  
+  set ALL-FIRM-PROFITS (list)
+  set BANKRUPT-FIRM-PROFITS (list)
   
   
   ask households[

@@ -575,16 +575,6 @@ count CONSUMER-GOOD-FIRMS
 1
 11
 
-TEXTBOX
-1343
-154
-1484
-238
-# Primary Good Firms          + # Intermediate Good Firms  + # Consumer Good Firms   = # Total Firms\n\nfor more than 1 firm type
-11
-0.0
-1
-
 SLIDER
 0
 145
@@ -594,7 +584,7 @@ n-firms
 n-firms
 0
 500
-40.0
+100.0
 10
 1
 NIL
@@ -614,24 +604,6 @@ framework-duration
 1
 NIL
 HORIZONTAL
-
-PLOT
-1338
-307
-1498
-457
-index distribution
-NIL
-NIL
-1.0
-5.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [index-type] of framework-agreements"
 
 CHOOSER
 0

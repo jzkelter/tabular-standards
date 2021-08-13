@@ -90,8 +90,9 @@ to go-end-of-month
   set-firm-xcor
   set-household-xcor
 
-  set month month + 1
+  set BANKRUPT-FIRM-PROFITS ALL-FIRM-PROFITS
   
+  set month month + 1
 end
 
 
