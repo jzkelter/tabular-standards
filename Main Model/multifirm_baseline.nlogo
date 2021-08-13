@@ -541,7 +541,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 1186
@@ -585,7 +585,7 @@ n-firms
 n-firms
 0
 500
-50.0
+130.0
 10
 1
 NIL
@@ -1049,6 +1049,31 @@ repeat 200 [go]</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="double-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 200 [go]</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>count households with [employed?]</metric>
+    <metric>mean [price] of firms</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="40" step="10" last="200"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>
