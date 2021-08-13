@@ -212,7 +212,7 @@ to-report make-input-data-table [original-data]
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
       table:put inputi "Current stock" 30
-      table:put inputi "Daily demand" 0
+      table:put inputi "Monthly demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]
     report data-table

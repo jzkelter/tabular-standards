@@ -297,15 +297,15 @@ to use-inputs [production-amount]
 end
 
 ;firm procedure, reports the demand for a given input given the economy transacts
-to-report input-demand-per-period [i]
+to-report input-demand-per-month [i]
   let input table:get input-data i
-  report table:get input "Daily demand"
+  report table:get input "Monthly demand"
 end
 
 ;firm procedure, sets the daily demand for a given input
-to set-demand-per-period [i value]
+to set-demand-per-month [i value]
   let input table:get input-data i
-  table:put input "Daily demand" value
+  table:put input "Monthly demand" value
   table:put input-data i input
 end
 
@@ -318,9 +318,9 @@ to set-input-demands
     let current-amount current-stock i
     let amount-needed (estimated-production / (marginal-productivity i))
     ifelse amount-needed > current-amount[
-      set-demand-per-period i ((amount-needed - current-amount) * transactions-per-month)
+      set-demand-per-month i ((amount-needed - current-amount) * transactions-per-month)
     ][
-      set-demand-per-period i 0
+      set-demand-per-month i 0
     ]
   ]
 end
@@ -348,13 +348,14 @@ end
 ;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
 to buy-input-goods
   foreach table:keys input-data[i ->
-    let remaining-demand input-demand-per-period i
+    let remaining-demand input-demand-per-month i / transactions-per-month
+    let total-demand remaining-demand
     let frameworks-to-try my-framework-agreements
-    while [remaining-demand >= (0.05 * input-demand-per-period i) and any? frameworks-to-try][
+    while [remaining-demand >= (0.05 * total-demand) and any? frameworks-to-try][
       let the-framework one-of frameworks-to-try
       let current-price 0
       ask the-framework [set current-price framework-price]
-      let goods-wanted min (list (input-demand-per-period i) (liquidity / current-price))
+      let goods-wanted min (list total-demand (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
       set lifetime-profits lifetime-profits - amount-bought * current-price
