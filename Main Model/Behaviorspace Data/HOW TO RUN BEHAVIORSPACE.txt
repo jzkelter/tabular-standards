@@ -1,0 +1,6 @@
+STEPS FOR BEHAVIORSPACE
+
+1. Uncheck measure at every run.
+2. Save in table format.
+3. Remember to save file ending in ".csv" so NetLogo knows how to handle the file
+4. Open in Jupyter Notebook with pd.read_csv('multifirm_baseline single-firm_varying_firm_number-table.csv', error_bad_lines=False, header=6)  

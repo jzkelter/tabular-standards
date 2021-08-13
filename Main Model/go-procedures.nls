@@ -93,6 +93,7 @@ to go-end-of-month
   set-firm-xcor
   set-household-xcor
 
+  set UNEMPLOYMENT-RATES (lput (1 - count employment-links / n-households) UNEMPLOYMENT-RATES)
   
   set month month + 1
 end

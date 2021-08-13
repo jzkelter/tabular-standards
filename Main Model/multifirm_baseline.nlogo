@@ -122,6 +122,7 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
+"mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
 652
@@ -584,7 +585,7 @@ n-firms
 n-firms
 0
 500
-60.0
+50.0
 10
 1
 NIL
@@ -1028,85 +1029,18 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="single-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
-repeat 100 [go]</setup>
+repeat 200 [go]</setup>
     <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
     <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
     <metric>count households with [employed?]</metric>
     <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup
-repeat 100 [go]</setup>
-    <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
-    <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="test" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup
-repeat 100 [go]</setup>
-    <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
-    <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="40"/>
-    </enumeratedValueSet>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="20" step="10" last="200"/>
     <enumeratedValueSet variable="transactions-per-month">
       <value value="1"/>
     </enumeratedValueSet>
@@ -1114,10 +1048,10 @@ repeat 100 [go]</setup>
       <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
+      <value value="&quot;single-firm&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
