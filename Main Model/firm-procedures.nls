@@ -17,6 +17,8 @@ firms-own [
   demand                           ; the most recent demand this firm experienced for its goods     (previous-sales used in calculations instead, so we can remove this variable if we want)
   tech-parameter                   ; determines how much each worker produces given a 
   consumer-good-firm?              ; defines whether they produce consumer goods
+  intermediate-good-firm?          ; defines whether they produce intermediate goods
+  primary-good-firm?               ; defines whether they produce primary goods
   
   firm-location                    ; the patch tied to the firm, relevant for the potvin index
   soil-health                      ; the soil health located under the firm, possible change to patch variable?
@@ -106,10 +108,10 @@ to add-firm
     if consumer-good-firm? [
       set CONSUMER-GOOD-FIRMS (turtle-set CONSUMER-GOOD-FIRMS self)
     ]
-    if table:length input-data = 0 [
+    if primary-good-firm? [
       set PRIMARY-GOOD-FIRMS (turtle-set PRIMARY-GOOD-FIRMS self)
     ] 
-    if not consumer-good-firm? and table:length input-data != 0[
+    if intermediate-good-firm? [
       set INTERMEDIATE-GOOD-FIRMS (turtle-set INTERMEDIATE-GOOD-FIRMS self)
     ]
   ]

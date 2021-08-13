@@ -29,9 +29,9 @@ framework-agreements-own[
 
 ;defines all global variables, see "setup-constants" for a description of what each of these does
 globals [
-  CONSUMER-GOOD-FIRMS              ; defined as firms that produce goods purchased by households                    (firms with [consumer-good-firm?])
-  PRIMARY-GOOD-FIRMS               ; defined as firms that produce goods without needing an input                   (firms with [table:length input-data = 0])
-  INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             (firms with [not consumer-good-firm? and not table:length input-data = 0])
+  CONSUMER-GOOD-FIRMS              ; defined as firms that produce goods purchased by households           
+  PRIMARY-GOOD-FIRMS               ; defined as firms that produce goods without needing an input                 
+  INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             
   TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
   LAST-TWO-YEARS-PRIMARY-INVENTORY ; defined as the rolling average of the total inventory of the last two years of the primary good firms
   LIFETIME-PROFITS-LIST            ; list of all lifetime profits from firms. A "profit" is added to the list if the firm goes bankrupt, behaviorspace tests need to add active firms at end
@@ -84,8 +84,8 @@ to setup
   
   
   set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
-  set PRIMARY-GOOD-FIRMS firms with [table:length input-data = 0]
-  set INTERMEDIATE-GOOD-FIRMS firms with [not consumer-good-firm? and table:length input-data != 0]
+  set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
+  set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
   set LAST-TWO-YEARS-PRIMARY-INVENTORY (list (sum [inventory] of firms))
   set LIFETIME-PROFITS-LIST (list)  
   
@@ -167,6 +167,8 @@ to setup-firms
     let firm-input-data make-input-data-table table:get f "Input data"
     let firm-tech-parameter table:get f "Tech constant"
     let is-consumer? table:get f "Consumer?"
+    let is-intermediate? table:get f "Intermediate?"
+    let is-primary? table:get f "Primary?"
     create-firms ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
       set shape "building store"
       set tech-parameter firm-tech-parameter 
@@ -175,6 +177,8 @@ to setup-firms
       set input-data firm-input-data
       set wage-rate tech-parameter * transactions-per-month 
       set consumer-good-firm? is-consumer?
+      set intermediate-good-firm? is-intermediate?
+      set primary-good-firm? is-primary?
       
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
             

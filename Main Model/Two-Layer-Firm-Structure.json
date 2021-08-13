@@ -10,14 +10,18 @@
             ],
             "Tech constant": 3,
             "Firm count": 1,
-            "Consumer?": true
+            "Consumer?":true,
+	    "Intermediate?":false,
+	    "Primary?":false
         },
         {
             "Firm type": 2,
             "Input data":[],
             "Tech constant": 3,
             "Firm count": 0.25,
-            "Consumer?":false
+            "Consumer?":false,
+	    "Intermediate?":false,
+	    "Primary?":true
         }
     ]
 }
