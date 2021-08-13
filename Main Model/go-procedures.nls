@@ -69,7 +69,10 @@ end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
+  if sum [liquidity] of turtles < 0.999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
+  
   ask firms [
+    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
     distribute-profits
     (ifelse desired-n-workers < n-workers [
       set months-failed-to-hire months-failed-to-hire + 1
@@ -88,6 +91,7 @@ to go-end-of-month
   set-household-xcor
 
   set month month + 1
+  
 end
 
 
