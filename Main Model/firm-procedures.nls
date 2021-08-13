@@ -9,7 +9,8 @@ firms-own [
   wage-rate                        
   liquidity                        ; i.e. money currently available
   
-  months-failed-to-hire            ; consecutive months that firms failed to hire
+  all-positions-filled             ; consecutive months that firms have filled every position they desired
+  fired-worker?                    ; flag triggered if during pay-wages a firm had to fire a worker. This is used when determining wage.
   
   desired-n-workers                ; represents the desired number of workers for the month
   previous-sales
@@ -28,9 +29,9 @@ firms-own [
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
 to adjust-wage-rate  
-  (ifelse months-failed-to-hire >= 1 and desired-n-workers > n-workers [  ; firm had an open position last month and failed to fill
+  (ifelse all-positions-filled = 0 and desired-n-workers > n-workers and not fired-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
     set wage-rate (1 + random-float MAX-WAGE-GROWTH) * wage-rate
-  ] months-failed-to-hire <= MONTHS-TO-LOWER-WAGE [ ; If all hires in past MONTHS-TO-LOWER-WAGE 
+  ] all-positions-filled >= MONTHS-TO-LOWER-WAGE or fired-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
     set wage-rate max (list ((1 - random-float MAX-WAGE-GROWTH) * wage-rate) MIN-WAGE-RATE)
   ])
 end
@@ -99,7 +100,7 @@ to add-firm
     set lifetime-profits liquidity * -1
     set desired-n-workers (floor (mean [demand] of firms-with-my-type / tech-parameter))
     set demand desired-n-workers * tech-parameter
-    set months-failed-to-hire 0
+    set all-positions-filled 0
     set-input-demands
     foreach table:keys input-data [i ->
       set-stock i 0
@@ -236,9 +237,11 @@ end
 
 ;firm procedure, pays wages to workers based on formula in Lengnick paper
 to pay-wages
+  set fired-worker? false
   if n-workers > 0 [
     while [wage-rate * n-workers > liquidity] [ 
       ask one-of my-employment-links [die]                   ; no change to desired-n-workers
+      set fired-worker? true
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     set lifetime-profits lifetime-profits - (wage-rate * n-workers)

@@ -107,7 +107,7 @@ to setup
   ask firms [
     set liquidity STARTUP-LIQUIDITY
     set lifetime-profits liquidity * -1
-    set months-failed-to-hire 0
+    set all-positions-filled 0
     set demand max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers    
     set inventory 50
@@ -129,10 +129,10 @@ end
 to set-constants
   set MIN-WAGE-RATE 2.5
   set MAX-WAGE-GROWTH 0.019                
-  set MONTHS-TO-LOWER-WAGE 12              
+  set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.2                 
   set BUFFER-LABOR-FRACTION 2               
-  set DIMINISHING-UTILITY-CONSTANT 0.7     
+  set DIMINISHING-UTILITY-CONSTANT 0.2     
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
@@ -183,6 +183,7 @@ to setup-firms
       set consumer-good-firm? is-consumer?
       set intermediate-good-firm? is-intermediate?
       set primary-good-firm? is-primary?
+      set fired-worker? false
       
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
             

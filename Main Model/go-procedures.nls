@@ -75,9 +75,9 @@ to go-end-of-month
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
     distribute-profits
     (ifelse desired-n-workers < n-workers [
-      set months-failed-to-hire months-failed-to-hire + 1
+      set all-positions-filled all-positions-filled + 1
     ] [
-      set months-failed-to-hire 0    
+      set all-positions-filled 0    ;if desired-n-workers > n-workers, then we failed to hire and we should reset all-positions-filled
     ])
   ]
   ask households [ 
