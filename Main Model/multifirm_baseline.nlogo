@@ -496,9 +496,9 @@ count firms with [color = yellow]
 11
 
 PLOT
-352
+415
 495
-636
+645
 645
 Firm Money Outflow/Inflow
 NIL
@@ -511,8 +511,8 @@ true
 true
 "" ""
 PENS
-"money inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"money outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+"inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
+"outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 855
@@ -584,7 +584,7 @@ n-firms
 n-firms
 0
 500
-100.0
+60.0
 10
 1
 NIL
@@ -614,6 +614,25 @@ index-in-use
 index-in-use
 "no index" "coates" "pringle" "ussher" "potvin"
 0
+
+PLOT
+205
+495
+410
+645
+Profitability
+NIL
+NIL
+0.0
+0.0
+-100.0
+-100.0
+true
+true
+"" ""
+PENS
+"Bankrupt " 1.0 0 -1184463 true "" "plot mean BANKRUPT-FIRM-PROFITS"
+"All" 1.0 0 -16777216 true "" "plot mean ALL-FIRM-PROFITS"
 
 @#$#@#$#@
 ## WHAT IS IT?

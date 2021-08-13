@@ -84,7 +84,7 @@ end
 
 ;firm procedure, adds the firms lifetime-profits to the list of total lifetime-profits
 to add-lifetime-profits
-  set ALL-FIRM-PROFITS (lput lifetime-profits ALL-FIRM-PROFITS)
+  set BANKRUPT-FIRM-PROFITS (lput lifetime-profits BANKRUPT-FIRM-PROFITS)
 end
 
 
