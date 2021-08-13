@@ -338,8 +338,10 @@ to-report sell-good [amount-wanted current-price]  ; need to input current-price
   set inventory inventory - goods-sold
   set previous-sales previous-sales + goods-sold
   if inventory < 0 [error "inventory cannot be negative"]
-  set liquidity liquidity + goods-sold * current-price
-  set lifetime-profits lifetime-profits + goods-sold * current-price
+  let value-sold goods-sold * current-price
+  set liquidity liquidity + value-sold
+  set lifetime-profits lifetime-profits + value-sold
+  set TOTAL-REVENUE TOTAL-REVENUE + value-sold
   report goods-sold
 end
 
