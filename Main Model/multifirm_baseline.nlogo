@@ -138,13 +138,15 @@ NIL
 5.0
 true
 true
-"" ""
+"set-plot-y-range (MIN-WAGE-RATE * 0.9) precision (mean [tech-parameter] of firms * 1.1) 1" ""
 PENS
 "mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
+"min firm wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
+"Marginal Prod. Labor" 1.0 0 -955883 true "" "plot mean [tech-parameter] of firms"
 
 PLOT
 855

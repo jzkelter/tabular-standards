@@ -134,12 +134,12 @@ to set-constants
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.2                 
   set BUFFER-LABOR-FRACTION 2               
-  set DIMINISHING-UTILITY-CONSTANT 0.2     
+  set DIMINISHING-UTILITY-CONSTANT 0.3     
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
   set N-FRAMEWORK-AGREEMENTS 7             
-  set AUTONOMOUS-CONSUMPTION 0.2         
+  set AUTONOMOUS-CONSUMPTION 0.1         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
   
