@@ -587,7 +587,7 @@ n-firms
 n-firms
 0
 500
-130.0
+20.0
 10
 1
 NIL
@@ -1033,12 +1033,18 @@ NetLogo 6.2.0
 <experiments>
   <experiment name="single-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
-repeat 200 [go]</setup>
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
     <go>go</go>
     <timeLimit steps="200"/>
     <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
     <metric>mean ALL-FIRM-PROFITS</metric>
     <metric>mean BANKRUPT-FIRM-PROFITS</metric>
     <metric>TOTAL-REVENUE</metric>
@@ -1051,31 +1057,6 @@ repeat 200 [go]</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="double-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="40" step="10" last="200"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>

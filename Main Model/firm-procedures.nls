@@ -135,7 +135,7 @@ to guarantee-framework-links [input-i]
   ]
   let curr-framework-links count my-framework-agreements with [input-firm-type = input-i]
   if curr-framework-links < N-FRAMEWORK-AGREEMENTS [
-    create-framework-agreements-from n-of (N-FRAMEWORK-AGREEMENTS - curr-framework-links) firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself][
+    create-framework-agreements-from up-to-n-of (N-FRAMEWORK-AGREEMENTS - curr-framework-links) firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself][
       init-framework-agreement        
     ]
   ]
