@@ -34,9 +34,13 @@ to go-beginning-of-month-firms
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month  
     foreach table:keys input-data[i ->
-      guarantee-framework-links i
+      search-new-in-framework-agreements i
+      ;guarantee-framework-links i
       ;search-cheaper-supplier i
       ;search-delivery-capable-seller i
+    ]
+    if not consumer-good-firm? [
+      search-new-out-framework-agreements 
     ]
     pay-wages
   ]
@@ -58,6 +62,7 @@ end
 to go-month
   repeat transactions-per-month [
     ask firms [
+      check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
       buy-input-goods
       produce-goods
     ]

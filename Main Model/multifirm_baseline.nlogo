@@ -41,9 +41,9 @@ months
 
 BUTTON
 0
-259
+310
 66
-292
+343
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -58,9 +58,9 @@ NIL
 
 BUTTON
 124
-259
+310
 205
-292
+343
 go-once
 go\n
 NIL
@@ -75,9 +75,9 @@ NIL
 
 BUTTON
 67
-259
+310
 122
-292
+343
 NIL
 go
 T
@@ -107,9 +107,9 @@ HORIZONTAL
 
 PLOT
 0
-298
+345
 200
-446
+493
 Unemployment rate
 NIL
 unemployment
@@ -128,7 +128,7 @@ PLOT
 652
 10
 975
-147
+180
 Wage Rate Stats
 NIL
 NIL
@@ -150,9 +150,9 @@ PENS
 
 PLOT
 855
-460
+495
 1055
-610
+645
 worker per firm distribution
 NIL
 NIL
@@ -202,9 +202,9 @@ NIL
 
 PLOT
 0
-450
+497
 200
-600
+647
 household liquidity distribution
 NIL
 NIL
@@ -220,9 +220,9 @@ PENS
 
 PLOT
 1060
-152
+187
 1334
-302
+337
 mean price
 NIL
 NIL
@@ -273,16 +273,16 @@ NIL
 
 PLOT
 855
-150
+185
 1055
-300
+335
 monthly firm turnover
 NIL
 NIL
 0.0
 10.0
 0.0
-0.65
+1.0
 true
 false
 "" ""
@@ -291,9 +291,9 @@ PENS
 
 PLOT
 650
-460
+495
 850
-610
+645
 mean demand not satisfied
 NIL
 NIL
@@ -309,9 +309,9 @@ PENS
 
 PLOT
 650
-150
+185
 850
-300
+335
 Inventory
 NIL
 NIL
@@ -380,9 +380,9 @@ NIL
 
 PLOT
 650
-305
+340
 850
-455
+490
 Last 2 Years Primary Inventory
 NIL
 NIL
@@ -414,9 +414,9 @@ HORIZONTAL
 
 PLOT
 1061
-459
+494
 1335
-609
+644
 Output and Demand
 NIL
 NIL
@@ -434,9 +434,9 @@ PENS
 
 PLOT
 1061
-306
+341
 1335
-456
+491
 Mean Liquidity
 NIL
 NIL
@@ -488,10 +488,10 @@ NIL
 1
 
 MONITOR
-905
-170
-1048
-215
+890
+205
+1033
+250
 Firms Added This Month
 count firms with [color = yellow]
 4
@@ -515,13 +515,13 @@ true
 "" ""
 PENS
 "inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+"outflow" 1.0 0 -2674135 true "" "plot sum [price * production-potential] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 855
-305
+340
 1054
-455
+490
 Total Bankrupt Firms
 NIL
 NIL
@@ -543,7 +543,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
 1186
@@ -585,9 +585,9 @@ SLIDER
 178
 n-firms
 n-firms
-0
+10
 500
-20.0
+25.0
 10
 1
 NIL
@@ -636,6 +636,21 @@ true
 PENS
 "Bankrupt " 1.0 0 -1184463 true "" "plot mean BANKRUPT-FIRM-PROFITS"
 "All" 1.0 0 -16777216 true "" "plot mean ALL-FIRM-PROFITS"
+
+SLIDER
+0
+250
+175
+283
+new-agreements-per-month
+new-agreements-per-month
+1
+10
+1.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1060,6 +1075,49 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
