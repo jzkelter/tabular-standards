@@ -13,7 +13,8 @@ firms-own [
   fired-worker?                    ; flag triggered if during pay-wages a firm had to fire a worker. This is used when determining wage.
   
   desired-n-workers                ; represents the desired number of workers for the month
-  previous-sales
+  previous-sales                   ; previous time period's sales
+  average-previous-sales           ; exponentially decaying function
 
   demand                           ; the most recent demand this firm experienced for its goods     (previous-sales used in calculations instead, so we can remove this variable if we want)
   tech-parameter                   ; determines how much each worker produces given a 
@@ -38,24 +39,32 @@ end
 
 ;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
 to adjust-labor-and-price
-  (ifelse previous-sales >= max-production [ 
+  let future-sales average-previous-sales
+  (ifelse future-sales >= max-production [ 
     ;excess demand
     (ifelse price > (mean [price] of firms-with-my-type) [ 
-      set desired-n-workers max (list 1 floor (previous-sales / tech-parameter)) ; excess demand and price is already higher than average, decrease output
+      set desired-n-workers ceiling (future-sales / tech-parameter) ; excess demand and price is already higher than average, decrease output
     ] [
       set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
     ])
   ] [
     ;excess supply
     (ifelse price < (mean [price] of firms-with-my-type) [
-      set desired-n-workers max (list 1 floor (previous-sales / tech-parameter)) ; excess supply and price is already lower than average, increase output.
+      set desired-n-workers ceiling (future-sales / tech-parameter) ; excess supply and price is already lower than average, increase output.
     ] [  
       set price max (list (wage-rate / tech-parameter) (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
     ])
   ])
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  if demand > average-previous-sales [
+    set desired-n-workers (demand + 3 * average-previous-sales) / 4 / tech-parameter
+  ] 
 end
 
+;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
+to estimate-future-sales
+  set average-previous-sales average-previous-sales * FIRM-MEMORY-CONSTANT + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
+end
 
 ;firm procedure, decides whether or not to fire a worker at the end of the next time period
 to decide-fire-worker
@@ -314,7 +323,7 @@ end
 
 ;firm procedure, decides how much to hold for distribution to households and for savings
 to-report decide-reserve  
-  report BUFFER-LABOR-FRACTION * wage-rate * n-workers
+  report BUFFER-LABOR-FRACTION * wage-rate * n-workers + STARTUP-LIQUIDITY 
 end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
@@ -362,6 +371,7 @@ to set-input-demands
       set-demand-per-month i 0
     ]
   ]
+  
 end
 
 ;firm procedure, returns true if a firm uses a given input

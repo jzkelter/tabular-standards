@@ -28,6 +28,7 @@ to go-beginning-of-month-firms
     if liquidity <= wage-rate [  
       remove-firm
     ]
+    estimate-future-sales
     set-input-demands
     adjust-wage-rate
     adjust-labor-and-price
@@ -62,7 +63,7 @@ end
 to go-month
   repeat transactions-per-month [
     ask firms [
-      check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
+      ;check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
       buy-input-goods
       produce-goods
     ]
@@ -102,6 +103,7 @@ to go-end-of-month
   set MEAN-PRICES (lput mean [price] of firms MEAN-PRICES)
   
   set month month + 1
+  
 end
 
 

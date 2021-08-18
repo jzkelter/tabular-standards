@@ -305,7 +305,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"Consumers" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"Consumer firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
 
 PLOT
 650
@@ -587,7 +588,7 @@ n-firms
 n-firms
 10
 500
-30.0
+40.0
 10
 1
 NIL

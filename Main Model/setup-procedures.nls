@@ -54,6 +54,7 @@ globals [
   AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
+  FIRM-MEMORY-CONSTANT             ; how much weighting a firm will put on current information vs. previous information
   
   month                            ; the current tick
   pringle-index-value              ; index id: 1
@@ -144,8 +145,9 @@ to set-constants
   set AUTONOMOUS-CONSUMPTION 0.1         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
+  set FIRM-MEMORY-CONSTANT 0.9
   
-  (ifelse setup-structure = "single-firm" [   ;autonomous consumption = 0.5 works well
+  (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
   ] 
   setup-structure = "two-layer" [
