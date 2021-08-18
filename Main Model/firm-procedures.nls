@@ -98,17 +98,17 @@ to add-firm
     set wage-rate mean [wage-rate] of firms-with-my-type
     set liquidity raise-funds
     set lifetime-profits liquidity * -1
-    set desired-n-workers max (list 1 (floor (mean [demand] of firms-with-my-type / tech-parameter)))
+    set desired-n-workers max (list 1 (floor (mean [previous-sales] of firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
     set all-positions-filled 0
     set-input-demands
     foreach table:keys input-data [i ->
       set-stock i 0
-      ask up-to-n-of N-FRAMEWORK-AGREEMENTS firms with [firm-type = i] [  
-        create-framework-agreement-to myself [init-framework-agreement]        
-      ]
+;      ask up-to-n-of N-FRAMEWORK-AGREEMENTS firms with [firm-type = i] [  
+;        create-framework-agreement-to myself [init-framework-agreement]        
+;      ]
     ]
-    create-framework-agreements-to up-to-n-of N-FRAMEWORK-AGREEMENTS firms-that-buy-from-me [init-framework-agreement]
+;    create-framework-agreements-to up-to-n-of N-FRAMEWORK-AGREEMENTS firms-that-buy-from-me [init-framework-agreement]
     
     if consumer-good-firm? [
       set CONSUMER-GOOD-FIRMS (turtle-set CONSUMER-GOOD-FIRMS self)

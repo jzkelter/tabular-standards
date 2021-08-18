@@ -8,7 +8,7 @@
                     "Marginal productivity": 4
                 }
             ],
-            "Tech constant": 3,
+            "Tech constant": 3.75,
             "Firm count": 1,
             "Consumer?":true,
 	    "Intermediate?":false,
@@ -17,7 +17,7 @@
         {
             "Firm type": 2,
             "Input data":[],
-            "Tech constant": 3,
+            "Tech constant": 3.75,
             "Firm count": 0.25,
             "Consumer?":false,
 	    "Intermediate?":false,
