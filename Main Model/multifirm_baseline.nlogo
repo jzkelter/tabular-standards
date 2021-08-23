@@ -327,7 +327,6 @@ PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
-"pen-3" 1.0 0 -2674135 true "" "plot 4 * mean [input-demand-per-month 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 195
@@ -413,7 +412,7 @@ true
 PENS
 "demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
 "cg-output" 1.0 0 -5509967 true "" "plot sum [production-potential] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [production-potential] of PRIMARY-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [production-potential * 4] of PRIMARY-GOOD-FIRMS"
 
 PLOT
 1061
@@ -671,7 +670,6 @@ false
 PENS
 "consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
 "primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
-"pen-2" 1.0 0 -7500403 true "" "plot mean [previous-sales] of PRIMARY-GOOD-FIRMS"
 
 @#$#@#$#@
 ## WHAT IS IT?

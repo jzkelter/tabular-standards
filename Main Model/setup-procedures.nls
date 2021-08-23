@@ -224,7 +224,7 @@ to-report make-input-data-table [original-data]
     foreach original-data [i ->
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
-      table:put inputi "Current stock" 3000
+      table:put inputi "Current stock" 30 * n-households / n-firms
       table:put inputi "Monthly demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]

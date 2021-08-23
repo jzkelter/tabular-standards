@@ -52,9 +52,6 @@ to adjust-labor-and-price
     ]
   ])
   
-  ;right now price is skyrocketing...why? if we keep price stable would this stabilize with purchasing input goods? Right now it is lumpy so I removed the current stock addition... but it still underestimates the previous sales when compared to the total demand of consumers... most unfortunate.
-  ;transactions-per-month fix
-  
   let inventory-buffer 3 * n-households / n-firms
   
   ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
@@ -62,7 +59,7 @@ to adjust-labor-and-price
   
   if inventory < inventory-buffer [
     set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter
-  ]
+  ] 
   
   let ideal-n-workers ideal-output / tech-parameter
   let ideal-input-goods (list)
@@ -88,7 +85,7 @@ to adjust-labor-and-price
   
   let index-i 0
   foreach table:keys input-data [i ->
-    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods))
+    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) * transactions-per-month
     set index-i index-i + 1 
   ]
   
@@ -429,7 +426,7 @@ end
 to-report sell-good [amount-wanted current-price]  ; need to input current-price, because for input good firms it can be different for each framework agreement
   if amount-wanted < 0 [error "you cant want less than 0"]
   set demand demand + amount-wanted
-  let goods-sold min list amount-wanted inventory  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
+  let goods-sold min (list amount-wanted inventory)  ; sell the amount wanted, or if the firm doesn't have enough, then all remaining inventory
   set inventory inventory - goods-sold
   set previous-sales previous-sales + goods-sold
   if inventory < 0 [error "inventory cannot be negative"]
@@ -448,8 +445,7 @@ to buy-input-goods
     let remaining-demand input-demand-per-month i / transactions-per-month
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
-    
-    while [remaining-demand > total-demand and any? frameworks-to-try][
+    while [remaining-demand > 0.01 * total-demand and any? frameworks-to-try][
       let the-framework one-of frameworks-to-try
       let current-price 0
       ask the-framework [set current-price framework-price]
