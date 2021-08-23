@@ -115,7 +115,7 @@ to setup
     set all-positions-filled 0
     set demand max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers    
-    set inventory 50
+    set inventory 500
     set-input-demands   
     setup-equity-links
     set previous-sales max-production
@@ -147,7 +147,7 @@ to set-constants
   set AUTONOMOUS-CONSUMPTION 0         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
-  set FIRM-MEMORY-CONSTANT 0.7
+  set FIRM-MEMORY-CONSTANT 0.9
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -176,27 +176,29 @@ to setup-firms
   foreach FIRM-STRUCTURE[ f ->
     let group table:get f "Firm type"
     let firm-ratio table:get f "Firm count"
-    let firm-input-data make-input-data-table table:get f "Input data"
     let firm-tech-parameter table:get f "Tech constant"
     let is-consumer? table:get f "Consumer?"
     let is-intermediate? table:get f "Intermediate?"
     let is-primary? table:get f "Primary?"
-    create-firms ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
-      set shape "building store"
-      set tech-parameter firm-tech-parameter 
-      set price 1 * small-random-change
-      set firm-type group
-      set input-data firm-input-data
-      set wage-rate tech-parameter * transactions-per-month 
-      set consumer-good-firm? is-consumer?
-      set intermediate-good-firm? is-intermediate?
-      set primary-good-firm? is-primary?
-      set fired-worker? false
-      
-      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+    repeat ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
+      let firm-input make-input-data-table table:get f "Input data"
+      create-firms 1 [
+        set shape "building store"
+        set tech-parameter firm-tech-parameter 
+        set price 1 * small-random-change
+        set firm-type group
+        set input-data firm-input
+        set wage-rate tech-parameter * transactions-per-month 
+        set consumer-good-firm? is-consumer?
+        set intermediate-good-firm? is-intermediate?
+        set primary-good-firm? is-primary?
+        set fired-worker? false
+        
+        create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
             
-      set ycor 12 - random 5
-      if table:length input-data != 0 [set ycor ycor - 9]
+        set ycor 12 - random 5
+        if table:length input-data != 0 [set ycor ycor - 9]
+      ]
     ]
   ]
 end
@@ -222,7 +224,7 @@ to-report make-input-data-table [original-data]
     foreach original-data [i ->
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
-      table:put inputi "Current stock" 300
+      table:put inputi "Current stock" 3000
       table:put inputi "Monthly demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]
@@ -250,4 +252,12 @@ to setup-patches
       set pcolor scale-color black patch-health 0 200
     ]
   ]
+end
+
+to-report copy-table [ orig ]
+  let copy table:make
+  foreach ( table:keys orig ) [
+    [key] -> table:put copy key ( table:get orig key )
+  ]
+  report copy
 end

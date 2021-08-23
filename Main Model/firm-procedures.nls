@@ -155,9 +155,9 @@ to add-firm
     set desired-n-workers max (list 1 (floor (mean [previous-sales] of firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
     set all-positions-filled 0
-    set-input-demands
+    ;set-input-demands
     foreach table:keys input-data [i ->
-      set-stock i 3000
+      set-stock i 30 * n-households / n-firms
 ;      ask up-to-n-of N-FRAMEWORK-AGREEMENTS firms with [firm-type = i] [  
 ;        create-framework-agreement-to myself [init-framework-agreement]        
 ;      ]
@@ -307,6 +307,7 @@ to set-stock [input value]
   table:put current-input "Current stock" value
 end
 
+
 ;firm procedure, reports the marginal productivity of a given input as stored in the input information table
 to-report marginal-productivity [i]
   let input table:get input-data i
@@ -448,7 +449,7 @@ to buy-input-goods
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
     
-    while [remaining-demand >= total-demand and any? frameworks-to-try][
+    while [remaining-demand > total-demand and any? frameworks-to-try][
       let the-framework one-of frameworks-to-try
       let current-price 0
       ask the-framework [set current-price framework-price]
@@ -457,6 +458,7 @@ to buy-input-goods
       set liquidity liquidity - amount-bought * current-price
       set lifetime-profits lifetime-profits - amount-bought * current-price
       let current-amount current-stock i  
+      if amount-bought < 0 [error "cannot buy a negative amount"]
       set-stock i (current-amount + amount-bought)
       if liquidity < 0 and liquidity > -1E-5 [set liquidity 0]                   ; only fix rounding errors that go slightly under liquidity
       if liquidity < 0 [error "negative liquidity when buying input goods"]

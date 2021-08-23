@@ -671,8 +671,7 @@ false
 PENS
 "consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
 "primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
-"pen-2" 1.0 0 -2674135 true "" "plot mean [previous-sales] of PRIMARY-GOOD-FIRMS"
-"pen-3" 1.0 0 -13345367 true "" "plot 4 * mean [input-demand-per-month 2] of CONSUMER-GOOD-FIRMS"
+"pen-2" 1.0 0 -7500403 true "" "plot mean [previous-sales] of PRIMARY-GOOD-FIRMS"
 
 @#$#@#$#@
 ## WHAT IS IT?
