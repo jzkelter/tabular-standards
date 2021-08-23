@@ -50,7 +50,7 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-ussher
-  ;IF WE DO ROLLING INVENTORY, ADD IN LIST OF 24 INVENTORIES AND AVERAGE OVER WHOLE 
+  update-rolling-mean-inventory
   set ussher-index-value mean LAST-TWO-YEARS-PRIMARY-INVENTORY
 end
 

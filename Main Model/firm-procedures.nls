@@ -55,7 +55,7 @@ to adjust-labor-and-price
   let inventory-buffer 3 * n-households / n-firms
   
   ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
-  let ideal-output (ceiling (future-sales / tech-parameter)) * tech-parameter 
+  let ideal-output (ceiling (future-sales / tech-parameter)) * tech-parameter    ;for the month
   
   if inventory < inventory-buffer [
     set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter

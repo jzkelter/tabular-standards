@@ -153,7 +153,7 @@ PLOT
 495
 1055
 645
-worker per firm distribution
+Worker Per Firm Distribution
 NIL
 NIL
 0.0
@@ -205,7 +205,7 @@ PLOT
 497
 200
 647
-household liquidity distribution
+Household Liquidity Distribution
 NIL
 NIL
 0.0
@@ -223,7 +223,7 @@ PLOT
 187
 1334
 337
-mean price
+Mean Price
 NIL
 NIL
 0.0
@@ -276,7 +276,7 @@ PLOT
 185
 1055
 335
-monthly firm turnover
+Monthly Firm Turnover
 NIL
 NIL
 0.0
@@ -294,7 +294,7 @@ PLOT
 495
 850
 645
-mean demand not satisfied
+Mean Demand Not Satisfied
 NIL
 NIL
 0.0
@@ -569,7 +569,7 @@ n-firms
 n-firms
 10
 500
-25.0
+30.0
 10
 1
 NIL
@@ -584,7 +584,7 @@ framework-duration
 framework-duration
 1
 60
-1.0
+12.0
 1
 1
 NIL
@@ -598,7 +598,7 @@ CHOOSER
 index-in-use
 index-in-use
 "no index" "coates" "pringle" "ussher" "potvin"
-0
+3
 
 PLOT
 205
@@ -670,6 +670,24 @@ false
 PENS
 "consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
 "primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
+
+PLOT
+1340
+185
+1540
+335
+Mean Framework Price
+NIL
+NIL
+0.0
+10.0
+0.9
+1.1
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [framework-price] of framework-agreements"
 
 @#$#@#$#@
 ## WHAT IS IT?

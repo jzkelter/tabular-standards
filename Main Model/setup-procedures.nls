@@ -188,7 +188,7 @@ to setup-firms
         set price 1 * small-random-change
         set firm-type group
         set input-data firm-input
-        set wage-rate tech-parameter * transactions-per-month 
+        set wage-rate tech-parameter
         set consumer-good-firm? is-consumer?
         set intermediate-good-firm? is-intermediate?
         set primary-good-firm? is-primary?
