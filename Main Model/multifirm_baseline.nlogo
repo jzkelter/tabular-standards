@@ -327,6 +327,7 @@ PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
+"pen-3" 1.0 0 -2674135 true "" "plot 4 * mean [input-demand-per-month 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 195
@@ -378,25 +379,6 @@ NIL
 NIL
 NIL
 1
-
-PLOT
-650
-340
-850
-490
-Last 2 Years Primary Inventory
-NIL
-NIL
-0.0
-10.0
-0.0
-100.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean LAST-TWO-YEARS-PRIMARY-INVENTORY"
-"pen-1" 1.0 0 -8431303 true "" "plot sum [inventory] of PRIMARY-GOOD-FIRMS"
 
 SLIDER
 0
@@ -588,7 +570,7 @@ n-firms
 n-firms
 10
 500
-40.0
+30.0
 10
 1
 NIL
@@ -670,6 +652,27 @@ false
 "" ""
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
+
+PLOT
+650
+340
+850
+490
+average-previous-sales
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
+"primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
+"pen-2" 1.0 0 -2674135 true "" "plot mean [previous-sales] of PRIMARY-GOOD-FIRMS"
+"pen-3" 1.0 0 -13345367 true "" "plot 4 * mean [input-demand-per-month 2] of CONSUMER-GOOD-FIRMS"
 
 @#$#@#$#@
 ## WHAT IS IT?

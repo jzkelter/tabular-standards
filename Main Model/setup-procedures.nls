@@ -118,6 +118,8 @@ to setup
     set inventory 50
     set-input-demands   
     setup-equity-links
+    set previous-sales max-production
+    set average-previous-sales max-production
   ]
   
   
@@ -135,17 +137,17 @@ to set-constants
   set MIN-WAGE-RATE 2.5
   set MAX-WAGE-GROWTH 0.019                
   set MONTHS-TO-LOWER-WAGE 1              
-  set MAX-PRICE-GROWTH 0.2                 
+  set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 2               
   set DIMINISHING-UTILITY-CONSTANT 0.3     
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
   set N-FRAMEWORK-AGREEMENTS 7             
-  set AUTONOMOUS-CONSUMPTION 0.1         
+  set AUTONOMOUS-CONSUMPTION 0         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
-  set FIRM-MEMORY-CONSTANT 0.9
+  set FIRM-MEMORY-CONSTANT 0.7
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -220,7 +222,7 @@ to-report make-input-data-table [original-data]
     foreach original-data [i ->
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
-      table:put inputi "Current stock" 30
+      table:put inputi "Current stock" 300
       table:put inputi "Monthly demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]

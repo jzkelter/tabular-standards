@@ -40,30 +40,74 @@ end
 ;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
 to adjust-labor-and-price
   let future-sales average-previous-sales
-  (ifelse future-sales >= max-production [ 
+  (ifelse future-sales > production-potential [ 
     ;excess demand
-    (ifelse price > (mean [price] of firms-with-my-type) [ 
-      set desired-n-workers ceiling (future-sales / tech-parameter) ; excess demand and price is already higher than average, decrease output
-    ] [
+    if price < (mean [price] of other firms-with-my-type) [ 
       set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-    ])
+    ]
   ] [
     ;excess supply
-    (ifelse price < (mean [price] of firms-with-my-type) [
-      set desired-n-workers ceiling (future-sales / tech-parameter) ; excess supply and price is already lower than average, increase output.
-    ] [  
-      set price max (list (wage-rate / tech-parameter) (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-    ])
+    if price > (mean [price] of other firms-with-my-type) [
+      set price max (list estimate-marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+    ]
   ])
+  
+  ;right now price is skyrocketing...why? if we keep price stable would this stabilize with purchasing input goods? Right now it is lumpy so I removed the current stock addition... but it still underestimates the previous sales when compared to the total demand of consumers... most unfortunate.
+  ;transactions-per-month fix
+  
+  let inventory-buffer 3 * n-households / n-firms
+  
+  ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
+  let ideal-output (ceiling (future-sales / tech-parameter)) * tech-parameter 
+  
+  if inventory < inventory-buffer [
+    set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter
+  ]
+  
+  let ideal-n-workers ideal-output / tech-parameter
+  let ideal-input-goods (list)
+  let total-price-of-goods ideal-n-workers * wage-rate
+  foreach table:keys input-data [i ->
+    ; set ideal input as the production minus the current amount
+    let ideal-input-amount max (list 0 (ideal-output / (marginal-productivity i))) ;- (current-stock i)))
+    set ideal-input-goods lput ideal-input-amount ideal-input-goods 
+    
+    ; estimate the price of purchasing the ideal goods by taking the mean framework-price of all framework-agreements
+    let estimated-price mean [framework-price] of my-framework-agreements with [input-firm-type = i]
+    set total-price-of-goods total-price-of-goods + (ideal-input-amount * estimated-price)
+  ]
+  
+  ; now we need to find the actual amount that we can afford, given our liquidity...represent this as a multiplier of the ideal-input-amount
+  let liquidity-limiter 1 
+  if total-price-of-goods > liquidity [
+    set liquidity-limiter liquidity / total-price-of-goods
+  ]
+  
+  ; we choose to round DOWN desired-n-workers now due to liquidity being a limiting factor
+  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)
+  
+  let index-i 0
+  foreach table:keys input-data [i ->
+    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods))
+    set index-i index-i + 1 
+  ]
+  
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
-  if demand > average-previous-sales [
-    set desired-n-workers (demand + 3 * average-previous-sales) / 4 / tech-parameter
-  ] 
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
 to estimate-future-sales
   set average-previous-sales average-previous-sales * FIRM-MEMORY-CONSTANT + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
+end
+
+;firm procedure, determines the marginal cost to produce a single good
+to-report estimate-marginal-cost 
+  let estimated-cost wage-rate / tech-parameter     ; price of labor to produce per one unit of good
+  foreach table:keys input-data [i ->
+    let estimated-price mean [framework-price] of my-framework-agreements with [input-firm-type = i]
+    set estimated-cost estimated-cost + estimated-price / (marginal-productivity i)
+  ]
+  report estimated-cost
 end
 
 ;firm procedure, decides whether or not to fire a worker at the end of the next time period
@@ -72,6 +116,7 @@ to decide-fire-worker
     ask one-of my-employment-links [die]
   ]
 end
+
 
 ;firm procedure, determines whether exit is an appropriate response for the firm this period
 to remove-firm
@@ -112,7 +157,7 @@ to add-firm
     set all-positions-filled 0
     set-input-demands
     foreach table:keys input-data [i ->
-      set-stock i 0
+      set-stock i 3000
 ;      ask up-to-n-of N-FRAMEWORK-AGREEMENTS firms with [firm-type = i] [  
 ;        create-framework-agreement-to myself [init-framework-agreement]        
 ;      ]
@@ -402,11 +447,12 @@ to buy-input-goods
     let remaining-demand input-demand-per-month i / transactions-per-month
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
-    while [remaining-demand >= (0.05 * total-demand) and any? frameworks-to-try][
+    
+    while [remaining-demand >= total-demand and any? frameworks-to-try][
       let the-framework one-of frameworks-to-try
       let current-price 0
       ask the-framework [set current-price framework-price]
-      let goods-wanted min (list total-demand (liquidity / current-price))
+      let goods-wanted min (list remaining-demand (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
       set lifetime-profits lifetime-profits - amount-bought * current-price
@@ -434,7 +480,7 @@ to-report n-out-agreements
   report count my-out-framework-agreements
 end
 
-;firm procedure, reports the input type of a framework agreement
+;framework-agreement procedure, reports the input type of a framework agreement
 to-report input-firm-type
    report [firm-type] of end1
 end

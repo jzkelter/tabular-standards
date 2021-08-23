@@ -102,7 +102,7 @@ to set-consumption
   let money-to-spend 0
   let autonomous-consumption-in-dollars (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors)
   
-  set money-to-spend min (list liquidity (liquidity ^ DIMINISHING-UTILITY-CONSTANT))
+  set money-to-spend min (list liquidity (liquidity ^ DIMINISHING-UTILITY-CONSTANT + autonomous-consumption-in-dollars))
   
   ;let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
   ;if count consumer-link-neighbors > 0 [
