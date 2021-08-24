@@ -146,7 +146,7 @@ PENS
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Marginal Prod. Labor" 1.0 0 -955883 true "" "plot mean [tech-parameter] of firms"
+"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of firms"
 
 PLOT
 855
@@ -238,10 +238,10 @@ PENS
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
-252
-10
-325
-43
+1040
+150
+1113
+183
 bmonth-f
 go-beginning-of-month-firms\n
 NIL
@@ -255,10 +255,10 @@ NIL
 1
 
 BUTTON
-406
-10
-501
-43
+1194
+150
+1289
+183
 go-month
 go-month\n
 NIL
@@ -329,10 +329,10 @@ PENS
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-195
-10
-250
-43
+983
+150
+1038
+183
 dsetup
 \nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
 NIL
@@ -346,10 +346,10 @@ NIL
 1
 
 BUTTON
-502
-10
-646
-43
+1290
+150
+1434
+183
 go-end-of-month
 go-end-of-month\ntick\n
 NIL
@@ -363,10 +363,10 @@ NIL
 1
 
 BUTTON
-327
-10
-404
-43
+1115
+150
+1192
+183
 bmonth-h
 go-beginning-of-month-households\n
 NIL
@@ -584,7 +584,7 @@ framework-duration
 framework-duration
 1
 60
-12.0
+9.0
 1
 1
 NIL
@@ -598,7 +598,7 @@ CHOOSER
 index-in-use
 index-in-use
 "no index" "coates" "pringle" "ussher" "potvin"
-3
+4
 
 PLOT
 205
@@ -688,6 +688,36 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [framework-price] of framework-agreements"
+
+TEXTBOX
+210
+10
+495
+31
+Economic Petri Dish\n
+16
+0.0
+1
+
+TEXTBOX
+210
+35
+360
+53
+https://ccl.northwestern.edu/
+11
+0.0
+1
+
+TEXTBOX
+525
+35
+675
+53
+https://xalgorithms.org/
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

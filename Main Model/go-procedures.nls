@@ -27,8 +27,7 @@ to go-beginning-of-month-firms
     if liquidity <= wage-rate [  
       remove-firm
     ]
-    estimate-future-sales
-    ;set-input-demands    currently commented out so that we can add it to adjust-labor-and-price
+    calculate-average-sales
     foreach table:keys input-data[i ->
       ;search-new-in-framework-agreements i
       guarantee-framework-links i
@@ -36,7 +35,7 @@ to go-beginning-of-month-firms
       ;search-delivery-capable-seller i
     ]
     adjust-wage-rate
-    adjust-labor-and-price
+    adjust-output-and-price
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month  
     

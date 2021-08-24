@@ -38,9 +38,9 @@ to adjust-wage-rate
 end
 
 ;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
-to adjust-labor-and-price
-  let future-sales average-previous-sales
-  (ifelse future-sales > production-potential [ 
+to adjust-output-and-price
+  let expected-future-sales average-previous-sales
+  (ifelse expected-future-sales > production-potential [ 
     ;excess demand
     if price < (mean [price] of other firms-with-my-type) [ 
       set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
@@ -52,11 +52,12 @@ to adjust-labor-and-price
     ]
   ])
   
-  let inventory-buffer 3 * n-households / n-firms
-  
   ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
-  let ideal-output (ceiling (future-sales / tech-parameter)) * tech-parameter    ;for the month
+  let ideal-output (ceiling (expected-future-sales / tech-parameter)) * tech-parameter    ;for the month
+  ;ideal output -> ideal-post-production-inventory
+  ;ideal-post-production-inventory = (1 + buffer-percentage) * expected-future-sales
   
+  let inventory-buffer 3 * n-households / n-firms
   if inventory < inventory-buffer [
     set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter
   ] 
@@ -93,7 +94,7 @@ to adjust-labor-and-price
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
-to estimate-future-sales
+to calculate-average-sales
   set average-previous-sales average-previous-sales * FIRM-MEMORY-CONSTANT + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
 end
 
@@ -400,6 +401,8 @@ to set-demand-per-month [i value]
   table:put input-data i input
 end
 
+
+;NOT CURRENTLY USED, OUTPUT COMPLETELY CALCULATED IN ADJUST OUTPUT AND PRICE
 ;firm procedure, sets the daily demands for all inputs by calling set-daily-demand, demand is determined by current stock and inventories
 to set-input-demands
   let estimated-demand demand
