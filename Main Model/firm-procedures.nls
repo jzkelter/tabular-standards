@@ -9,7 +9,7 @@ firms-own [
   wage-rate                        
   liquidity                        ; i.e. money currently available
   
-  all-positions-filled             ; consecutive months that firms have filled every position they desired
+  months-without-vacancies         ; consecutive months that firms have filled every position they desired
   fired-worker?                    ; flag triggered if during pay-wages a firm had to fire a worker. This is used when determining wage.
   
   desired-n-workers                ; represents the desired number of workers for the month
@@ -30,9 +30,9 @@ firms-own [
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
 to adjust-wage-rate  
-  (ifelse all-positions-filled = 0 and desired-n-workers > n-workers and not fired-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
+  (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not fired-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
     set wage-rate (1 + random-float MAX-WAGE-GROWTH) * wage-rate
-  ] all-positions-filled >= MONTHS-TO-LOWER-WAGE or fired-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
+  ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or fired-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
     set wage-rate max (list ((1 - random-float MAX-WAGE-GROWTH) * wage-rate) MIN-WAGE-RATE)
   ])
 end
@@ -40,7 +40,7 @@ end
 ;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
 to adjust-output-and-price
   let expected-future-sales average-previous-sales
-  (ifelse expected-future-sales > production-potential [ 
+  (ifelse expected-future-sales > max-production [ 
     ;excess demand
     if price < (mean [price] of other firms-with-my-type) [ 
       set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
@@ -62,16 +62,17 @@ to adjust-output-and-price
     set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter
   ] 
   
-  let ideal-n-workers ideal-output / tech-parameter
+  let ideal-n-workers max (list 1 (ideal-output / tech-parameter))
   let ideal-input-goods (list)
   let total-price-of-goods ideal-n-workers * wage-rate
   foreach table:keys input-data [i ->
     ; set ideal input as the production minus the current amount
-    let ideal-input-amount max (list 0 (ideal-output / (marginal-productivity i))) ;- (current-stock i)))
+    let ideal-input-amount (ideal-output / (marginal-productivity i)) ; - current stock...?
+    if ideal-input-amount < 0 [error "ideal input amount is negative"]
     set ideal-input-goods lput ideal-input-amount ideal-input-goods 
     
     ; estimate the price of purchasing the ideal goods by taking the mean framework-price of all framework-agreements
-    let estimated-price mean [framework-price] of my-framework-agreements with [input-firm-type = i]
+    let estimated-price (estimate-price i)
     set total-price-of-goods total-price-of-goods + (ideal-input-amount * estimated-price)
   ]
   
@@ -86,30 +87,31 @@ to adjust-output-and-price
   
   let index-i 0
   foreach table:keys input-data [i ->
-    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) * transactions-per-month
+    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) 
     set index-i index-i + 1 
   ]
   
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  fire-workers
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
 to calculate-average-sales
-  set average-previous-sales average-previous-sales * FIRM-MEMORY-CONSTANT + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
+  set average-previous-sales FIRM-MEMORY-CONSTANT * average-previous-sales  + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
 end
 
-;firm procedure, determines the marginal cost to produce a single good
+;firm procedure, determines the marginal cost
 to-report estimate-marginal-cost 
-  let estimated-cost wage-rate / tech-parameter     ; price of labor to produce per one unit of good
-  foreach table:keys input-data [i ->
-    let estimated-price mean [framework-price] of my-framework-agreements with [input-firm-type = i]
-    set estimated-cost estimated-cost + estimated-price / (marginal-productivity i)
-  ]
-  report estimated-cost
+  report sum (map [i -> (estimate-price i) / (marginal-productivity i)] table:keys input-data)
 end
 
-;firm procedure, decides whether or not to fire a worker at the end of the next time period
-to decide-fire-worker
+;firm procedure, estimates the price of a given input good for a firm
+to-report estimate-price [input-i]
+  report mean [framework-price] of my-framework-agreements with [input-firm-type = input-i]
+end
+
+;firm procedure, fires all workers that firm does not want
+to fire-workers
   if desired-n-workers < n-workers and n-workers > 0 [  
     ask one-of my-employment-links [die]
   ]
@@ -152,10 +154,10 @@ to add-firm
     set lifetime-profits liquidity * -1
     set desired-n-workers max (list 1 (floor (mean [previous-sales] of firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
-    set all-positions-filled 0
+    set months-without-vacancies 0
     ;set-input-demands
     foreach table:keys input-data [i ->
-      set-stock i 30 * n-households / n-firms
+      set-stock i 0
 ;      ask up-to-n-of N-FRAMEWORK-AGREEMENTS firms with [firm-type = i] [  
 ;        create-framework-agreement-to myself [init-framework-agreement]        
 ;      ]
@@ -217,6 +219,17 @@ to-report raise-funds
   report STARTUP-LIQUIDITY
 end
 
+to search-for-framework-agreements
+  foreach table:keys input-data[i ->
+    ;search-new-in-framework-agreements i
+    guarantee-framework-links i
+  ]
+  if not consumer-good-firm? [
+    ;search-new-out-framework-agreements 
+  ] 
+end
+
+;We either use guarantee-framework-links or the two following procedures (search-new-___-framework-agreements)
 ;firm procedure, guarantees the correct number of trading links per consumer good firm after removing any expired 
 to guarantee-framework-links [input-i]
   ask my-framework-agreements with [expiration-date >= month] [
@@ -232,8 +245,14 @@ end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with a given input
 to search-new-in-framework-agreements [input-i]
-  repeat new-agreements-per-month [
-    if random-float 1 < 0.5 [
+  ifelse mean-new-agreements-per-month < 1 [ 
+    if random-float 1 < mean-new-agreements-per-month [
+      create-framework-agreements-from up-to-n-of 1 firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
+        init-framework-agreement
+      ]
+    ]
+  ] [
+    repeat floor mean-new-agreements-per-month [
       create-framework-agreements-from up-to-n-of 1 firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
         init-framework-agreement
       ]
@@ -243,9 +262,15 @@ end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with the firms output
 to search-new-out-framework-agreements 
-  repeat new-agreements-per-month [
-    if random-float 1 < 0.5 [
-      create-framework-agreements-to up-to-n-of 1 firms-that-buy-from-me [
+  ifelse mean-new-agreements-per-month < 1 [ 
+    if random-float 1 < mean-new-agreements-per-month [
+      create-framework-agreements-to up-to-n-of 1 firms-that-can-buy-from-me [
+        init-framework-agreement
+      ]
+    ]
+  ] [
+    repeat floor mean-new-agreements-per-month [
+      create-framework-agreements-to up-to-n-of 1 firms-that-can-buy-from-me [
         init-framework-agreement
       ]
     ]
@@ -256,8 +281,9 @@ end
 to check-framework-profitability
   let my-wage wage-rate
   let my-tech tech-parameter
+  let my-input-goods-cost estimate-marginal-cost
   ask my-framework-agreements [
-    if framework-price < my-wage / my-tech [     ;if it is no longer profitable to continue, kill the framework agreement
+    if framework-price < my-wage / my-tech + my-input-goods-cost [     ;if it is no longer profitable to continue, kill the framework agreement
       die
     ]
   ]
@@ -324,7 +350,7 @@ to produce-goods
   use-inputs production-amount
 end
 
-;firm procedure, pays wages to workers based on formula in Lengnick paper
+;firm procedure, pays wages to workers
 to pay-wages
   set fired-worker? false
   if n-workers > 0 [
@@ -333,7 +359,6 @@ to pay-wages
       set fired-worker? true
     ]
     set liquidity precision (liquidity - wage-rate * n-workers) 10
-    set lifetime-profits lifetime-profits - (wage-rate * n-workers)
     if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
     let temp-wr wage-rate
     ask employment-link-neighbors [set liquidity liquidity + temp-wr]
@@ -349,6 +374,7 @@ to distribute-profits
     set liquidity buffer
     ;; distribute profits proportionately to initial investment
     let profits-to-be-allocated profits-to-allocate
+    set lifetime-profits lifetime-profits + profits-to-be-allocated
     let total-equity sum [equity] of my-equity-links
     ask my-equity-links [
       if equity < 0 [error "equity must be positive"]
@@ -367,7 +393,7 @@ end
 
 ;firm procedure, decides how much to hold for distribution to households and for savings
 to-report decide-reserve  
-  report BUFFER-LABOR-FRACTION * wage-rate * n-workers + STARTUP-LIQUIDITY 
+  report BUFFER-LABOR-FRACTION * wage-rate * n-workers
 end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
@@ -435,7 +461,6 @@ to-report sell-good [amount-wanted current-price]  ; need to input current-price
   if inventory < 0 [error "inventory cannot be negative"]
   let value-sold goods-sold * current-price
   set liquidity liquidity + value-sold
-  set lifetime-profits lifetime-profits + value-sold
   set TOTAL-REVENUE TOTAL-REVENUE + value-sold
   report goods-sold
 end
@@ -449,13 +474,12 @@ to buy-input-goods
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
     while [remaining-demand > 0.01 * total-demand and any? frameworks-to-try][
-      let the-framework one-of frameworks-to-try
+      let the-framework one-of frameworks-to-try 
       let current-price 0
       ask the-framework [set current-price framework-price]
       let goods-wanted min (list remaining-demand (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
       set liquidity liquidity - amount-bought * current-price
-      set lifetime-profits lifetime-profits - amount-bought * current-price
       let current-amount current-stock i  
       if amount-bought < 0 [error "cannot buy a negative amount"]
       set-stock i (current-amount + amount-bought)
@@ -497,7 +521,7 @@ to-report firms-with-my-type
 end
 
 ;firm procedure, reports an agentset of firms that can buy input goods from the caller
-to-report firms-that-buy-from-me
+to-report firms-that-can-buy-from-me
   let my-firm-type firm-type
   report firms with [member? my-firm-type table:keys input-data]
 end
@@ -522,6 +546,6 @@ to-report framework-price
 end
 
 to-report choose-index
-  let indices (list "no index"  "pringle" "coates" "ussher" "potvin")
+  let indices (list "no index"  "pringle" "coats" "ussher" "potvin")
   report position index-in-use indices ; right now we always use the same index determined by the index-in-use chooser
 end

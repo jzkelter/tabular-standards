@@ -1,4 +1,4 @@
-;;; THINGS THAT MIGHT BE OFF
+;; THINGS THAT MIGHT BE OFF
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
@@ -146,7 +146,7 @@ PENS
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 "median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of firms"
+"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of firms - mean [marginal-productivity 2 * price] of PRIMARY-GOOD-FIRMS "
 
 PLOT
 855
@@ -382,13 +382,13 @@ NIL
 SLIDER
 0
 180
-173
+170
 213
 transactions-per-month
 transactions-per-month
 1
 21
-1.0
+2.0
 1
 1
 NIL
@@ -577,14 +577,14 @@ HORIZONTAL
 
 SLIDER
 0
-217
-172
-250
+215
+170
+248
 framework-duration
 framework-duration
 1
 60
-9.0
+1.0
 1
 1
 NIL
@@ -597,8 +597,8 @@ CHOOSER
 103
 index-in-use
 index-in-use
-"no index" "coates" "pringle" "ussher" "potvin"
-4
+"no index" "coats" "pringle" "ussher" "potvin"
+0
 
 PLOT
 205
@@ -617,15 +617,15 @@ true
 "" ""
 PENS
 "Bankrupt " 1.0 0 -1184463 true "" "plot mean BANKRUPT-FIRM-PROFITS"
-"All" 1.0 0 -16777216 true "" "plot mean ALL-FIRM-PROFITS"
+"In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
 
 SLIDER
 0
 250
-175
+200
 283
-new-agreements-per-month
-new-agreements-per-month
+mean-new-agreements-per-month
+mean-new-agreements-per-month
 1
 10
 1.0

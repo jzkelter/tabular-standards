@@ -51,7 +51,7 @@ end
 ;observer procedure, recalculates the current index
 to recalculate-index-ussher
   update-rolling-mean-inventory
-  set ussher-index-value mean LAST-TWO-YEARS-PRIMARY-INVENTORY
+  set ussher-index-value mean PRIMARY-INVENTORY-VALUE-HISTORY
 end
 
 ;observer procedure, recalculates the current index
@@ -77,9 +77,9 @@ end
 ;observer procedure, recalculates rolling average of the sum of past two years inventory
 to update-rolling-mean-inventory
   ifelse month < 24 [
-    set LAST-TWO-YEARS-PRIMARY-INVENTORY lput (sum [inventory * price] of PRIMARY-GOOD-FIRMS) LAST-TWO-YEARS-PRIMARY-INVENTORY 
+    set PRIMARY-INVENTORY-VALUE-HISTORY lput (sum [inventory * price] of PRIMARY-GOOD-FIRMS) PRIMARY-INVENTORY-VALUE-HISTORY 
   ] [
-    set LAST-TWO-YEARS-PRIMARY-INVENTORY replace-item (month mod 24) LAST-TWO-YEARS-PRIMARY-INVENTORY (sum [inventory * price] of PRIMARY-GOOD-FIRMS)
+    set PRIMARY-INVENTORY-VALUE-HISTORY lput (sum [inventory * price] of PRIMARY-GOOD-FIRMS) but-first PRIMARY-INVENTORY-VALUE-HISTORY 
   ]
 end
 

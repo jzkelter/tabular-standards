@@ -123,7 +123,7 @@ to buy-consumption-goods  ; household procedure
     
     if liquidity < 0 [error "negative liquidity"] 
     
-    let goods-wanted min list remaining-demand (liquidity / [price] of the-firm)  ; demand is demanded-consumption or as much as the buyer could afford. Note, Lengnick doesn't explain exactly how demand is calculated.
+    let goods-wanted min list remaining-demand (liquidity / [price] of the-firm)  ; demand is remaining-demand or as much as the buyer could afford.
     if goods-wanted < 0 [ error "must want more than 0 goods"]
     let amount-bought [sell-good goods-wanted price] of the-firm
 
