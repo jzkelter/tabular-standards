@@ -55,6 +55,7 @@ globals [
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
   FIRM-MEMORY-CONSTANT             ; how much weighting a firm will put on current information vs. previous information
+  DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
   
   month                            ; the current tick
   pringle-index-value              ; index id: 1
@@ -148,6 +149,7 @@ to set-constants
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
   set FIRM-MEMORY-CONSTANT 0.9
+  set DESIRED-BUFFER-PERCENT 0.5
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"

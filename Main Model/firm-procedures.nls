@@ -53,21 +53,24 @@ to adjust-output-and-price
   ])
   
   ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
-  let ideal-output (ceiling (expected-future-sales / tech-parameter)) * tech-parameter    ;for the month
-  ;ideal output -> ideal-post-production-inventory
-  ;ideal-post-production-inventory = (1 + buffer-percentage) * expected-future-sales
+  let ideal-post-production-inventory expected-future-sales
+  let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
+  (ifelse inventory < ideal-buffer [
+    set ideal-post-production-inventory ideal-post-production-inventory + (ideal-buffer - inventory) 
+  ] inventory > (ideal-buffer * 1.2) [
+    set ideal-post-production-inventory ideal-post-production-inventory - (inventory - ideal-buffer * 1.2)
+    set ideal-post-production-inventory max (list 0 ideal-post-production-inventory)
+  ])
   
-  let inventory-buffer 3 * n-households / n-firms
-  if inventory < inventory-buffer [
-    set ideal-output ideal-output + (ceiling (inventory-buffer - inventory) / tech-parameter) * tech-parameter
-  ] 
+  ;now fix it to be evenly divisible by the tech-parameter
+  set ideal-post-production-inventory (ceiling (ideal-post-production-inventory / tech-parameter)) * tech-parameter  
   
-  let ideal-n-workers max (list 1 (ideal-output / tech-parameter))
+  let ideal-n-workers max (list 1 (ideal-post-production-inventory / tech-parameter))
   let ideal-input-goods (list)
   let total-price-of-goods ideal-n-workers * wage-rate
   foreach table:keys input-data [i ->
     ; set ideal input as the production minus the current amount
-    let ideal-input-amount (ideal-output / (marginal-productivity i)) ; - current stock...?
+    let ideal-input-amount (ideal-post-production-inventory / (marginal-productivity i)) ; - current stock...?
     if ideal-input-amount < 0 [error "ideal input amount is negative"]
     set ideal-input-goods lput ideal-input-amount ideal-input-goods 
     

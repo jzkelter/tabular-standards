@@ -87,7 +87,6 @@ to go-end-of-month
   set ALL-FIRM-PROFITS BANKRUPT-FIRM-PROFITS       ; reset all-firm-profits
   ask firms [
     set ALL-FIRM-PROFITS (lput lifetime-profits ALL-FIRM-PROFITS)
-    decide-fire-worker
   ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set-firm-xcor
