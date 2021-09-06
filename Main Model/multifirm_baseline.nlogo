@@ -381,14 +381,14 @@ NIL
 
 SLIDER
 0
-180
+175
 170
-213
+208
 transactions-per-month
 transactions-per-month
 1
 21
-2.0
+1.0
 1
 1
 NIL
@@ -525,7 +525,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
 1186
@@ -562,9 +562,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 0
-145
+140
 172
-178
+173
 n-firms
 n-firms
 10
@@ -577,9 +577,9 @@ HORIZONTAL
 
 SLIDER
 0
-215
+210
 170
-248
+243
 framework-duration
 framework-duration
 1
@@ -621,9 +621,9 @@ PENS
 
 SLIDER
 0
-250
+245
 200
-283
+278
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 1
@@ -718,6 +718,21 @@ https://xalgorithms.org/
 11
 0.0
 1
+
+SLIDER
+0
+280
+172
+313
+firm-memory-constant
+firm-memory-constant
+0
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1113,43 +1128,6 @@ NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-  </experiment>
   <experiment name="single-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
 repeat 200 [go]
@@ -1260,6 +1238,83 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     <enumeratedValueSet variable="new-agreements-per-month">
       <value value="1"/>
     </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_varying_memory_constant" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 1000 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean [lifetime-profits] of firms</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="firm-memory-constant" first="0" step="0.1" last="0.9"/>
   </experiment>
 </experiments>
 @#$#@#$#@

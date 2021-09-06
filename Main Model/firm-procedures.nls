@@ -40,38 +40,37 @@ end
 ;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
 to adjust-output-and-price
   let expected-future-sales average-previous-sales
-  (ifelse expected-future-sales > max-production [ 
-    ;excess demand
-    if price < (mean [price] of other firms-with-my-type) [ 
-      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-    ]
-  ] [
-    ;excess supply
-    if price > (mean [price] of other firms-with-my-type) [
-      set price max (list estimate-marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-    ]
-  ])
   
   ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
-  let ideal-post-production-inventory expected-future-sales
+  let ideal-production expected-future-sales    ; we will chnage this later to find the true production amount given inventory
   let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
-  (ifelse inventory < ideal-buffer [
-    set ideal-post-production-inventory ideal-post-production-inventory + (ideal-buffer - inventory) 
-  ] inventory > (ideal-buffer * 1.2) [
-    set ideal-post-production-inventory ideal-post-production-inventory - (inventory - ideal-buffer * 1.2)
-    set ideal-post-production-inventory max (list 0 ideal-post-production-inventory)
-  ])
+  
+  (ifelse inventory < ideal-buffer [ ;ideal-post-production-inventory is ideal-buffer
+    set ideal-production ideal-production + (ideal-buffer - inventory) 
+  ] inventory > (ideal-buffer * 1.2) [ ;ideal-post-production-inventory is 1.2 * ideal-buffer
+    set ideal-production ideal-production - (inventory - ideal-buffer * 1.2)
+    set ideal-production max (list 0 ideal-production)
+  ]) ;ELSE, ideal-post-production-inventory is somewhere in between these two numbers
   
   ;now fix it to be evenly divisible by the tech-parameter
-  set ideal-post-production-inventory (ceiling (ideal-post-production-inventory / tech-parameter)) * tech-parameter  
+  set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter  
   
-  let ideal-n-workers max (list 1 (ideal-post-production-inventory / tech-parameter))
+  let ideal-n-workers max (list 1 (ideal-production / tech-parameter))
   let ideal-input-goods (list)
   let total-price-of-goods ideal-n-workers * wage-rate
   foreach table:keys input-data [i ->
     ; set ideal input as the production minus the current amount
-    let ideal-input-amount (ideal-post-production-inventory / (marginal-productivity i)) ; - current stock...?
+    let ideal-input-amount (ideal-production / (marginal-productivity i)) 
     if ideal-input-amount < 0 [error "ideal input amount is negative"]
+    let ideal-input-buffer ideal-buffer / (marginal-productivity i)
+    
+    (ifelse (current-stock i) < ideal-input-buffer [
+      set ideal-input-amount ideal-input-amount + ideal-input-buffer - (current-stock i) 
+    ] (current-stock i) > ideal-input-buffer * 1.2 [
+      set ideal-input-amount ideal-input-amount - ((current-stock i) - ideal-input-buffer * 1.2)
+      set ideal-input-amount max (list 0 ideal-input-amount)
+    ])
+    
     set ideal-input-goods lput ideal-input-amount ideal-input-goods 
     
     ; estimate the price of purchasing the ideal goods by taking the mean framework-price of all framework-agreements
@@ -95,16 +94,44 @@ to adjust-output-and-price
   ]
   
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  
+  let expected-post-production-inventory desired-n-workers * tech-parameter + inventory
+;  (ifelse expected-future-sales > max-production [ 
+;    ;excess demand
+;    if price < (mean [price] of other firms-with-my-type) [ 
+;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
+;    ]
+;  ] [
+;    ;excess supply
+;    if price > (mean [price] of other firms-with-my-type) [
+;     let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+;      set price max (list estimate-marginal-cost-of-input-goods (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+;    ]
+;  ])
+  
+  (ifelse liquidity-limiter < 1 [ 
+    ;excess demand 
+    if price < (mean [price] of other firms-with-my-type) [
+      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
+    ]
+  ] [
+    ;excess supply
+    if price > (mean [price] of other firms-with-my-type) [
+      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+    ]
+  ])
+  
   fire-workers
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
 to calculate-average-sales
-  set average-previous-sales FIRM-MEMORY-CONSTANT * average-previous-sales  + (1 - FIRM-MEMORY-CONSTANT) * previous-sales
+  set average-previous-sales firm-memory-constant * average-previous-sales  + (1 - firm-memory-constant) * previous-sales
 end
 
-;firm procedure, determines the marginal cost
-to-report estimate-marginal-cost 
+;firm procedure, determines the marginal cost of purchasing input goods to produce a single good
+to-report estimate-marginal-cost-of-input-goods
   report sum (map [i -> (estimate-price i) / (marginal-productivity i)] table:keys input-data)
 end
 
@@ -155,7 +182,7 @@ to add-firm
     set wage-rate mean [wage-rate] of firms-with-my-type
     set liquidity raise-funds
     set lifetime-profits liquidity * -1
-    set desired-n-workers max (list 1 (floor (mean [previous-sales] of firms-with-my-type / tech-parameter)))
+    set desired-n-workers max (list 1 (floor (mean [average-previous-sales] of firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
     set months-without-vacancies 0
     ;set-input-demands
@@ -284,7 +311,7 @@ end
 to check-framework-profitability
   let my-wage wage-rate
   let my-tech tech-parameter
-  let my-input-goods-cost estimate-marginal-cost
+  let my-input-goods-cost estimate-marginal-cost-of-input-goods
   ask my-framework-agreements [
     if framework-price < my-wage / my-tech + my-input-goods-cost [     ;if it is no longer profitable to continue, kill the framework agreement
       die

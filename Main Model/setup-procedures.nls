@@ -54,7 +54,6 @@ globals [
   AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
-  FIRM-MEMORY-CONSTANT             ; how much weighting a firm will put on current information vs. previous information
   DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
   
   month                            ; the current tick
@@ -111,15 +110,18 @@ to setup
   ]
 
   ask firms [
-    set liquidity STARTUP-LIQUIDITY
+    set liquidity n-households / n-firms / 4 * STARTUP-LIQUIDITY
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
     set demand max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers    
-    set inventory 100
     set-input-demands   
     setup-equity-links
     set previous-sales max-production
+    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
+    foreach table:keys input-data [ i ->
+      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales); / (marginal-productivity i))
+    ]
     set average-previous-sales max-production
   ]
   
@@ -139,8 +141,8 @@ to set-constants
   set MAX-WAGE-GROWTH 0.019                
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.05                 
-  set BUFFER-LABOR-FRACTION 2               
-  set DIMINISHING-UTILITY-CONSTANT 0.3     
+  set BUFFER-LABOR-FRACTION 3               
+  set DIMINISHING-UTILITY-CONSTANT 0.3    
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
@@ -148,7 +150,6 @@ to set-constants
   set AUTONOMOUS-CONSUMPTION 0         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
-  set FIRM-MEMORY-CONSTANT 0.9
   set DESIRED-BUFFER-PERCENT 0.5
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
@@ -226,7 +227,7 @@ to-report make-input-data-table [original-data]
     foreach original-data [i ->
       let inputi table:make
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
-      table:put inputi "Current stock" 30 * n-households / n-firms
+      table:put inputi "Current stock" 0
       table:put inputi "Monthly demand" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]
