@@ -92,9 +92,9 @@ NIL
 
 SLIDER
 0
-108
+100
 172
-141
+133
 n-households
 n-households
 10
@@ -325,7 +325,7 @@ false
 "" ""
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
-"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -381,9 +381,9 @@ NIL
 
 SLIDER
 0
-175
+167
 170
-208
+200
 transactions-per-month
 transactions-per-month
 1
@@ -411,8 +411,8 @@ true
 "" ""
 PENS
 "demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -5509967 true "" "plot sum [production-potential] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [production-potential * 4] of PRIMARY-GOOD-FIRMS"
+"cg-output" 1.0 0 -5509967 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * max-production] of PRIMARY-GOOD-FIRMS"
 
 PLOT
 1061
@@ -497,7 +497,7 @@ true
 "" ""
 PENS
 "inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"outflow" 1.0 0 -2674135 true "" "plot sum [price * production-potential] of CONSUMER-GOOD-FIRMS"
+"outflow" 1.0 0 -2674135 true "" "plot sum [price * max-production] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 855
@@ -525,7 +525,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 1186
@@ -562,9 +562,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 0
-140
+132
 172
-173
+165
 n-firms
 n-firms
 10
@@ -577,9 +577,9 @@ HORIZONTAL
 
 SLIDER
 0
-210
+202
 170
-243
+235
 framework-duration
 framework-duration
 1
@@ -592,9 +592,9 @@ HORIZONTAL
 
 CHOOSER
 0
-58
+55
 132
-103
+100
 index-in-use
 index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
@@ -621,15 +621,15 @@ PENS
 
 SLIDER
 0
-245
-200
-278
+235
+205
+268
 mean-new-agreements-per-month
 mean-new-agreements-per-month
-1
+0
 10
-1.0
-1
+2.0
+0.1
 1
 NIL
 HORIZONTAL
@@ -643,12 +643,12 @@ Framework Agreements per Firm
 NIL
 NIL
 0.0
-10.0
+20.0
 0.0
 10.0
 true
 false
-"" ""
+"" "set-plot-x-range 0 count firms with [not consumer-good-firm?]\nset-plot-y-range 0 count firms with [not primary-good-firm?]\n"
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
 
@@ -721,18 +721,29 @@ https://xalgorithms.org/
 
 SLIDER
 0
-280
-172
-313
+272
+205
+305
 firm-memory-constant
 firm-memory-constant
 0
 1
-0.0
+0.8
 0.1
 1
 NIL
 HORIZONTAL
+
+SWITCH
+1340
+460
+1557
+493
+fix-n-framework-agreements?
+fix-n-framework-agreements?
+1
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1315,6 +1326,47 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
       <value value="1"/>
     </enumeratedValueSet>
     <steppedValueSet variable="firm-memory-constant" first="0" step="0.1" last="0.9"/>
+  </experiment>
+  <experiment name="double-firm_varying_framework_duration" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 1000 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>standard-deviation MEAN-PRICES</metric>
+    <metric>mean [lifetime-profits] of firms</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="framework-duration" first="1" step="1" last="10"/>
   </experiment>
 </experiments>
 @#$#@#$#@

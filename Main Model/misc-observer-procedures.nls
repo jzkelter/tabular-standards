@@ -1,4 +1,3 @@
-
 ;observer procedure, initializes a single consumer link
 to init-consumer-link
   hide-link

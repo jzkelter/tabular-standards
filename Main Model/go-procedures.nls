@@ -1,3 +1,4 @@
+
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go  
@@ -83,11 +84,6 @@ to go-end-of-month
   ask households [ 
     adjust-reservation-wage
   ]
-  
-  set ALL-FIRM-PROFITS BANKRUPT-FIRM-PROFITS       ; reset all-firm-profits
-  ask firms [
-    set ALL-FIRM-PROFITS (lput lifetime-profits ALL-FIRM-PROFITS)
-  ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set-firm-xcor
   set-household-xcor
