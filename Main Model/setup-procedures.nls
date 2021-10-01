@@ -49,7 +49,7 @@ globals [
   PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
   N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
   N-FRAMEWORK-AGREEMENTS           ; number of firms contacted by non-primary firms trying to buy input goods
-  AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
+  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
   DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
@@ -142,7 +142,7 @@ to set-constants
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
   set N-FRAMEWORK-AGREEMENTS 7             
-  set AUTONOMOUS-CONSUMPTION 0         
+  ; set AUTONOMOUS-CONSUMPTION 0         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
   set DESIRED-BUFFER-PERCENT 0.5

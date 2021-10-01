@@ -100,9 +100,9 @@ end
 to set-consumption
   if liquidity < 0 [error "no money to consume"]
   let money-to-spend 0
-  let autonomous-consumption-in-dollars (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors)
+  ; let autonomous-consumption-in-dollars (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors) ; we aren't usin autonomous consumption for now
   
-  set money-to-spend min (list liquidity (liquidity ^ DIMINISHING-UTILITY-CONSTANT + autonomous-consumption-in-dollars))
+  set money-to-spend min (list liquidity (liquidity ^ DIMINISHING-UTILITY-CONSTANT))  ; when wew were using autonomous-consumption, we added to the second item:  + autonomous-consumption-in-dollars))
   
   ;let total-consumption money-to-spend / mean [price] of CONSUMER-GOOD-FIRMS      ;on the off chance all 7 consumer links exit the market at the same time (highly unlikely, but still possible), this is a catch all
   ;if count consumer-link-neighbors > 0 [
@@ -116,7 +116,7 @@ to buy-consumption-goods  ; household procedure
   let remaining-demand demanded-consumption
   let firms-to-try consumer-link-neighbors
 
-  while [remaining-demand >= (0.01 * demanded-consumption) and any? firms-to-try] [
+  while [remaining-demand >= (0.01 * demanded-consumption) and any? firms-to-try] [  ; try to get within 1% of demand
 
     ; figure out the transaction
     let the-firm one-of firms-to-try
