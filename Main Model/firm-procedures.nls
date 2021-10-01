@@ -144,7 +144,11 @@ end
 ;firm procedure, fires all workers that firm does not want
 to fire-workers
   if desired-n-workers < n-workers and n-workers > 0 [  
-    ask n-of (n-workers - desired-workers) my-employment-links [die]    
+    ifelse only-fire-1-per-month? [
+      ask one-of my-employment-links [die]    
+    ] [
+      ask up-to-n-of (n-workers - desired-n-workers) my-employment-links [die]    
+    ]        
   ]
 end
 
@@ -247,11 +251,11 @@ to-report raise-funds
 end
 
 to search-for-framework-agreements
-  (ifelse fix-n-framework-agreements? [
+  (ifelse fix-n-framework-agreements? [  ; in the first option we fix the number of framework agreements
     foreach table:keys input-data[i ->
       guarantee-framework-links i
     ]
-  ] [
+  ] [                                   ; in this option, firms search new framework agreements each tick and probabalistically find them
     foreach table:keys input-data[i ->
       search-new-in-framework-agreements i
     ]
@@ -262,7 +266,10 @@ to search-for-framework-agreements
 end
 
 ;We either use guarantee-framework-links or the two following procedures (search-new-___-framework-agreements)
+
+
 ;firm procedure, guarantees the correct number of trading links per consumer good firm after removing any expired 
+; used if fix-n-framework-agreements? = true
 to guarantee-framework-links [input-i]
   ask my-framework-agreements with [expiration-date >= month] [
     init-framework-agreement      ; when framework agreement expires, renegotiate it
@@ -276,34 +283,26 @@ to guarantee-framework-links [input-i]
 end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with a given input
-to search-new-in-framework-agreements [input-i]
-  ifelse mean-new-agreements-per-month < 1 [ 
-    if random-float 1 < mean-new-agreements-per-month [
-      create-framework-agreements-from up-to-n-of 1 firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
-        init-framework-agreement
-      ]
-    ]
-  ] [
-    create-framework-agreements-from up-to-n-of (floor mean-new-agreements-per-month) firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
-      init-framework-agreement
-    ]
-  ]
+to search-new-in-framework-agreements [input-i] 
+  let new-agreements round-up-or-down-with-prob mean-new-agreements-per-month
+  create-framework-agreements-from up-to-n-of new-agreements firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
+    init-framework-agreement
+  ]  
 end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with the firms output
-to search-new-out-framework-agreements 
-  ifelse mean-new-agreements-per-month < 1 [ 
-    if random-float 1 < mean-new-agreements-per-month [
-      create-framework-agreements-to up-to-n-of 1 firms-that-can-buy-from-me [
-        init-framework-agreement
-      ]
-    ]
-  ] [
-    create-framework-agreements-to up-to-n-of (floor mean-new-agreements-per-month) firms-that-can-buy-from-me [
-      init-framework-agreement
-    ]
+to search-new-out-framework-agreements   
+  let new-agreements round-up-or-down-with-prob mean-new-agreements-per-month
+  create-framework-agreements-to up-to-n-of new-agreements firms-that-can-buy-from-me [
+    init-framework-agreement
   ]
+  
 end
+
+to-report round-up-or-down-with-prob [n]
+  report (floor n) + ifelse-value random-float (n - floor n) < 1 [1] [0]
+end  
+    
 
 ;non-consumer firm procedure, caller kills framework-agreements that are not profitable
 to check-framework-profitability

@@ -41,9 +41,9 @@ months
 
 BUTTON
 0
-310
+360
 66
-343
+393
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -58,9 +58,9 @@ NIL
 
 BUTTON
 124
-310
+360
 205
-343
+393
 go-once
 go\n
 NIL
@@ -75,9 +75,9 @@ NIL
 
 BUTTON
 67
-310
+360
 122
-343
+393
 NIL
 go
 T
@@ -107,9 +107,9 @@ HORIZONTAL
 
 PLOT
 0
-345
+395
 200
-493
+543
 Unemployment rate
 NIL
 unemployment
@@ -202,9 +202,9 @@ NIL
 
 PLOT
 0
-497
+547
 200
-647
+697
 Household Liquidity Distribution
 NIL
 NIL
@@ -742,6 +742,17 @@ SWITCH
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
+1
+-1000
+
+SWITCH
+0
+315
+202
+348
+only-fire-1-per-month?
+only-fire-1-per-month?
+0
 1
 -1000
 
