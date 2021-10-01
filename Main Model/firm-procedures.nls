@@ -123,7 +123,7 @@ to adjust-output-and-price
   set desired-n-workers floor (ideal-n-workers * liquidity-limiter)
   
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
-  fire-workers
+  
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
@@ -495,20 +495,18 @@ end
 
 ;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
 to buy-input-goods
-  foreach table:keys input-data[i ->
+  foreach table:keys input-data [i ->
     let remaining-demand input-demand-per-month i / transactions-per-month
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
     while [remaining-demand > 0.01 * total-demand and any? frameworks-to-try][
       let the-framework min-one-of frameworks-to-try [framework-price]
-      let current-price 0
-      ask the-framework [set current-price framework-price]
+      let current-price [framework-price] of the-framework
       let goods-wanted min (list remaining-demand (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
-      set liquidity liquidity - amount-bought * current-price
-      let current-amount current-stock i  
+      set liquidity liquidity - amount-bought * current-price      
       if amount-bought < 0 [error "cannot buy a negative amount"]
-      set-stock i (current-amount + amount-bought)
+      set-stock i (current-stock i + amount-bought)
       if liquidity < 0 and liquidity > -1E-5 [set liquidity 0]                   ; only fix rounding errors that go slightly under liquidity
       if liquidity < 0 [error "negative liquidity when buying input goods"]
       set remaining-demand remaining-demand - amount-bought
