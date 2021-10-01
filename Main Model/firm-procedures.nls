@@ -14,7 +14,7 @@ firms-own [
   
   desired-n-workers                ; represents the desired number of workers for the month
   previous-sales                   ; previous time period's sales
-  average-previous-sales           ; exponentially decaying function
+  average-previous-sales           ; average of previousl sales using an exponentially decaying function with time
 
   demand                           ; the most recent demand this firm experienced for its goods     (previous-sales used in calculations instead, so we can remove this variable if we want)
   tech-parameter                   ; determines how much each worker produces given a 
@@ -37,55 +37,58 @@ to adjust-wage-rate
   ])
 end
 
-;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
-to adjust-output-and-price
-  let expected-future-sales average-previous-sales
+;firm procedure: adjust output and price based on expected demand and ability to produce
+to adjust-output-and-price  
+  let expected-future-sales average-previous-sales  ; expect the future to be like the average of the past
   
-  ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
+  ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
   let ideal-production expected-future-sales    ; we will chnage this later to find the true production amount given inventory
   let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
   
-  (ifelse inventory < ideal-buffer [ ;ideal-post-production-inventory is ideal-buffer
-    set ideal-production ideal-production + (ideal-buffer - inventory) 
-  ] inventory > (ideal-buffer * 1.2) [ ;ideal-post-production-inventory is 1.2 * ideal-buffer
-    set ideal-production ideal-production - (inventory - (ideal-buffer * 1.2))
-    set ideal-production max (list 0 ideal-production)
-  ]) ;ELSE, ideal-post-production-inventory is somewhere in between these two numbers
+  ; adjust ideal-production based on current inventory
+  set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 
+  set ideal-production max (list 0 ideal-production)  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer 
   
-  ;now fix it to be evenly divisible by the tech-parameter
+  ; now fix ideal-produuction to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
   set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter  
   
+  ; Figure out how much producing ideal-production will cost  
   let ideal-n-workers (ideal-production / tech-parameter)
   let ideal-input-goods (list)
-  let total-price-of-goods ideal-n-workers * wage-rate
-  foreach table:keys input-data [i ->
+  let total-price-of-production ideal-n-workers * wage-rate  ; start with labor costs and then add input costs
+  foreach table:keys input-data [ i ->
     ; set ideal input as the production minus the current amount
     let ideal-input-amount (ideal-production / (marginal-productivity i)) 
     if ideal-input-amount < 0 [error "ideal input amount is negative"]
     let ideal-input-buffer ideal-buffer / (marginal-productivity i)
-    
-    (ifelse (current-stock i) < ideal-input-buffer [
-      set ideal-input-amount ideal-input-amount + ideal-input-buffer - (current-stock i) 
-    ] (current-stock i) > ideal-input-buffer * 1.2 [
-      set ideal-input-amount ideal-input-amount - ((current-stock i) - ideal-input-buffer * 1.2)
-      set ideal-input-amount max (list 0 ideal-input-amount)
-    ])
+        
+    set ideal-input-amount ideal-input-amount + ideal-input-buffer - (current-stock i)   
+    set ideal-input-amount max (list 0 ideal-input-amount)
     
     set ideal-input-goods lput ideal-input-amount ideal-input-goods 
     
     ; estimate the price of purchasing the ideal goods by taking the mean framework-price of all framework-agreements
     let estimated-price (estimate-price i)
-    set total-price-of-goods total-price-of-goods + (ideal-input-amount * estimated-price)
+    set total-price-of-production total-price-of-production + (ideal-input-amount * estimated-price)
   ]
   
-  ; now we need to find the actual amount that we can afford, given our liquidity...represent this as a multiplier of the ideal-input-amount
+  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
   let liquidity-limiter 1
-  if total-price-of-goods > liquidity [
-    set liquidity-limiter liquidity / total-price-of-goods
+  if total-price-of-production > liquidity [
+    set liquidity-limiter liquidity / total-price-of-production
     
   ]
   
-  let expected-post-production-inventory desired-n-workers * tech-parameter + inventory
+  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
+  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
+  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  
+  let index-i 0
+  foreach table:keys input-data [ i ->
+    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) 
+    set index-i index-i + 1 
+  ]
+  
   
 ;  (ifelse expected-future-sales > max-production [ 
 ;    ;excess demand
@@ -100,29 +103,22 @@ to adjust-output-and-price
 ;    ]
 ;  ])
   
-  (ifelse liquidity-limiter < 1 and inventory < ideal-buffer [  ; we don't have enough money to make up the buffer, the only thing we can do is charge more
-    ;excess demand 
-    if price < (mean [price] of other firms-with-my-type) [
-      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-    ]
-  ] liquidity-limiter = 1 and inventory > ideal-buffer * 1.2 [ ; we have too much inventory, and we have enough money to pay for it
-    ;excess supply
-    if price > (mean [price] of other firms-with-my-type) [
+  ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
+  (ifelse 
+    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
+    and price < (mean [price] of other firms-with-my-type) [    ;     and price is below competition's average 
+      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
+    ] 
+    
+    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
+    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
+    and price > (mean [price] of other firms-with-my-type) [    ;     and price is higher than average
+                                                                ; Then: lower price to increase sales (without going below marginal cost of production)
       let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
     ]
-  ])
-  
-  ;else, change output
-  let index-i 0
-  foreach table:keys input-data [i ->
-    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) 
-    set index-i index-i + 1 
-  ]
-  ; we choose to round DOWN desired-n-workers now due to liquidity being a limiting factor
-  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)
-  
-  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  )    
   
 end
 
