@@ -432,7 +432,7 @@ true
 PENS
 "primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -710,9 +710,9 @@ https://ccl.northwestern.edu/
 1
 
 TEXTBOX
-525
+510
 35
-675
+660
 53
 https://xalgorithms.org/
 11

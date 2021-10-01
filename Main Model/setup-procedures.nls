@@ -101,13 +101,15 @@ to setup
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
     set demand max-production   ; demand initialized to be the intial output of the firm
-    set desired-n-workers n-workers    
+    set desired-n-workers n-workers   ; workers initially want the number of workers they have
     set-input-demands   
     set previous-sales max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
-    foreach table:keys input-data [ i ->
-      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales); / (marginal-productivity i))
-    ]
+    
+    ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
+;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
+;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
+;    ]
     set average-previous-sales max-production
   ]
   
@@ -135,7 +137,7 @@ to set-constants
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.25    
+  set DIMINISHING-UTILITY-CONSTANT 0.25  
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
@@ -176,28 +178,27 @@ to setup-firms
     let is-consumer? table:get f "Consumer?"
     let is-intermediate? table:get f "Intermediate?"
     let is-primary? table:get f "Primary?"
-    repeat ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
-      let firm-input make-input-data-table table:get f "Input data"
-      create-firms 1 [
-        set shape "building store"
-        set tech-parameter firm-tech-parameter 
-        set price 1 * small-random-change
-        set firm-type group
-        set input-data firm-input
-        set wage-rate tech-parameter
-        set consumer-good-firm? is-consumer?
-        set intermediate-good-firm? is-intermediate?
-        set primary-good-firm? is-primary?
-        set fired-worker? false
-        
-        create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
-            
-        set ycor 12 - random 5
-        if table:length input-data != 0 [set ycor ycor - 9]
-      ]
+
+    create-firms ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
+      
+      set shape "building store"
+      set tech-parameter firm-tech-parameter 
+      set price 1 * small-random-change
+      set firm-type group
+      set input-data make-input-data-table table:get f "Input data"
+      set wage-rate tech-parameter
+      set consumer-good-firm? is-consumer?
+      set intermediate-good-firm? is-intermediate?
+      set primary-good-firm? is-primary?
+      set fired-worker? false
+      
+      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      
+      set ycor 12 - random 5
+      if table:length input-data != 0 [set ycor ycor - 9]
     ]
   ]
-  
+
   set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
   set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
   set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
