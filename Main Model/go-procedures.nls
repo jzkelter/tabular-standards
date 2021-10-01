@@ -78,7 +78,7 @@ to go-end-of-month
     (ifelse desired-n-workers <= n-workers [
       set months-without-vacancies months-without-vacancies + 1
     ] [
-      set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire and we should reset all-positions-filled
+      set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire, i.e. had a vacancy
     ])
   ]
   ask households [ 
