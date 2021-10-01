@@ -69,8 +69,8 @@ end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
-  if sum [liquidity] of turtles < 0.999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
-  if sum [liquidity] of turtles > 1.001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
+  if sum [liquidity] of turtles < 0.9999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
+  if sum [liquidity] of turtles > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
   
   ask firms [
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]

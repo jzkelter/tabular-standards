@@ -61,6 +61,7 @@ globals [
   potvin-index-value               ; index id: 4
 ]
 
+
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
 to setup
   ca
@@ -84,17 +85,7 @@ to setup
   
   setup-firms         
   initialize-framework-agreements
-  
-  
-  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
-  set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
-  set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
-  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
-  set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list)
-  set MEAN-PRICES (list)
-  
-  
+      
   ask households[
     set-household-xcor
     create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
@@ -105,14 +96,13 @@ to setup
     set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
 
-  ask firms [
-    set liquidity 0.2 * n-households / n-firms * STARTUP-LIQUIDITY
+  ask firms [    
+    set liquidity raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
     set demand max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers    
     set-input-demands   
-    setup-equity-links
     set previous-sales max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     foreach table:keys input-data [ i ->
@@ -126,6 +116,13 @@ to setup
   ask one-of firms [ask my-links [show-link]]
   
   setup-patches
+  
+  
+  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
+  set BANKRUPT-FIRM-PROFITS (list)
+  set UNEMPLOYMENT-RATES (list 0)
+  set MEAN-PRICES (list mean [price] of firms)
+      
   
   reset-ticks
   tick
@@ -200,19 +197,13 @@ to setup-firms
       ]
     ]
   ]
+  
+  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
+  set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
+  set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
+  
 end
 
-to setup-equity-links  ; firm procedure    
-  let equity-per-employee 1 / count employment-link-neighbors
-  let f self
-  ask employment-link-neighbors [
-    set liquidity liquidity - (equity-per-employee * [liquidity] of f)   ; this forces all liquidity to be initialized with households
-    create-equity-link-with f [
-      init-equity-link
-      set equity equity-per-employee * [liquidity] of f    ;all employees should have equal amounts of equity-percent invested in the firm
-    ]
-  ]  
-end
 
 ;generates the input data for a specific firm based on the structure specified in a json file
 to-report make-input-data-table [original-data]

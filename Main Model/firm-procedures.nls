@@ -177,7 +177,7 @@ end
 ;firm procedure, adds in another firm of a given firm type
 to add-firm
   set TOTAL-BANKRUPT-FIRMS TOTAL-BANKRUPT-FIRMS + 1
-  hatch 1[
+  hatch 1 [
     set color yellow                    ; set color to yellow for one month to visually indicate which firms are going bankrupt
     set price mean [price] of firms-with-my-type
     set wage-rate mean [wage-rate] of firms-with-my-type
@@ -217,10 +217,10 @@ end
 to-report raise-funds
   let to-be-raised STARTUP-LIQUIDITY
   let new-firm self
-  let current-price mean [price] of CONSUMER-GOOD-FIRMS
+  let avg-consumer-price mean [price] of CONSUMER-GOOD-FIRMS  
   while [to-be-raised > 0] [
     ask one-of households with [not equity-link-neighbor? new-firm][ 
-      let liquidity-available (liquidity - AUTONOMOUS-CONSUMPTION * current-price) * 0.5
+      let liquidity-available (liquidity - AUTONOMOUS-CONSUMPTION * avg-consumer-price) * 0.5
       if liquidity-available >= 0.1 * STARTUP-LIQUIDITY [  ; only accept investments that are at least 10% of the total
         ifelse liquidity-available > to-be-raised [
           create-equity-link-with new-firm [
