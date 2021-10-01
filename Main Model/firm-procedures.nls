@@ -144,7 +144,7 @@ end
 ;firm procedure, fires all workers that firm does not want
 to fire-workers
   if desired-n-workers < n-workers and n-workers > 0 [  
-    ask one-of my-employment-links [die]
+    ask n-of (n-workers - desired-workers) my-employment-links [die]    
   ]
 end
 
@@ -311,7 +311,7 @@ to check-framework-profitability
   let my-tech tech-parameter
   let my-input-goods-cost estimate-marginal-cost-of-input-goods
   ask my-framework-agreements [
-    if framework-price < my-wage / my-tech + my-input-goods-cost [     ;if it is no longer profitable to continue, kill the framework agreement
+    if framework-price < (my-wage / my-tech + my-input-goods-cost) [     ;if it is no longer profitable to continue, kill the framework agreement
       die
     ]
   ]
