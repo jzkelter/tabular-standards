@@ -89,20 +89,6 @@ to adjust-output-and-price
     set index-i index-i + 1 
   ]
   
-  
-;  (ifelse expected-future-sales > max-production [ 
-;    ;excess demand
-;    if price < (mean [price] of other firms-with-my-type) [ 
-;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-;    ]
-;  ] [
-;    ;excess supply
-;    if price > (mean [price] of other firms-with-my-type) [
-;      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-;    ]
-;  ])
-  
   ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
   (ifelse 
     inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
@@ -119,6 +105,19 @@ to adjust-output-and-price
       set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
     ]
   )    
+  
+  ;  (ifelse expected-future-sales > max-production [ 
+  ;    ;excess demand
+  ;    if price < (mean [price] of other firms-with-my-type) [ 
+  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
+  ;    ]
+  ;  ] [
+  ;    ;excess supply
+  ;    if price > (mean [price] of other firms-with-my-type) [
+  ;      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+  ;    ]
+  ;  ])
   
 end
 
