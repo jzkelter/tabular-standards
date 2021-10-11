@@ -49,7 +49,7 @@ globals [
   PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
   N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
   N-FRAMEWORK-AGREEMENTS           ; number of firms contacted by non-primary firms trying to buy input goods
-  AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
+  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
   DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
@@ -60,6 +60,7 @@ globals [
   ussher-index-value               ; index id: 3
   potvin-index-value               ; index id: 4
 ]
+
 
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
 to setup
@@ -84,17 +85,7 @@ to setup
   
   setup-firms         
   initialize-framework-agreements
-  
-  
-  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
-  set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
-  set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
-  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
-  set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list)
-  set MEAN-PRICES (list)
-  
-  
+      
   ask households[
     set-household-xcor
     create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
@@ -105,19 +96,20 @@ to setup
     set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
 
-  ask firms [
-    set liquidity 0.2 * n-households / n-firms * STARTUP-LIQUIDITY
+  ask firms [    
+    set liquidity raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
     set demand max-production   ; demand initialized to be the intial output of the firm
-    set desired-n-workers n-workers    
+    set desired-n-workers n-workers   ; workers initially want the number of workers they have
     set-input-demands   
-    setup-equity-links
     set previous-sales max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
-    foreach table:keys input-data [ i ->
-      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales); / (marginal-productivity i))
-    ]
+    
+    ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
+;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
+;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
+;    ]
     set average-previous-sales max-production
   ]
   
@@ -126,6 +118,13 @@ to setup
   ask one-of firms [ask my-links [show-link]]
   
   setup-patches
+  
+  
+  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
+  set BANKRUPT-FIRM-PROFITS (list)
+  set UNEMPLOYMENT-RATES (list 0)
+  set MEAN-PRICES (list mean [price] of firms)
+      
   
   reset-ticks
   tick
@@ -138,12 +137,12 @@ to set-constants
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.25    
+  set DIMINISHING-UTILITY-CONSTANT 0.25  
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
   set N-FRAMEWORK-AGREEMENTS 7             
-  set AUTONOMOUS-CONSUMPTION 0         
+  ; set AUTONOMOUS-CONSUMPTION 0         
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
   set DESIRED-BUFFER-PERCENT 0.5
@@ -179,40 +178,33 @@ to setup-firms
     let is-consumer? table:get f "Consumer?"
     let is-intermediate? table:get f "Intermediate?"
     let is-primary? table:get f "Primary?"
-    repeat ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
-      let firm-input make-input-data-table table:get f "Input data"
-      create-firms 1 [
-        set shape "building store"
-        set tech-parameter firm-tech-parameter 
-        set price 1 * small-random-change
-        set firm-type group
-        set input-data firm-input
-        set wage-rate tech-parameter
-        set consumer-good-firm? is-consumer?
-        set intermediate-good-firm? is-intermediate?
-        set primary-good-firm? is-primary?
-        set fired-worker? false
-        
-        create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
-            
-        set ycor 12 - random 5
-        if table:length input-data != 0 [set ycor ycor - 9]
-      ]
+
+    create-firms ceiling ((firm-ratio / firm-ratio-sum) * n-firms) [
+      
+      set shape "building store"
+      set tech-parameter firm-tech-parameter 
+      set price 1 * small-random-change
+      set firm-type group
+      set input-data make-input-data-table table:get f "Input data"
+      set wage-rate tech-parameter
+      set consumer-good-firm? is-consumer?
+      set intermediate-good-firm? is-intermediate?
+      set primary-good-firm? is-primary?
+      set fired-worker? false
+      
+      create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      
+      set ycor 12 - random 5
+      if table:length input-data != 0 [set ycor ycor - 9]
     ]
   ]
+
+  set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
+  set PRIMARY-GOOD-FIRMS firms with [primary-good-firm?]
+  set INTERMEDIATE-GOOD-FIRMS firms with [intermediate-good-firm?]
+  
 end
 
-to setup-equity-links  ; firm procedure    
-  let equity-per-employee 1 / count employment-link-neighbors
-  let f self
-  ask employment-link-neighbors [
-    set liquidity liquidity - (equity-per-employee * [liquidity] of f)   ; this forces all liquidity to be initialized with households
-    create-equity-link-with f [
-      init-equity-link
-      set equity equity-per-employee * [liquidity] of f    ;all employees should have equal amounts of equity-percent invested in the firm
-    ]
-  ]  
-end
 
 ;generates the input data for a specific firm based on the structure specified in a json file
 to-report make-input-data-table [original-data]

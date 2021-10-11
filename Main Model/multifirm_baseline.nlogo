@@ -41,9 +41,9 @@ months
 
 BUTTON
 0
-310
+360
 66
-343
+393
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -58,9 +58,9 @@ NIL
 
 BUTTON
 124
-310
+360
 205
-343
+393
 go-once
 go\n
 NIL
@@ -75,9 +75,9 @@ NIL
 
 BUTTON
 67
-310
+360
 122
-343
+393
 NIL
 go
 T
@@ -107,16 +107,16 @@ HORIZONTAL
 
 PLOT
 0
-345
+395
 200
-493
+543
 Unemployment rate
 NIL
 unemployment
 0.0
 10.0
 0.0
-1.0
+0.5
 true
 false
 "" ""
@@ -129,7 +129,7 @@ PLOT
 10
 975
 180
-Wage Rate Stats
+Wage Rate Stats 
 NIL
 NIL
 0.0
@@ -140,13 +140,13 @@ true
 true
 "set-plot-y-range (MIN-WAGE-RATE * 0.9) precision (mean [tech-parameter] of firms * 1.1) 1" ""
 PENS
-"mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-"min firm wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
+"mean firm wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
-"median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of firms - mean [marginal-productivity 2 * price] of PRIMARY-GOOD-FIRMS "
+"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
 
 PLOT
 855
@@ -202,9 +202,9 @@ NIL
 
 PLOT
 0
-497
+547
 200
-647
+697
 Household Liquidity Distribution
 NIL
 NIL
@@ -432,7 +432,7 @@ true
 PENS
 "primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -616,7 +616,7 @@ true
 true
 "" ""
 PENS
-"Bankrupt " 1.0 0 -1184463 true "" "plot mean BANKRUPT-FIRM-PROFITS"
+"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
 "In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
 
 SLIDER
@@ -710,9 +710,9 @@ https://ccl.northwestern.edu/
 1
 
 TEXTBOX
-525
+510
 35
-675
+660
 53
 https://xalgorithms.org/
 11
@@ -742,6 +742,17 @@ SWITCH
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
+1
+-1000
+
+SWITCH
+0
+315
+202
+348
+only-fire-1-per-month?
+only-fire-1-per-month?
+0
 1
 -1000
 
@@ -1134,7 +1145,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.1-beta1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

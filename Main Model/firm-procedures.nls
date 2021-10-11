@@ -14,7 +14,7 @@ firms-own [
   
   desired-n-workers                ; represents the desired number of workers for the month
   previous-sales                   ; previous time period's sales
-  average-previous-sales           ; exponentially decaying function
+  average-previous-sales           ; average of previousl sales using an exponentially decaying function with time
 
   demand                           ; the most recent demand this firm experienced for its goods     (previous-sales used in calculations instead, so we can remove this variable if we want)
   tech-parameter                   ; determines how much each worker produces given a 
@@ -37,93 +37,88 @@ to adjust-wage-rate
   ])
 end
 
-;firm procedure, GATTI procedure used to determine whether there needs to be a price or labor correction.
-to adjust-output-and-price
-  let expected-future-sales average-previous-sales
+;firm procedure: adjust output and price based on expected demand and ability to produce
+to adjust-output-and-price  
+  let expected-future-sales average-previous-sales  ; expect the future to be like the average of the past
   
-  ; we begin by setting ideal_output to the average-previous-sales, rounded up to a whole worker's worth of production
+  ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
   let ideal-production expected-future-sales    ; we will chnage this later to find the true production amount given inventory
   let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
   
-  (ifelse inventory < ideal-buffer [ ;ideal-post-production-inventory is ideal-buffer
-    set ideal-production ideal-production + (ideal-buffer - inventory) 
-  ] inventory > (ideal-buffer * 1.2) [ ;ideal-post-production-inventory is 1.2 * ideal-buffer
-    set ideal-production ideal-production - (inventory - (ideal-buffer * 1.2))
-    set ideal-production max (list 0 ideal-production)
-  ]) ;ELSE, ideal-post-production-inventory is somewhere in between these two numbers
+  ; adjust ideal-production based on current inventory
+  set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 
+  set ideal-production max (list 0 ideal-production)  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer 
   
-  ;now fix it to be evenly divisible by the tech-parameter
+  ; now fix ideal-produuction to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
   set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter  
   
+  ; Figure out how much producing ideal-production will cost  
   let ideal-n-workers (ideal-production / tech-parameter)
   let ideal-input-goods (list)
-  let total-price-of-goods ideal-n-workers * wage-rate
-  foreach table:keys input-data [i ->
+  let total-price-of-production ideal-n-workers * wage-rate  ; start with labor costs and then add input costs
+  foreach table:keys input-data [ i ->
     ; set ideal input as the production minus the current amount
     let ideal-input-amount (ideal-production / (marginal-productivity i)) 
     if ideal-input-amount < 0 [error "ideal input amount is negative"]
     let ideal-input-buffer ideal-buffer / (marginal-productivity i)
-    
-    (ifelse (current-stock i) < ideal-input-buffer [
-      set ideal-input-amount ideal-input-amount + ideal-input-buffer - (current-stock i) 
-    ] (current-stock i) > ideal-input-buffer * 1.2 [
-      set ideal-input-amount ideal-input-amount - ((current-stock i) - ideal-input-buffer * 1.2)
-      set ideal-input-amount max (list 0 ideal-input-amount)
-    ])
+        
+    set ideal-input-amount ideal-input-amount + ideal-input-buffer - (current-stock i)   
+    set ideal-input-amount max (list 0 ideal-input-amount)
     
     set ideal-input-goods lput ideal-input-amount ideal-input-goods 
     
     ; estimate the price of purchasing the ideal goods by taking the mean framework-price of all framework-agreements
     let estimated-price (estimate-price i)
-    set total-price-of-goods total-price-of-goods + (ideal-input-amount * estimated-price)
+    set total-price-of-production total-price-of-production + (ideal-input-amount * estimated-price)
   ]
   
-  ; now we need to find the actual amount that we can afford, given our liquidity...represent this as a multiplier of the ideal-input-amount
+  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
   let liquidity-limiter 1
-  if total-price-of-goods > liquidity [
-    set liquidity-limiter liquidity / total-price-of-goods
+  if total-price-of-production > liquidity [
+    set liquidity-limiter liquidity / total-price-of-production
     
   ]
   
-  let expected-post-production-inventory desired-n-workers * tech-parameter + inventory
+  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
+  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
+  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
   
-;  (ifelse expected-future-sales > max-production [ 
-;    ;excess demand
-;    if price < (mean [price] of other firms-with-my-type) [ 
-;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-;    ]
-;  ] [
-;    ;excess supply
-;    if price > (mean [price] of other firms-with-my-type) [
-;      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-;    ]
-;  ])
-  
-  (ifelse liquidity-limiter < 1 and inventory < ideal-buffer [  ; we don't have enough money to make up the buffer, the only thing we can do is charge more
-    ;excess demand 
-    if price < (mean [price] of other firms-with-my-type) [
-      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-    ]
-  ] liquidity-limiter = 1 and inventory > ideal-buffer * 1.2 [ ; we have too much inventory, and we have enough money to pay for it
-    ;excess supply
-    if price > (mean [price] of other firms-with-my-type) [
-      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-    ]
-  ])
-  
-  ;else, change output
   let index-i 0
-  foreach table:keys input-data [i ->
+  foreach table:keys input-data [ i ->
     set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) 
     set index-i index-i + 1 
   ]
-  ; we choose to round DOWN desired-n-workers now due to liquidity being a limiting factor
-  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)
   
-  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
-  fire-workers
+  ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
+  (ifelse 
+    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
+    and price < (mean [price] of other firms-with-my-type) [    ;     and price is below competition's average 
+      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
+    ] 
+    
+    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
+    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
+    and price > (mean [price] of other firms-with-my-type) [    ;     and price is higher than average
+                                                                ; Then: lower price to increase sales (without going below marginal cost of production)
+      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
+    ]
+  )    
+  
+  ;  (ifelse expected-future-sales > max-production [ 
+  ;    ;excess demand
+  ;    if price < (mean [price] of other firms-with-my-type) [ 
+  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
+  ;    ]
+  ;  ] [
+  ;    ;excess supply
+  ;    if price > (mean [price] of other firms-with-my-type) [
+  ;      let marginal-cost estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+  ;    ]
+  ;  ])
+  
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights
@@ -144,7 +139,11 @@ end
 ;firm procedure, fires all workers that firm does not want
 to fire-workers
   if desired-n-workers < n-workers and n-workers > 0 [  
-    ask one-of my-employment-links [die]
+    ifelse only-fire-1-per-month? [
+      ask one-of my-employment-links [die]    
+    ] [
+      ask up-to-n-of (n-workers - desired-n-workers) my-employment-links [die]    
+    ]        
   ]
 end
 
@@ -177,7 +176,7 @@ end
 ;firm procedure, adds in another firm of a given firm type
 to add-firm
   set TOTAL-BANKRUPT-FIRMS TOTAL-BANKRUPT-FIRMS + 1
-  hatch 1[
+  hatch 1 [
     set color yellow                    ; set color to yellow for one month to visually indicate which firms are going bankrupt
     set price mean [price] of firms-with-my-type
     set wage-rate mean [wage-rate] of firms-with-my-type
@@ -217,10 +216,10 @@ end
 to-report raise-funds
   let to-be-raised STARTUP-LIQUIDITY
   let new-firm self
-  let current-price mean [price] of CONSUMER-GOOD-FIRMS
+  let avg-consumer-price mean [price] of CONSUMER-GOOD-FIRMS  
   while [to-be-raised > 0] [
     ask one-of households with [not equity-link-neighbor? new-firm][ 
-      let liquidity-available (liquidity - AUTONOMOUS-CONSUMPTION * current-price) * 0.5
+      let liquidity-available liquidity * 0.5  ; when we were using AUTONOMOUS-CONSUMPTION (liquidity - AUTONOMOUS-CONSUMPTION * avg-consumer-price) * 0.5
       if liquidity-available >= 0.1 * STARTUP-LIQUIDITY [  ; only accept investments that are at least 10% of the total
         ifelse liquidity-available > to-be-raised [
           create-equity-link-with new-firm [
@@ -247,11 +246,11 @@ to-report raise-funds
 end
 
 to search-for-framework-agreements
-  (ifelse fix-n-framework-agreements? [
+  (ifelse fix-n-framework-agreements? [  ; in the first option we fix the number of framework agreements
     foreach table:keys input-data[i ->
       guarantee-framework-links i
     ]
-  ] [
+  ] [                                   ; in this option, firms search new framework agreements each tick and probabalistically find them
     foreach table:keys input-data[i ->
       search-new-in-framework-agreements i
     ]
@@ -262,7 +261,10 @@ to search-for-framework-agreements
 end
 
 ;We either use guarantee-framework-links or the two following procedures (search-new-___-framework-agreements)
+
+
 ;firm procedure, guarantees the correct number of trading links per consumer good firm after removing any expired 
+; used if fix-n-framework-agreements? = true
 to guarantee-framework-links [input-i]
   ask my-framework-agreements with [expiration-date >= month] [
     init-framework-agreement      ; when framework agreement expires, renegotiate it
@@ -276,34 +278,26 @@ to guarantee-framework-links [input-i]
 end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with a given input
-to search-new-in-framework-agreements [input-i]
-  ifelse mean-new-agreements-per-month < 1 [ 
-    if random-float 1 < mean-new-agreements-per-month [
-      create-framework-agreements-from up-to-n-of 1 firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
-        init-framework-agreement
-      ]
-    ]
-  ] [
-    create-framework-agreements-from up-to-n-of (floor mean-new-agreements-per-month) firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
-      init-framework-agreement
-    ]
-  ]
+to search-new-in-framework-agreements [input-i] 
+  let new-agreements round-up-or-down-with-prob mean-new-agreements-per-month
+  create-framework-agreements-from up-to-n-of new-agreements firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
+    init-framework-agreement
+  ]  
 end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with the firms output
-to search-new-out-framework-agreements 
-  ifelse mean-new-agreements-per-month < 1 [ 
-    if random-float 1 < mean-new-agreements-per-month [
-      create-framework-agreements-to up-to-n-of 1 firms-that-can-buy-from-me [
-        init-framework-agreement
-      ]
-    ]
-  ] [
-    create-framework-agreements-to up-to-n-of (floor mean-new-agreements-per-month) firms-that-can-buy-from-me [
-      init-framework-agreement
-    ]
+to search-new-out-framework-agreements   
+  let new-agreements round-up-or-down-with-prob mean-new-agreements-per-month
+  create-framework-agreements-to up-to-n-of new-agreements firms-that-can-buy-from-me [
+    init-framework-agreement
   ]
+  
 end
+
+to-report round-up-or-down-with-prob [n]
+  report (floor n) + ifelse-value random-float (n - floor n) < 1 [1] [0]
+end  
+    
 
 ;non-consumer firm procedure, caller kills framework-agreements that are not profitable
 to check-framework-profitability
@@ -311,7 +305,7 @@ to check-framework-profitability
   let my-tech tech-parameter
   let my-input-goods-cost estimate-marginal-cost-of-input-goods
   ask my-framework-agreements [
-    if framework-price < my-wage / my-tech + my-input-goods-cost [     ;if it is no longer profitable to continue, kill the framework agreement
+    if framework-price < (my-wage / my-tech + my-input-goods-cost) [     ;if it is no longer profitable to continue, kill the framework agreement
       die
     ]
   ]
@@ -496,20 +490,18 @@ end
 
 ;firm procedure, buys all necessary inputs for a day by asking some combination of framework agreement partners
 to buy-input-goods
-  foreach table:keys input-data[i ->
+  foreach table:keys input-data [i ->
     let remaining-demand input-demand-per-month i / transactions-per-month
     let total-demand remaining-demand
     let frameworks-to-try my-in-framework-agreements
     while [remaining-demand > 0.01 * total-demand and any? frameworks-to-try][
       let the-framework min-one-of frameworks-to-try [framework-price]
-      let current-price 0
-      ask the-framework [set current-price framework-price]
+      let current-price [framework-price] of the-framework
       let goods-wanted min (list remaining-demand (liquidity / current-price))
       let amount-bought [sell-good goods-wanted current-price] of [end1] of the-framework
-      set liquidity liquidity - amount-bought * current-price
-      let current-amount current-stock i  
+      set liquidity liquidity - amount-bought * current-price      
       if amount-bought < 0 [error "cannot buy a negative amount"]
-      set-stock i (current-amount + amount-bought)
+      set-stock i (current-stock i + amount-bought)
       if liquidity < 0 and liquidity > -1E-5 [set liquidity 0]                   ; only fix rounding errors that go slightly under liquidity
       if liquidity < 0 [error "negative liquidity when buying input goods"]
       set remaining-demand remaining-demand - amount-bought
