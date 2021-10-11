@@ -1,4 +1,3 @@
-
 ;observer procedure, initializes a single consumer link
 to init-consumer-link
   hide-link
@@ -50,8 +49,8 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-ussher
-  ;IF WE DO ROLLING INVENTORY, ADD IN LIST OF 24 INVENTORIES AND AVERAGE OVER WHOLE 
-  set ussher-index-value sum [price] of PRIMARY-GOOD-FIRMS * mean LAST-TWO-YEARS-PRIMARY-INVENTORY
+  update-rolling-mean-inventory
+  set ussher-index-value mean PRIMARY-INVENTORY-VALUE-HISTORY
 end
 
 ;observer procedure, recalculates the current index
@@ -77,9 +76,9 @@ end
 ;observer procedure, recalculates rolling average of the sum of past two years inventory
 to update-rolling-mean-inventory
   ifelse month < 24 [
-    set LAST-TWO-YEARS-PRIMARY-INVENTORY lput (sum [inventory] of firms) LAST-TWO-YEARS-PRIMARY-INVENTORY 
+    set PRIMARY-INVENTORY-VALUE-HISTORY lput (sum [inventory * price] of PRIMARY-GOOD-FIRMS) PRIMARY-INVENTORY-VALUE-HISTORY 
   ] [
-    set LAST-TWO-YEARS-PRIMARY-INVENTORY replace-item (month mod 24) LAST-TWO-YEARS-PRIMARY-INVENTORY (sum [inventory] of firms)
+    set PRIMARY-INVENTORY-VALUE-HISTORY lput (sum [inventory * price] of PRIMARY-GOOD-FIRMS) but-first PRIMARY-INVENTORY-VALUE-HISTORY 
   ]
 end
 

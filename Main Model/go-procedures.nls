@@ -1,3 +1,4 @@
+
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go  
@@ -15,7 +16,6 @@ to go-beginning-of-month-observer
   recalculate-index-coats
   recalculate-index-ussher
   recalculate-index-potvin
-  update-rolling-mean-inventory
   set-colors
 end
 
@@ -28,16 +28,16 @@ to go-beginning-of-month-firms
     if liquidity <= wage-rate [  
       remove-firm
     ]
-    set-input-demands
+    calculate-average-sales
+    search-for-framework-agreements
+    ;search-delivery-capable-supplier and vendor used to be here
+    
     adjust-wage-rate
-    adjust-labor-and-price
+    adjust-output-and-price
+    fire-workers
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month  
-    foreach table:keys input-data[i ->
-      guarantee-framework-links i
-      ;search-cheaper-supplier i
-      ;search-delivery-capable-seller i
-    ]
+    
     pay-wages
   ]
 end
@@ -58,6 +58,7 @@ end
 to go-month
   repeat transactions-per-month [
     ask firms [
+      ;check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
       buy-input-goods
       produce-goods
     ]
@@ -69,25 +70,30 @@ end
 
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
+  if sum [liquidity] of turtles < 0.9999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
+  if sum [liquidity] of turtles > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
+  
   ask firms [
+    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
     distribute-profits
-    (ifelse desired-n-workers < n-workers [
-      set months-failed-to-hire months-failed-to-hire + 1
+    (ifelse desired-n-workers <= n-workers [
+      set months-without-vacancies months-without-vacancies + 1
     ] [
-      set months-failed-to-hire 0    
+      set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire, i.e. had a vacancy
     ])
   ]
   ask households [ 
     adjust-reservation-wage
   ]
-  ask firms [
-    decide-fire-worker
-  ] ; important for this to happen after wages are paid and households adjust since the model assumes one month between a firing decision and the person actually getting fired
 
   set-firm-xcor
   set-household-xcor
 
+  set UNEMPLOYMENT-RATES (lput (1 - count employment-links / n-households) UNEMPLOYMENT-RATES)
+  set MEAN-PRICES (lput mean [price] of firms MEAN-PRICES)
+  
   set month month + 1
+  
 end
 
 

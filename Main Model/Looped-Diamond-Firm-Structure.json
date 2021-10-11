@@ -1,10 +1,46 @@
 {
     "Firms":[
-        {
+	{
             "Firm type": 1,
             "Input data": [
                 {
+                    "Input firm type": 2,
+                    "Marginal productivity": 4
+                },
+		{
                     "Input firm type": 3,
+                    "Marginal productivity": 4
+                }
+            ],
+            "Tech constant": 3,
+            "Firm count": 1,
+            "Consumer?":true,
+	    "Intermediate?":false,
+	    "Primary?":false
+        },
+        {
+            "Firm type": 2,
+            "Input data": [
+                {
+                    "Input firm type": 4,
+                    "Marginal productivity": 4
+                },
+		{
+                    "Input firm type": 3,
+                    "Marginal productivity": 4
+                }
+            ],
+            "Tech constant": 3,
+            "Firm count": 1,
+            "Consumer?":false,
+	    "Intermediate?":true,
+	    "Primary?":false
+        },
+	{
+            "Firm type": 3,
+            "Input data": [
+                {
+                    "Input firm type": 4,
                     "Marginal productivity": 4
                 },
 		{
@@ -13,31 +49,19 @@
                 }
             ],
             "Tech constant": 3,
-            "Firm count": 40,
-            "Consumer?": true
-        },
-	{
-            "Firm type": 2,
-            "Input data": [
-                {
-                    "Input firm type": 3,
-                    "Marginal productivity": 4
-                },
-		{
-                    "Input firm type": 1,
-                    "Marginal productivity": 4
-                }
-            ],
-            "Tech constant": 3,
-            "Firm count": 40,
-            "Consumer?": true
+            "Firm count": 1,
+            "Consumer?":false,
+	    "Intermediate?":true,
+	    "Primary?":false
         },
         {
-            "Firm type": 3,
+            "Firm type": 4,
             "Input data":[],
             "Tech constant": 3,
-            "Firm count": 20,
-            "Consumer?":false
+            "Firm count": 0.5,
+            "Consumer?":false,
+	    "Intermediate?":false,
+	    "Primary?":true
         }
     ]
 }

@@ -1,4 +1,4 @@
-;;; THINGS THAT MIGHT BE OFF
+;; THINGS THAT MIGHT BE OFF
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
@@ -41,9 +41,9 @@ months
 
 BUTTON
 0
-259
+360
 66
-292
+393
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -58,9 +58,9 @@ NIL
 
 BUTTON
 124
-259
+360
 205
-292
+393
 go-once
 go\n
 NIL
@@ -75,9 +75,9 @@ NIL
 
 BUTTON
 67
-259
+360
 122
-292
+393
 NIL
 go
 T
@@ -92,9 +92,9 @@ NIL
 
 SLIDER
 0
-108
+100
 172
-141
+133
 n-households
 n-households
 10
@@ -107,28 +107,29 @@ HORIZONTAL
 
 PLOT
 0
-298
+395
 200
-446
+543
 Unemployment rate
 NIL
 unemployment
 0.0
 10.0
 0.0
-1.0
+0.5
 true
 false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
+"mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
 652
 10
 975
-147
-Wage Rate Stats
+180
+Wage Rate Stats 
 NIL
 NIL
 0.0
@@ -137,20 +138,22 @@ NIL
 5.0
 true
 true
-"" ""
+"set-plot-y-range (MIN-WAGE-RATE * 0.9) precision (mean [tech-parameter] of firms * 1.1) 1" ""
 PENS
-"mean wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
+"mean firm wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
 "min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
-"median wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
+"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
 
 PLOT
 855
-460
+495
 1055
-610
-worker per firm distribution
+645
+Worker Per Firm Distribution
 NIL
 NIL
 0.0
@@ -199,10 +202,10 @@ NIL
 
 PLOT
 0
-450
+547
 200
-600
-household liquidity distribution
+697
+Household Liquidity Distribution
 NIL
 NIL
 0.0
@@ -217,10 +220,10 @@ PENS
 
 PLOT
 1060
-152
+187
 1334
-302
-mean price
+337
+Mean Price
 NIL
 NIL
 0.0
@@ -235,10 +238,10 @@ PENS
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
 BUTTON
-252
-10
-325
-43
+1040
+150
+1113
+183
 bmonth-f
 go-beginning-of-month-firms\n
 NIL
@@ -252,10 +255,10 @@ NIL
 1
 
 BUTTON
-406
-10
-501
-43
+1194
+150
+1289
+183
 go-month
 go-month\n
 NIL
@@ -270,16 +273,16 @@ NIL
 
 PLOT
 855
-150
+185
 1055
-300
-monthly firm turnover
+335
+Monthly Firm Turnover
 NIL
 NIL
 0.0
 10.0
 0.0
-0.65
+1.0
 true
 false
 "" ""
@@ -288,10 +291,10 @@ PENS
 
 PLOT
 650
-460
+495
 850
-610
-mean demand not satisfied
+645
+Mean Demand Not Satisfied
 NIL
 NIL
 0.0
@@ -302,13 +305,14 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"Consumers" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"Consumer firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
 
 PLOT
 650
-150
+185
 850
-300
+335
 Inventory
 NIL
 NIL
@@ -321,14 +325,14 @@ false
 "" ""
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
-"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 "consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
-195
-10
-250
-43
+983
+150
+1038
+183
 dsetup
 \nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
 NIL
@@ -342,10 +346,10 @@ NIL
 1
 
 BUTTON
-502
-10
-646
-43
+1290
+150
+1434
+183
 go-end-of-month
 go-end-of-month\ntick\n
 NIL
@@ -359,10 +363,10 @@ NIL
 1
 
 BUTTON
-327
-10
-404
-43
+1115
+150
+1192
+183
 bmonth-h
 go-beginning-of-month-households\n
 NIL
@@ -375,30 +379,11 @@ NIL
 NIL
 1
 
-PLOT
-650
-305
-850
-455
-Last 2 Years Primary Inventory
-NIL
-NIL
-0.0
-10.0
-0.0
-100.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean LAST-TWO-YEARS-PRIMARY-INVENTORY"
-"pen-1" 1.0 0 -8431303 true "" "plot sum [inventory] of PRIMARY-GOOD-FIRMS"
-
 SLIDER
 0
-180
-173
-213
+167
+170
+200
 transactions-per-month
 transactions-per-month
 1
@@ -411,9 +396,9 @@ HORIZONTAL
 
 PLOT
 1061
-459
+494
 1335
-609
+644
 Output and Demand
 NIL
 NIL
@@ -427,13 +412,13 @@ true
 PENS
 "demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
 "cg-output" 1.0 0 -5509967 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [max-production] of PRIMARY-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * max-production] of PRIMARY-GOOD-FIRMS"
 
 PLOT
 1061
-306
+341
 1335
-456
+491
 Mean Liquidity
 NIL
 NIL
@@ -447,7 +432,7 @@ true
 PENS
 "primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -7500403 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -485,10 +470,10 @@ NIL
 1
 
 MONITOR
-905
-170
-1048
-215
+890
+205
+1033
+250
 Firms Added This Month
 count firms with [color = yellow]
 4
@@ -496,9 +481,9 @@ count firms with [color = yellow]
 11
 
 PLOT
-352
+415
 495
-636
+645
 645
 Firm Money Outflow/Inflow
 NIL
@@ -511,14 +496,14 @@ true
 true
 "" ""
 PENS
-"money inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"money outflow" 1.0 0 -2674135 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
+"inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
+"outflow" 1.0 0 -2674135 true "" "plot sum [price * max-production] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 855
-305
+340
 1054
-455
+490
 Total Bankrupt Firms
 NIL
 NIL
@@ -540,7 +525,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 1186
@@ -575,26 +560,16 @@ count CONSUMER-GOOD-FIRMS
 1
 11
 
-TEXTBOX
-1343
-154
-1484
-238
-# Primary Good Firms          + # Intermediate Good Firms  + # Consumer Good Firms   = # Total Firms\n\nfor more than 1 firm type
-11
-0.0
-1
-
 SLIDER
 0
-145
+132
 172
-178
+165
 n-firms
 n-firms
-0
+10
 500
-40.0
+30.0
 10
 1
 NIL
@@ -602,9 +577,9 @@ HORIZONTAL
 
 SLIDER
 0
-217
-172
-250
+202
+170
+235
 framework-duration
 framework-duration
 1
@@ -615,33 +590,171 @@ framework-duration
 NIL
 HORIZONTAL
 
+CHOOSER
+0
+55
+132
+100
+index-in-use
+index-in-use
+"no index" "coats" "pringle" "ussher" "potvin"
+0
+
 PLOT
-1338
-307
-1498
-457
-index distribution
+205
+495
+410
+645
+Profitability
 NIL
 NIL
-1.0
-5.0
+0.0
+0.0
+-100.0
+-100.0
+true
+true
+"" ""
+PENS
+"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
+"In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
+
+SLIDER
+0
+235
+205
+268
+mean-new-agreements-per-month
+mean-new-agreements-per-month
+0
+10
+2.0
+0.1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1340
+495
+1540
+645
+Framework Agreements per Firm
+NIL
+NIL
+0.0
+20.0
+0.0
+10.0
+true
+false
+"" "set-plot-x-range 0 count firms with [not consumer-good-firm?]\nset-plot-y-range 0 count firms with [not primary-good-firm?]\n"
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
+
+PLOT
+650
+340
+850
+490
+average-previous-sales
+NIL
+NIL
+0.0
+10.0
 0.0
 10.0
 true
 false
 "" ""
 PENS
-"default" 1.0 1 -16777216 true "" "histogram [index-type] of framework-agreements"
+"consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
+"primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
 
-CHOOSER
+PLOT
+1340
+185
+1540
+335
+Mean Framework Price
+NIL
+NIL
+0.0
+10.0
+0.9
+1.1
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [framework-price] of framework-agreements"
+
+TEXTBOX
+210
+10
+495
+31
+Economic Petri Dish\n
+16
+0.0
+1
+
+TEXTBOX
+210
+35
+360
+53
+https://ccl.northwestern.edu/
+11
+0.0
+1
+
+TEXTBOX
+510
+35
+660
+53
+https://xalgorithms.org/
+11
+0.0
+1
+
+SLIDER
 0
-58
-132
-103
-index-in-use
-index-in-use
-"no index" "coates" "pringle" "ussher" "potvin"
+272
+205
+305
+firm-memory-constant
+firm-memory-constant
 0
+1
+0.8
+0.1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+1340
+460
+1557
+493
+fix-n-framework-agreements?
+fix-n-framework-agreements?
+1
+1
+-1000
+
+SWITCH
+0
+315
+202
+348
+only-fire-1-per-month?
+only-fire-1-per-month?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1032,89 +1145,216 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.1-beta1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="single-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
-repeat 100 [go]</setup>
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
     <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
     <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="20" step="10" last="200"/>
     <enumeratedValueSet variable="transactions-per-month">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
+      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;single-firm&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="single-firm_baseline_varying_firm_number" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="double-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
-repeat 100 [go]</setup>
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
     <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
     <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="n-firms" first="40" step="20" last="400"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
     <enumeratedValueSet variable="transactions-per-month">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
+      <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;two-layer&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="test" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="double-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
     <setup>setup
-repeat 100 [go]</setup>
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
     <go>go</go>
-    <final>ask firms [add-lifetime-profits]</final>
     <timeLimit steps="200"/>
-    <metric>count firms with [color = yellow]</metric>
-    <metric>mean LIFETIME-PROFITS-LIST</metric>
-    <metric>count households with [employed?]</metric>
-    <metric>mean [price] of firms</metric>
-    <enumeratedValueSet variable="replace-exited-firm?">
-      <value value="true"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="20" step="10" last="200"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="allow-firm-exit?">
-      <value value="true"/>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 200 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean ALL-FIRM-PROFITS</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
+    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm_varying_memory_constant" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 1000 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set ALL-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-REVENUE 0
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>mean [lifetime-profits] of firms</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <metric>TOTAL-REVENUE</metric>
     <enumeratedValueSet variable="n-firms">
-      <value value="40"/>
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;single-firm&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="firm-memory-constant" first="0" step="0.1" last="0.9"/>
+  </experiment>
+  <experiment name="double-firm_varying_framework_duration" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup
+repeat 1000 [go]
+set BANKRUPT-FIRM-PROFITS (list)
+set UNEMPLOYMENT-RATES (list)
+set MEAN-PRICES (list)
+set TOTAL-BANKRUPT-FIRMS 0</setup>
+    <go>go</go>
+    <timeLimit steps="200"/>
+    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
+    <metric>mean UNEMPLOYMENT-RATES</metric>
+    <metric>mean MEAN-PRICES</metric>
+    <metric>standard-deviation MEAN-PRICES</metric>
+    <metric>mean [lifetime-profits] of firms</metric>
+    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="transactions-per-month">
       <value value="1"/>
@@ -1125,9 +1365,19 @@ repeat 100 [go]</setup>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;two-layer&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="use-index?">
-      <value value="true"/>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="framework-duration" first="1" step="1" last="10"/>
   </experiment>
 </experiments>
 @#$#@#$#@
