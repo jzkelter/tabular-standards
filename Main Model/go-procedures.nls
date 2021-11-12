@@ -11,7 +11,8 @@ to go
 end
 
 ;egeneral beginning of the month procedure for resetting all model-wide varibales 
-to go-beginning-of-month-observer  
+to go-beginning-of-month-observer 
+  land-endogenously-renews
   recalculate-index-pringle 
   recalculate-index-coats
   recalculate-index-ussher
@@ -22,8 +23,7 @@ end
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to go-beginning-of-month-firms
   
-  ask firms [
-    update-soil-health
+  ask firms [    
     pay-wages  ; pay workers for last month's work
     
     if liquidity <= wage-rate [  

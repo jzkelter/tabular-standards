@@ -202,15 +202,6 @@ to add-firm
   ]
 end
 
-;firm procedure, updates the soil health of the patches 
-to update-soil-health
-  set soil-health min (list 200 (soil-health + BACKGROUND-IMPROVEMENT))
-  set soil-health max (list 0 (soil-health - (max-production)))
-  let patch-health soil-health
-  ask firm-location [
-    set pcolor scale-color black patch-health 0 200
-  ]
-end
 
 ;firm procedure, firms search for the funding from households
 to-report raise-funds

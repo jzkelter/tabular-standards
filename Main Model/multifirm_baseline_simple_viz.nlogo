@@ -7,6 +7,7 @@ __includes["unit testing.nls"
            "firm-procedures.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
+           "earth-reserve-procedures.nls"
            "misc-observer-procedures.nls"]
 
 
@@ -14,12 +15,12 @@ __includes["unit testing.nls"
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
-50
-647
-488
+55
+638
+484
 -1
 -1
-13.0
+60.0
 1
 10
 1
@@ -29,10 +30,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+0
+6
+0
+6
 1
 1
 1
@@ -889,7 +890,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
