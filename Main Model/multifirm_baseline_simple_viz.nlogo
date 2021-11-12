@@ -20,7 +20,7 @@ GRAPHICS-WINDOW
 484
 -1
 -1
-60.0
+38.18181818181818
 1
 10
 1
@@ -31,9 +31,9 @@ GRAPHICS-WINDOW
 0
 1
 0
-6
+10
 0
-6
+10
 1
 1
 1
@@ -314,7 +314,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
 650

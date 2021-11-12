@@ -131,7 +131,12 @@ to setup
 end
 
 to size-world-and-position-agents
-  resize-world 0 count primary-good-firms 0 count primary-good-firms
+  ifelse count primary-good-firms > 0 [
+    resize-world 0 count primary-good-firms 0 count primary-good-firms
+  ] [
+    resize-world 0 10 0 10
+  ]
+    
   set-patch-size 420 / world-width
   
   ; household get 1 / 3 of the world
@@ -149,7 +154,7 @@ to size-world-and-position-agents
   let height-per-firm (remaining-wh / n-firm-types)
   let padding household-size * 4
   ask firms [
-    set ycor (max-pycor - 0.5) 
+    set ycor (max-pycor - 0.4) 
               - (firm-type - 1) * height-per-firm 
               - ((who - min [who] of firms with [firm-type = [firm-type] of myself]) / count firms with [firm-type = [firm-type] of myself]) * (height-per-firm - padding)
     set size 20 / patch-size

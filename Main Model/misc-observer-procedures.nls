@@ -84,9 +84,9 @@ end
 
 ;observer procedure to generate the correct location from the firms' liquidity
 to set-firm-xcor
-  let firm-liq-dev max (list 1 (max [liquidity] of firms)) / (world-width - 2)
+  let firm-liq-dev max (list 1 (max [liquidity] of firms)) / (world-width - 0.2)
   ask firms [
-    set xcor min-pxcor + (liquidity / firm-liq-dev)
+    set xcor min-pxcor - 0.4 + (liquidity / firm-liq-dev)
   ]
 end
 
@@ -94,7 +94,7 @@ end
 to set-household-xcor
   let max-house-liq (max [liquidity] of households) 
   ask households [
-    set xcor min-pxcor + (liquidity) / max-house-liq * (world-width - 1)
+    set xcor min-pxcor - 0.4 + (liquidity / max-house-liq) * (world-width - .2)
   ]
 end
 
