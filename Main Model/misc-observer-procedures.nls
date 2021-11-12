@@ -60,7 +60,7 @@ to recalculate-index-potvin
 end
 
 to set-colors
-  let firm-colors (list black green brown red orange blue gray yellow pink)
+  let firm-colors (list black brown green red orange blue gray yellow pink)
   ask firms [
     set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types
   ]
