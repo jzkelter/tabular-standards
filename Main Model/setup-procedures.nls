@@ -144,12 +144,12 @@ to size-world-and-position-agents
     set size household-size
   ]
   
-  let remaining-wh (2 / 3) * (world-height + 0.5)
+  let remaining-wh (2 / 3) * (world-height - 0.5)
   let n-firm-types max [firm-type] of firms
   let height-per-firm (remaining-wh / n-firm-types)
   let padding household-size * 4
   ask firms [
-    set ycor (max-pycor + 0.49) 
+    set ycor (max-pycor - 0.5) 
               - (firm-type - 1) * height-per-firm 
               - ((who - min [who] of firms with [firm-type = [firm-type] of myself]) / count firms with [firm-type = [firm-type] of myself]) * (height-per-firm - padding)
     set size 20 / patch-size
