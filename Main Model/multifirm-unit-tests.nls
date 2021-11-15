@@ -1,0 +1,157 @@
+__includes["unit testing.nls"]  ;including this for purpose of using the helpful
+
+
+to unit-tests
+  run-tests (list    
+    (list "Price and output tests" test-adjust-price-and-output)
+    (list "Pay wage tests" test-pay-wages)
+    (list "Fire worker tests" test-fire-workers)
+    (list "Average sales tests" test-average-sales)
+    (list "Wage rate tests" test-adjust-wage-rate)
+  )
+end
+
+;;TO IMPLEMENT: Test trends that measure the reasonableness of the model (like unemployment rate and price)
+;;We want users to be able to distinguish when the model is behaving appropriately when it might not be obvious from the output
+to test-trends
+  run-tests (list
+  )
+end
+
+
+to test-unemployment
+  setup
+  repeat 100 [
+    go
+    assert ((1 - (count employment-links / count households)) < 0.5) "Unemployment must be below 50%"
+  ]
+end
+
+to-report test-remove-firm
+  report [->
+    set BANKRUPT-FIRM-PROFITS (list)
+    create-households 1
+    create-firms 1 [
+      set firm-type 0
+    ]
+    create-firms 1 [
+      ask households [create-equity-link-with myself]
+      ask my-equity-links [set equity 100]
+      set liquidity 100
+      set firm-type 0
+      remove-firm
+    ]
+    assert (count firms = 1) "Removed firm should be replaced"
+  ]
+end
+
+
+to-report test-adjust-wage-rate
+  report [->
+    set MAX-WAGE-GROWTH 0.1
+    set MONTHS-TO-LOWER-WAGE 2
+    create-households 3
+    create-firms 1 [
+      set wage-rate 1
+      set months-without-vacancies 0
+      ask households [create-employment-link-with myself]
+      set desired-n-workers 5 
+      set fired-worker? false
+      
+      adjust-wage-rate
+      assert (wage-rate > 1) "wage should increase"
+      
+      set wage-rate 1
+      set fired-worker? true
+      adjust-wage-rate
+      assert (wage-rate < 1) "wage should decrease when we fired a worker last time period"
+      
+      set wage-rate 1
+      set months-without-vacancies 3
+      adjust-wage-rate
+      assert (wage-rate < 1) "wage should decrease when we have had a vacant position for too many months"
+      
+      set wage-rate 1
+      set months-without-vacancies 1
+      set fired-worker? false
+      adjust-wage-rate
+      assert (wage-rate = 1) "wage should not change"
+      
+    ]
+  ]
+end
+
+to-report test-adjust-price-and-output
+  report [->
+    let before-price 1
+    create-firms 1 [
+      set price before-price
+      set average-previous-sales 100
+    set tech-parameter 3
+      set input-data table:make
+      set liquidity 999999
+      
+      adjust-output-and-price
+      assert (price = before-price) "price should not have changed"
+    ]
+  ]
+end
+
+to-report test-pay-wages
+  report [->
+    ca
+    set-constants
+    create-households 3
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      set wage-rate 1
+      set liquidity 4
+      
+      pay-wages
+      assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
+      assert (liquidity = 1) "firm should have $1 left (23)"
+                  
+    ]
+  ]
+end
+  
+to-report test-fire-workers
+  report [->
+    create-households 5
+    create-firms 1 [
+      ask households [create-employment-link-with myself]
+      assert (count my-employment-links = 5) "firms should initially have all 5 workers"
+      
+      set only-fire-1-per-month? false
+      set desired-n-workers 3
+      fire-workers
+      assert (count my-employment-links = 3) "firms should only fire two workers"
+      
+      set only-fire-1-per-month? true
+      set desired-n-workers 1
+      fire-workers
+      assert (count my-employment-links = 2) "firms should only fire one worker"
+    ]
+  ]
+end
+
+to-report test-average-sales
+  report [->
+    create-firms 1 [
+      set firm-memory-constant 0.5
+      set average-previous-sales 0
+      set previous-sales 0
+      calculate-average-sales
+      assert average-previous-sales = 0 "average-previous-sales should not have changed"
+      
+      set previous-sales 1
+      calculate-average-sales
+      assert average-previous-sales = 0.5 "average-previous-sales should be 0.5"
+      
+      set previous-sales 1
+      calculate-average-sales
+      assert average-previous-sales = 0.75 "average-previous-sales should be 0.75"
+    ]
+  ]
+end
+

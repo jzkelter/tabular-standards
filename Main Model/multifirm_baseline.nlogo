@@ -2,12 +2,12 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["unit testing.nls"
-           "household-procedures.nls"
+__includes["household-procedures.nls"
            "firm-procedures.nls"
            "go-procedures.nls"
            "setup-procedures.nls"
-           "misc-observer-procedures.nls"]
+           "misc-observer-procedures.nls"
+           "multifirm-unit-tests.nls"]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
@@ -756,6 +756,23 @@ only-fire-1-per-month?
 1
 -1000
 
+BUTTON
+1080
+117
+1182
+150
+run unit-tests
+unit-tests
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1145,7 +1162,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.1-beta1
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
