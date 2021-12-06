@@ -20,10 +20,7 @@ firms-own [
   tech-parameter                   ; determines how much each worker produces given a 
   consumer-good-firm?              ; defines whether they produce consumer goods
   intermediate-good-firm?          ; defines whether they produce intermediate goods
-  primary-good-firm?               ; defines whether they produce primary goods
-  
-  firm-location                    ; the patch tied to the firm, relevant for the potvin index
-  soil-health                      ; the soil health located under the firm, possible change to patch variable?
+  primary-good-firm?               ; defines whether they produce primary goods    
   
   lifetime-profits                 ; the total sum of profits - startup costs
 ]
@@ -85,7 +82,7 @@ to adjust-output-and-price
   
   let index-i 0
   foreach table:keys input-data [ i ->
-    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods)) 
+    set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods))     
     set index-i index-i + 1 
   ]
   
@@ -137,7 +134,7 @@ to-report estimate-price [input-i]
 end
 
 ;firm procedure, fires all workers that firm does not want
-to fire-workers
+to lay-off-workers
   if desired-n-workers < n-workers and n-workers > 0 [  
     ifelse only-fire-1-per-month? [
       ask one-of my-employment-links [die]    
@@ -148,8 +145,8 @@ to fire-workers
 end
 
 
-;firm procedure, determines whether exit is an appropriate response for the firm this period
-to remove-firm
+
+to replace-firm
   add-lifetime-profits    
   
   ;; give any liquidity back to investors
@@ -202,15 +199,6 @@ to add-firm
   ]
 end
 
-;firm procedure, updates the soil health of the patches 
-to update-soil-health
-  set soil-health min (list 200 (soil-health + BACKGROUND-IMPROVEMENT))
-  set soil-health max (list 0 (soil-health - (max-production)))
-  let patch-health soil-health
-  ask firm-location [
-    set pcolor scale-color black patch-health 0 200
-  ]
-end
 
 ;firm procedure, firms search for the funding from households
 to-report raise-funds

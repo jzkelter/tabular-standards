@@ -66,24 +66,23 @@ globals [
 to setup
   ca
   
-  set-constants
-  set TOTAL-BANKRUPT-FIRMS 0
+  set-constants  
   set pringle-index-value 1
   set coats-index-value 1            
   set ussher-index-value 1              
   set potvin-index-value 1
     
-  
   ;; setup agents
-  
   create-households n-households [
-    set shape "circle" 
-    set ycor min-pycor + 1 + random 10
+    set shape "circle"     
     set size 0.5
     set liquidity STARTUP-LIQUIDITY  
   ]
   
   setup-firms         
+  
+  setup-lands 
+  
   initialize-framework-agreements
       
   ask households[
@@ -111,8 +110,7 @@ to setup
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
     set average-previous-sales max-production
-  ]
-  
+  ]    
   
   set-colors
   ask one-of firms [ask my-links [show-link]]
@@ -125,9 +123,45 @@ to setup
   set UNEMPLOYMENT-RATES (list 0)
   set MEAN-PRICES (list mean [price] of firms)
       
+  position-agents  
   
   reset-ticks
   tick
+end
+
+to setup-lands 
+  create-lands count PRIMARY-GOOD-FIRMS 
+  let min-land-who min [who] of lands
+  let x-per-land world-width / count lands
+  ask lands [
+    setxy (who - min-land-who) * x-per-land max-pycor
+    set shape "square"
+    set color green
+  ]
+end
+
+to position-agents  
+  ; land-plots get top row
+  
+  
+  ; household get 1 / 3 of the world        
+  let household-size  10 / patch-size
+  ask households [ 
+    set ycor -0.5 + min-pycor + ((who - min [who] of households) / count households) * (world-height / 3)
+    set size household-size
+  ]
+ 
+  ; firms divide up the remaining 2 / 3 of the world  
+  let remaining-wh (2 / 3) * (world-height - 0.5)
+  let n-firm-types max [firm-type] of firms
+  let height-per-firm (remaining-wh / n-firm-types)
+  let padding household-size * 4
+  ask firms [
+    set ycor (max-pycor - 0.4) 
+              - (firm-type - 1) * height-per-firm 
+              - ((who - min [who] of firms with [firm-type = [firm-type] of myself]) / count firms with [firm-type = [firm-type] of myself]) * (height-per-firm - padding)
+    set size 20 / patch-size
+  ]
 end
 
 ;procedure to initialize all global constants
@@ -146,6 +180,7 @@ to set-constants
   set STARTUP-LIQUIDITY 100                
   set BACKGROUND-IMPROVEMENT 10
   set DESIRED-BUFFER-PERCENT 0.5
+  set TOTAL-BANKRUPT-FIRMS 0
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -168,10 +203,10 @@ end
 ;setup procedure for firms, creates every firm in the model according to the specifications in a json file
 to setup-firms
   let firm-ratio-sum 0
-  foreach FIRM-STRUCTURE[ f ->     ; we need to first find out how many firms to create
+  foreach FIRM-STRUCTURE [ f ->     ; we need to first find out how many firms to create
     set firm-ratio-sum firm-ratio-sum + table:get f "Firm count"  ; final sum should be 
   ]
-  foreach FIRM-STRUCTURE[ f ->
+  foreach FIRM-STRUCTURE [ f ->
     let group table:get f "Firm type"
     let firm-ratio table:get f "Firm count"
     let firm-tech-parameter table:get f "Tech constant"
@@ -193,9 +228,7 @@ to setup-firms
       set fired-worker? false
       
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
-      
-      set ycor 12 - random 5
-      if table:length input-data != 0 [set ycor ycor - 9]
+                  
     ]
   ]
 
@@ -235,12 +268,5 @@ to initialize-framework-agreements
 end
 
 to setup-patches
-  ask firms [
-    set firm-location (patch (((who - n-households) mod world-width) + min-pycor) (max-pxcor - (floor ((who - n-households) / world-width))))
-    set soil-health random 50
-    let patch-health soil-health
-    ask firm-location [
-      set pcolor scale-color black patch-health 0 200
-    ]
-  ]
+
 end

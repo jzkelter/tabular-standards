@@ -2,9 +2,18 @@
     "Firms":[
         {
             "Firm type": 1,
+            "Input data":[],
+            "Tech constant": 3.75,
+            "Firm count": 0.25,
+            "Consumer?":false,
+	    "Intermediate?":false,
+	    "Primary?":true
+        },
+        {
+            "Firm type": 2,
             "Input data": [
                 {
-                    "Input firm type": 2,
+                    "Input firm type": 1,
                     "Marginal productivity": 4
                 }
             ],
@@ -13,16 +22,8 @@
             "Consumer?":true,
 	    "Intermediate?":false,
 	    "Primary?":false
-        },
-        {
-            "Firm type": 2,
-            "Input data":[],
-            "Tech constant": 3.75,
-            "Firm count": 0.25,
-            "Consumer?":false,
-	    "Intermediate?":false,
-	    "Primary?":true
         }
+        
     ]
 }
 

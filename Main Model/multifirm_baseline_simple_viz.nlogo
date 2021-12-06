@@ -2,16 +2,13 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-
-__includes[
-  "unit testing.nls"
-  "household-procedures.nls"
-  "firm-procedures.nls"
-  "go-procedures.nls"
-  "setup-procedures.nls"
-  "misc-observer-procedures.nls"
-  "land-procedures.nls"
-]
+__includes["unit testing.nls"
+           "household-procedures.nls"
+           "firm-procedures.nls"
+           "go-procedures.nls"
+           "setup-procedures.nls"
+           "earth-reserve-procedures.nls"
+           "misc-observer-procedures.nls"]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
@@ -19,11 +16,11 @@ __includes[
 GRAPHICS-WINDOW
 210
 55
-643
-489
+638
+484
 -1
 -1
-38.64
+38.18181818181818
 1
 10
 1
@@ -45,9 +42,9 @@ months
 
 BUTTON
 0
-360
+300
 66
-393
+333
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -62,9 +59,9 @@ NIL
 
 BUTTON
 124
-360
+300
 205
-393
+333
 go-once
 go\n
 NIL
@@ -79,9 +76,9 @@ NIL
 
 BUTTON
 67
-360
+300
 122
-393
+333
 NIL
 go
 T
@@ -96,9 +93,9 @@ NIL
 
 SLIDER
 0
-100
+55
 172
-133
+88
 n-households
 n-households
 10
@@ -111,9 +108,9 @@ HORIZONTAL
 
 PLOT
 0
-395
+340
 200
-543
+488
 Unemployment rate
 NIL
 unemployment
@@ -129,10 +126,10 @@ PENS
 "mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
-652
-10
-975
-180
+650
+165
+973
+335
 Wage Rate Stats 
 NIL
 NIL
@@ -153,9 +150,9 @@ PENS
 "Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
 
 PLOT
-855
+210
 495
-1055
+435
 645
 Worker Per Firm Distribution
 NIL
@@ -171,10 +168,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 BUTTON
-983
-117
-1077
-150
+805
+125
+899
+158
 hide-links
 ask links [hide-link]
 NIL
@@ -188,10 +185,10 @@ NIL
 1
 
 BUTTON
-983
-10
-1145
-43
+805
+18
+967
+51
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
 NIL
@@ -206,9 +203,9 @@ NIL
 
 PLOT
 0
-547
+490
 200
-697
+640
 Household Liquidity Distribution
 NIL
 NIL
@@ -223,10 +220,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-1060
-187
-1334
-337
+650
+340
+985
+490
 Mean Price
 NIL
 NIL
@@ -240,154 +237,13 @@ true
 PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
-
-BUTTON
-1040
-150
-1113
-183
-bmonth-f
-go-beginning-of-month-firms\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1194
-150
-1289
-183
-go-month
-go-month\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-PLOT
-855
-185
-1055
-335
-Monthly Firm Turnover
-NIL
-NIL
-0.0
-10.0
-0.0
-1.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
-
-PLOT
-650
-495
-850
-645
-Mean Demand Not Satisfied
-NIL
-NIL
-0.0
-10.0
-0.0
-0.1
-true
-false
-"" ""
-PENS
-"Consumers" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
-"Consumer firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
-
-PLOT
-650
-185
-850
-335
-Inventory
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
-"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
-
-BUTTON
-983
-150
-1038
-183
-dsetup
-\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1290
-150
-1434
-183
-go-end-of-month
-go-end-of-month\ntick\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1115
-150
-1192
-183
-bmonth-h
-go-beginning-of-month-households\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"fw-agreements" 1.0 0 -7500403 true "" "plot mean [framework-price] of framework-agreements"
 
 SLIDER
 0
-167
+122
 170
-200
+155
 transactions-per-month
 transactions-per-month
 1
@@ -398,52 +254,11 @@ transactions-per-month
 NIL
 HORIZONTAL
 
-PLOT
-1061
-494
-1335
-644
-Output and Demand
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -5509967 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * max-production] of PRIMARY-GOOD-FIRMS"
-
-PLOT
-1061
-341
-1335
-491
-Mean Liquidity
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
-"household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
-"consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
-
 BUTTON
-983
-46
-1144
-79
+805
+54
+966
+87
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
 NIL
@@ -457,10 +272,10 @@ NIL
 1
 
 BUTTON
-983
-82
-1143
-115
+805
+90
+965
+123
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
 NIL
@@ -473,41 +288,11 @@ NIL
 NIL
 1
 
-MONITOR
-890
-205
-1033
-250
-Firms Added This Month
-count firms with [color = yellow]
-4
-1
-11
-
 PLOT
-415
+440
 495
 645
 645
-Firm Money Outflow/Inflow
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"outflow" 1.0 0 -2674135 true "" "plot sum [price * max-production] of CONSUMER-GOOD-FIRMS"
-
-PLOT
-855
-340
-1054
-490
 Total Bankrupt Firms
 NIL
 NIL
@@ -524,18 +309,18 @@ PENS
 CHOOSER
 0
 10
-133
+100
 55
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
-1186
-10
-1333
-55
+650
+20
+797
+65
 # Primary Good Firms
 count PRIMARY-GOOD-FIRMS
 17
@@ -543,10 +328,10 @@ count PRIMARY-GOOD-FIRMS
 11
 
 MONITOR
-1186
-57
-1332
-102
+650
+67
+796
+112
 # Intermediate Good Firms
 count INTERMEDIATE-GOOD-FIRMS
 17
@@ -554,10 +339,10 @@ count INTERMEDIATE-GOOD-FIRMS
 11
 
 MONITOR
-1185
-105
-1331
-150
+649
+115
+795
+160
 # Consumer Good Firms
 count CONSUMER-GOOD-FIRMS
 17
@@ -566,9 +351,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 0
-132
+87
 172
-165
+120
 n-firms
 n-firms
 10
@@ -581,9 +366,9 @@ HORIZONTAL
 
 SLIDER
 0
-202
+157
 170
-235
+190
 framework-duration
 framework-duration
 1
@@ -595,21 +380,21 @@ NIL
 HORIZONTAL
 
 CHOOSER
-0
-55
-132
 100
+10
+192
+55
 index-in-use
 index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
 0
 
 PLOT
-205
+650
 495
-410
+985
 645
-Profitability
+Mean Lifetime Profits
 NIL
 NIL
 0.0
@@ -625,9 +410,9 @@ PENS
 
 SLIDER
 0
-235
+190
 205
-268
+223
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -637,61 +422,6 @@ mean-new-agreements-per-month
 1
 NIL
 HORIZONTAL
-
-PLOT
-1340
-495
-1540
-645
-Framework Agreements per Firm
-NIL
-NIL
-0.0
-20.0
-0.0
-10.0
-true
-false
-"" "set-plot-x-range 0 count firms with [not consumer-good-firm?]\nset-plot-y-range 0 count firms with [not primary-good-firm?]\n"
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
-
-PLOT
-650
-340
-850
-490
-average-previous-sales
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
-"primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
-
-PLOT
-1340
-185
-1540
-335
-Mean Framework Price
-NIL
-NIL
-0.0
-10.0
-0.9
-1.1
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot mean [framework-price] of framework-agreements"
 
 TEXTBOX
 210
@@ -725,24 +455,24 @@ https://xalgorithms.org/
 
 SLIDER
 0
-272
+227
 205
-305
+260
 firm-memory-constant
 firm-memory-constant
 0
 1
-0.8
+1.0
 0.1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-1340
-460
-1557
-493
+0
+660
+217
+693
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -751,31 +481,25 @@ fix-n-framework-agreements?
 
 SWITCH
 0
-315
+265
 202
-348
+298
 only-fire-1-per-month?
 only-fire-1-per-month?
 0
 1
 -1000
 
-BUTTON
-1080
-117
-1182
-150
-run unit-tests
-unit-tests
-NIL
+MONITOR
+570
+585
+640
+630
+this month
+count firms with [color = yellow]
+17
 1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1166,9 +890,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-
-NetLogo 6.2.1
-
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

@@ -1,0 +1,7 @@
+breed [lands  land]
+
+lands-own [soil-health]
+
+to land-endogenously-renews  ; TODO
+  
+end
