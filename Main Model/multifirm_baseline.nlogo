@@ -2,24 +2,27 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["unit testing.nls"
-           "household-procedures.nls"
-           "firm-procedures.nls"
-           "go-procedures.nls"
-           "setup-procedures.nls"
-           "misc-observer-procedures.nls"]
+__includes[
+  "unit testing.nls"
+  "household-procedures.nls"
+  "firm-procedures.nls"
+  "go-procedures.nls"
+  "setup-procedures.nls"
+  "misc-observer-procedures.nls"
+  "land-procedures.nls"
+]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
 @#$#@#$#@
 GRAPHICS-WINDOW
-207
-51
-644
+210
+55
+643
 489
 -1
 -1
-13.0
+38.64
 1
 10
 1
@@ -29,10 +32,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+0
+10
+0
+10
 1
 1
 1
@@ -1145,7 +1148,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.1-beta1
+NetLogo 6.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
