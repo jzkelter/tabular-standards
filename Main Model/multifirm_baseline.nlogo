@@ -721,9 +721,9 @@ https://xalgorithms.org/
 
 SLIDER
 0
-272
+270
 205
-305
+303
 firm-memory-constant
 firm-memory-constant
 0
@@ -747,9 +747,9 @@ fix-n-framework-agreements?
 
 SWITCH
 0
-315
+305
 202
-348
+338
 only-fire-1-per-month?
 only-fire-1-per-month?
 0

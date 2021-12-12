@@ -3,11 +3,14 @@ __includes["unit testing.nls"]  ;including this for purpose of using the helpful
 
 to unit-tests
   run-tests (list    
-    (list "Price and output tests" test-adjust-price-and-output)
+    (list "Price tests" test-adjust-price)
     (list "Pay wage tests" test-pay-wages)
     (list "Fire worker tests" test-fire-workers)
     (list "Average sales tests" test-average-sales)
     (list "Wage rate tests" test-adjust-wage-rate)
+    (list "Remove firm tests" test-remove-firm)
+    (list "Adjust output tests" test-adjust-output)
+    (list "Cost of production tests" test-cost-of-production)
   )
 end
 
@@ -31,17 +34,31 @@ to-report test-remove-firm
   report [->
     set BANKRUPT-FIRM-PROFITS (list)
     create-households 1
-    create-firms 1 [
+    create-firms 2 [;this allows some market wide procedures to work later
       set firm-type 0
+      set tech-parameter 1
+      set input-data table:make
+      set consumer-good-firm? true
+      set primary-good-firm? true
+      set intermediate-good-firm? true
     ]
+    set CONSUMER-GOOD-FIRMS firms with [firm-type = 0]
+    set PRIMARY-GOOD-FIRMS firms with [firm-type = 0]
+    set INTERMEDIATE-GOOD-FIRMS firms with [firm-type = 0]
     create-firms 1 [
       ask households [create-equity-link-with myself]
       ask my-equity-links [set equity 100]
       set liquidity 100
       set firm-type 0
-      remove-firm
+      set average-previous-sales 50
+      set tech-parameter 1
+      set input-data table:make
+      set consumer-good-firm? true
+      set primary-good-firm? false
+      set intermediate-good-firm? false
     ]
-    assert (count firms = 1) "Removed firm should be replaced"
+    ask firms [remove-firm]
+    assert (count firms = 3) "Removed firm should be replaced"
   ]
 end
 
@@ -69,7 +86,7 @@ to-report test-adjust-wage-rate
       set wage-rate 1
       set months-without-vacancies 3
       adjust-wage-rate
-      assert (wage-rate < 1) "wage should decrease when we have had a vacant position for too many months"
+      assert (wage-rate < 1) "wage should decrease when there has not been a vacant position for at least X months"
       
       set wage-rate 1
       set months-without-vacancies 1
@@ -81,18 +98,42 @@ to-report test-adjust-wage-rate
   ]
 end
 
-to-report test-adjust-price-and-output
+to-report test-adjust-price
   report [->
     let before-price 1
+    set DESIRED-BUFFER-PERCENT 0.2
+    set MAX-PRICE-GROWTH 0.1
     create-firms 1 [
+      set firm-type 0
+      set price 2
+    ]
+    create-firms 1 [
+      set firm-type 0
       set price before-price
       set average-previous-sales 100
-    set tech-parameter 3
+      set tech-parameter 3
       set input-data table:make
       set liquidity 999999
+      set wage-rate 3
       
       adjust-output-and-price
       assert (price = before-price) "price should not have changed"
+     
+      ;ideal-buffer = 100 * 0.2 = 20
+      set price 1
+      set inventory 19             
+      set liquidity 0
+      adjust-output-and-price
+      assert (price > before-price) "price should have increased"
+      
+      ask one-of other firms [set price 0]
+      ;ideal-buffer * 1.2 = 24
+      set price 1
+      set inventory 25
+      set liquidity 999999
+      set wage-rate 1
+      adjust-output-and-price
+      assert (price < before-price) "price should have decreased"
     ]
   ]
 end
@@ -153,5 +194,44 @@ to-report test-average-sales
       assert average-previous-sales = 0.75 "average-previous-sales should be 0.75"
     ]
   ]
+end
+
+to-report test-adjust-output
+  report [->
+    set DESIRED-BUFFER-PERCENT 0.2
+    set MAX-PRICE-GROWTH 0.1
+    
+    create-firms 1 [
+      set price 1
+      set tech-parameter 3
+      set wage-rate 3
+      set average-previous-sales 100
+      ;ideal-buffer is 20
+      set inventory 20
+      assert (estimate-ideal-production = 102) "should round up from 100 to 102"
+      
+      set inventory 120
+      assert (estimate-ideal-production = 0) "inventory high enough as is, we do not need to produce any more"
+    ]    
+  ] 
+end
+
+to-report test-cost-of-production
+  report [->
+    set DESIRED-BUFFER-PERCENT 0.2
+    set MAX-PRICE-GROWTH 0.1
+    
+    create-firms 1 [
+      set price 1
+      set tech-parameter 3
+      set wage-rate 3
+      set input-data table:make
+      set average-previous-sales 100
+      ;ideal-buffer is 20
+      set inventory 20
+      assert (estimate-total-price-of-production 0) = 0 "It should not cost anything to produce nothing"
+      assert (estimate-total-price-of-production 100) = 100 "It should cost 100"
+    ]    
+  ] 
 end
 
