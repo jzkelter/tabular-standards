@@ -116,7 +116,7 @@ to setup
   set-colors
   ask one-of firms [ask my-links [show-link]]
   
-  setup-patches
+  LAND.setup-patches
   
   
   set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
@@ -271,10 +271,6 @@ to initialize-framework-agreements
   ]
 end
 
-to setup-patches
-
-end
-
 to setup-crash
   ca
   
@@ -331,7 +327,7 @@ to setup-crash
   set-colors
   ask one-of firms [ask my-links [show-link]]
   
-  setup-patches
+  LAND.setup-patches
   
   
   set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))

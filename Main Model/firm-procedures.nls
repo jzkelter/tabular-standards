@@ -23,6 +23,9 @@ firms-own [
   primary-good-firm?               ; defines whether they produce primary goods    
   
   lifetime-profits                 ; the total sum of profits - startup costs
+  
+  firm-location                    ; a single number representing the single piece of land that the firm operates on
+  competency                       ; the ability for a firm to make 
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details

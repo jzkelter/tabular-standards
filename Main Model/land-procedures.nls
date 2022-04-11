@@ -1,7 +1,73 @@
-breed [lands  land]
+;breed [lands  land]
 
-lands-own [soil-health]
-
-to land-endogenously-renews  ; TODO
+;;changed this to patches, but we can always change back
+patches-own [
+  soil-health                      ; the soil health located under the firm, possible change to patch variable?
   
+  maximum-soil-health-increase
+  maximum-soil-health-decrease
+  optimal-soil-health
+  MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION ;constant, should be elsewhere, here for now
+  MARGINAL-EFFECT-OF-LABOR-ON-LAND
+]
+
+to LAND.endogenously-renews  ; TODO
+  
+end
+
+
+to LAND.setup-patches  
+  ask firms [
+    set firm-location (patch (((who - n-households) mod world-width) + min-pycor) (max-pxcor - (floor ((who - n-households) / world-width))))
+    ask firm-location [
+      set soil-health random-normal 50 5
+      set optimal-soil-health 100
+      set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
+      set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
+      set pcolor scale-color black soil-health 0 200
+    ]
+    set competency random-normal 0 0.1
+  ]
+end
+
+;;NOTE, I have yet to actually implement this, but if we end up using this, every time production is calculated, it would be multiplied by this constant
+;firm procedure, reports the calculated productivity multiplier for max production
+to-report LAND.calculate-productivity-multiplier
+  if index-in-use != "potvin" [
+    report 1
+  ]
+  report 1 ;;temp, we need to discuss
+end
+
+;observer procedure, updates the soil health of the patches 
+to LAND.update-soil-health
+  ask firms [
+    set soil-health soil-health + LAND.labors-effect-on-land
+    let patch-health soil-health
+    ask firm-location [
+      set pcolor scale-color black patch-health 0 150
+    ]
+  ]
+end
+
+to-report LAND.labors-effect-on-land
+  let marginal-effect 1
+  let change-factor 0
+  let temp-competency competency
+  ask firm-location [
+    LAND.calculate-maximum-soil-health-change
+    ifelse temp-competency > 0 [   ;we could reasonably change this back to 0, if it is easier to understand, but I will leave it for consistency
+      set change-factor maximum-soil-health-increase
+    ] [
+      set change-factor -1 * maximum-soil-health-decrease
+    ]
+    set marginal-effect MARGINAL-EFFECT-OF-LABOR-ON-LAND
+  ]
+  report 2 * ((change-factor / (1 + e ^ (-1 * (competency) * ((n-workers / n-households) * n-firms) ^ marginal-effect))) - (change-factor / 2))
+  ;Equation: https://www.desmos.com/calculator/8zmmossndi
+end
+
+to LAND.calculate-maximum-soil-health-change
+  set maximum-soil-health-increase (optimal-soil-health - soil-health) * MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION
+  set maximum-soil-health-decrease (soil-health) * MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION ;worst case normalized to 0
 end
