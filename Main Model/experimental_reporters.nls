@@ -1,0 +1,91 @@
+to-report unit-cost
+  let atc 0
+  foreach table:keys input-data [i ->
+    set atc (atc + ((avg-unit-cost i) / (marginal-productivity i)))
+  ]
+  report atc
+end
+
+to-report labor-value
+  report (tech-parameter * (price - unit-cost))
+end
+
+to-report ratio-all-firms
+  let mean-ratio 0
+  ask firms[
+    set mean-ratio (mean-ratio + (labor-value / wage-rate))
+  ]
+  set mean-ratio (mean-ratio / (count firms))
+  report mean-ratio
+end
+
+to-report ratio-primary-good-firms
+  let mean-ratio 0
+  ask PRIMARY-GOOD-FIRMS[
+    set mean-ratio (mean-ratio + (labor-value / wage-rate))
+  ]
+  set mean-ratio (mean-ratio / (count (PRIMARY-GOOD-FIRMS)))
+  report mean-ratio
+end
+
+to-report ratio-consumer-good-firms
+  let mean-ratio 0
+  ask CONSUMER-GOOD-FIRMS[
+    set mean-ratio (mean-ratio + (labor-value / wage-rate))
+  ]
+  set mean-ratio (mean-ratio / (count (CONSUMER-GOOD-FIRMS)))
+  report mean-ratio
+end
+
+to-report mean-cg-price
+  report mean [price] of CONSUMER-GOOD-FIRMS
+end
+
+to-report mean-pg-price
+  report mean [price] of PRIMARY-GOOD-FIRMS
+end
+
+to-report mean-price
+  report mean [price] of firms
+end
+
+to-report experimental-seed
+  report SEED
+end
+
+to-report mean-unemployment
+  report mean UNEMPLOYMENT-RATES
+end
+
+to-report mean-profits
+  report mean [lifetime-profits] of firms
+end
+
+to-report mean-household-liquidity
+  report mean [liquidity] of households
+end
+
+to-report median-household-liquidity
+  report median [liquidity] of households
+end
+
+to-report median-firm-profits
+  report median [lifetime-profits] of firms
+end
+
+to-report mean-firm-liquidity
+  report mean [liquidity] of firms
+end
+
+to-report median-firm-liquidity
+  report median [liquidity] of firms
+end
+
+to-report total-max-production
+  let total 0
+  ask firms[
+    set total (total + max-production)
+  ]
+  
+  report total
+end

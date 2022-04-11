@@ -7,6 +7,9 @@ to go
   go-beginning-of-month-households  
   go-month  
   go-end-of-month
+  if go-crashed?[
+    stop
+  ]
   tick
 end
 
@@ -24,18 +27,18 @@ end
 to go-beginning-of-month-firms
   
   ask firms [    
-    pay-wages  ; pay workers for last month's work
+    firm-pay-wages  ; pay workers for last month's work
     
     if liquidity <= wage-rate [  
-      replace-firm
+      firm-replace-firm
     ]
-    calculate-average-sales
-    search-for-framework-agreements
+    firm-calculate-average-sales
+    firm-search-for-framework-agreements
     ;search-delivery-capable-supplier and vendor used to be here
     
-    adjust-wage-rate
-    adjust-output-and-price
-    lay-off-workers
+    firm-adjust-wage-rate
+    firm-adjust-output-and-price
+    firm-lay-off-workers
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month          
   ]
@@ -45,11 +48,11 @@ end
 to go-beginning-of-month-households
   ask households [
     if liquidity < 0 [error "negative liquidity beginning of month"] 
-    guarantee-consumer-links
-    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [search-cheaper-vendor]
-    if random-float 1 < PROB-REPLACE-FIRM-QUANT [search-delivery-capable-vendor]  
-    search-for-employement
-    set-consumption
+    household-guarantee-consumer-links
+    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [household-search-cheaper-vendor]
+    if random-float 1 < PROB-REPLACE-FIRM-QUANT [household-search-delivery-capable-vendor]  
+    household-search-for-employement
+    household-set-consumption
   ]
 end
 
@@ -58,11 +61,11 @@ to go-month
   repeat transactions-per-month [
     ask firms [
       ;check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
-      buy-input-goods
-      produce-goods
+      firm-buy-input-goods
+      firm-produce-goods
     ]
     ask households [
-      buy-consumption-goods
+      household-buy-consumption-goods
     ]
   ]
 end
@@ -72,17 +75,22 @@ to go-end-of-month
   if (sum [liquidity] of firms) + (sum [liquidity] of households) < 0.9999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
   if (sum [liquidity] of firms) + (sum [liquidity] of households) > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
   
+  let mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
+  
   ask firms [
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
-    distribute-profits
+    firm-distribute-profits
     (ifelse desired-n-workers <= n-workers [
       set months-without-vacancies months-without-vacancies + 1
     ] [
       set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire, i.e. had a vacancy
     ])
   ]
+  
+  set mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
+  
   ask households [ 
-    adjust-reservation-wage
+    household-adjust-reservation-wage
   ]
 
   set-firm-xcor
@@ -94,6 +102,23 @@ to go-end-of-month
   set month month + 1
   
 end
+
+to-report go-crashed?
+  let n length UNEMPLOYMENT-RATES
+  set n (n - 1)
+  let c 0
+  while [c < 50 and n >= 0][
+    let curr-rate item n UNEMPLOYMENT-RATES
+    if curr-rate < 0.8[
+      report false
+    ]
+    set c c + 1
+    set n n - 1
+  ]
+  report true
+end
+
+
 
 
 

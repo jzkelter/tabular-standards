@@ -6,11 +6,12 @@ extensions [rnd table]
 __includes[
   "unit testing.nls"
   "household-procedures.nls"
-  "firm-procedures.nls"
+  "firm-procs-probablistic-firing.nls"
   "go-procedures.nls"
   "setup-procedures.nls"
   "misc-observer-procedures.nls"
   "land-procedures.nls"
+  "experimental_reporters.nls"
 ]
 
 
@@ -330,7 +331,6 @@ false
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 983
@@ -436,7 +436,7 @@ true
 PENS
 "primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of firms"
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -732,7 +732,7 @@ firm-memory-constant
 firm-memory-constant
 0
 1
-0.8
+0.7
 0.1
 1
 NIL
@@ -758,17 +758,56 @@ layoff-probability
 layoff-probability
 0
 1
-0.59
+1.0
 0.01
 1
 NIL
 HORIZONTAL
 
+PLOT
+1435
+30
+1825
+180
+Labor-wage-rate-ratios
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"all-firms" 1.0 0 -16777216 true "" "plot ratio-all-firms"
+"primary-good-firms" 1.0 0 -7500403 true "" "plot ratio-primary-good-firms"
+"consumer-good-firms" 1.0 0 -2674135 true "" "plot ratio-consumer-good-firms"
+
+PLOT
+1540
+495
+1740
+645
+sales plot
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count firms"
+"pen-1" 1.0 0 -7500403 true "" "plot count firms with [previous-sales > 0]"
+
 BUTTON
-1335
-105
-1442
-138
+205
+650
+312
+683
 NIL
 setup-crash
 NIL
@@ -780,6 +819,25 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+1540
+185
+1740
+335
+Liquidity Limiter
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -2674135 true "" "plot mean [my-liquidity-limiter] of CONSUMER-GOOD-FIRMS"
+"pen-1" 1.0 0 -14439633 true "" "plot mean [my-pre-profit-liquidity-limiter] of CONSUMER-GOOD-FIRMS"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1404,12 +1462,151 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <steppedValueSet variable="framework-duration" first="1" step="1" last="10"/>
   </experiment>
-  <experiment name="economy-crash-experiment" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="layoff-probability-variation-0-3" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="2000"/>
+    <timeLimit steps="3000"/>
+    <metric>ratio-all-firms</metric>
+    <metric>ratio-primary-good-firms</metric>
+    <metric>ratio-consumer-good-firms</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>mean-price</metric>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="layoff-probability-variation-4-7" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <metric>ratio-all-firms</metric>
+    <metric>ratio-primary-good-firms</metric>
+    <metric>ratio-consumer-good-firms</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>mean-price</metric>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="layoff-probability-variation-8-1" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <metric>ratio-all-firms</metric>
+    <metric>ratio-primary-good-firms</metric>
+    <metric>ratio-consumer-good-firms</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>mean-price</metric>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="economy-crash" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
     <exitCondition>crashed?</exitCondition>
     <metric>crashed?</metric>
+    <metric>experimental-seed</metric>
+    <metric>mean-unemployment</metric>
+    <metric>mean-profits</metric>
+    <metric>mean-household-liquidity</metric>
+    <metric>median-household-liquidity</metric>
+    <metric>median-firm-profits</metric>
+    <metric>mean-firm-liquidity</metric>
+    <metric>median-firm-liquidity</metric>
     <metric>ticks</metric>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0"/>
@@ -1451,6 +1648,92 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="economy-crash-test" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <exitCondition>crashed?</exitCondition>
+    <metric>crashed?</metric>
+    <metric>ticks</metric>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.78"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="profit-examination" repetitions="1" runMetricsEveryStep="false">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <exitCondition>crashed?</exitCondition>
+    <metric>mean [LIFETIME-PROFITS] of firms</metric>
+    <metric>crashed?</metric>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.3"/>
+      <value value="0.4"/>
+      <value value="0.5"/>
+      <value value="0.6"/>
+      <value value="0.7"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.7"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fix-n-framework-agreements?">
       <value value="false"/>

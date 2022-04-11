@@ -53,6 +53,7 @@ globals [
   STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
   BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
   DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
+  SEED                             ; the random seed for the current run
   
   month                            ; the current tick
   pringle-index-value              ; index id: 1
@@ -71,7 +72,7 @@ to setup
   set coats-index-value 1            
   set ussher-index-value 1              
   set potvin-index-value 1
-    
+  
   ;; setup agents
   create-households n-households [
     set shape "circle"     
@@ -81,7 +82,7 @@ to setup
   
   setup-firms         
   
-  setup-lands 
+  ;setup-lands 
   
   initialize-framework-agreements
       
@@ -91,25 +92,25 @@ to setup
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
-    set reservation-wage [wage-rate] of my-employer
-    set-consumption             ; this has to be set after households have trading connections to calculate mean price
+    set reservation-wage [wage-rate] of household-my-employer
+    household-set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
 
   ask firms [    
-    set liquidity raise-funds
+    set liquidity firm-raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand max-production   ; demand initialized to be the intial output of the firm
+    set demand firm-max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
-    set-input-demands   
-    set previous-sales max-production
+    firm-set-input-demands   
+    set previous-sales firm-max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales max-production
+    set average-previous-sales firm-max-production
   ]    
   
   set-colors
@@ -129,16 +130,16 @@ to setup
   tick
 end
 
-to setup-lands 
-  create-lands count PRIMARY-GOOD-FIRMS 
-  let min-land-who min [who] of lands
-  let x-per-land world-width / count lands
-  ask lands [
-    setxy (who - min-land-who) * x-per-land max-pycor
-    set shape "square"
-    set color green
-  ]
-end
+;to setup-lands 
+;  create-lands count PRIMARY-GOOD-FIRMS 
+;  let min-land-who min [who] of lands
+;  let x-per-land world-width / count lands
+;  ask lands [
+;    setxy (who - min-land-who) * x-per-land max-pycor
+;    set shape "square"
+;    set color green
+;  ]
+;end
 
 to position-agents  
   ; land-plots get top row
@@ -166,6 +167,8 @@ end
 
 ;procedure to initialize all global constants
 to set-constants
+  set SEED new-seed
+  random-seed SEED
   set MIN-WAGE-RATE 2.5
   set MAX-WAGE-GROWTH 0.019                
   set MONTHS-TO-LOWER-WAGE 1              
@@ -250,6 +253,7 @@ to-report make-input-data-table [original-data]
       table:put inputi "Marginal productivity" (table:get i "Marginal productivity")
       table:put inputi "Current stock" 0
       table:put inputi "Monthly demand" 0
+      table:put inputi "Average unit cost" 0
       table:put data-table (table:get i "Input firm type") inputi
     ]
     report data-table
@@ -269,4 +273,114 @@ end
 
 to setup-patches
 
+end
+
+to setup-crash
+  ca
+  
+  set-constants
+  set STARTUP-LIQUIDITY 7  
+  set pringle-index-value 1
+  set coats-index-value 1            
+  set ussher-index-value 1              
+  set potvin-index-value 1
+  
+  ;; setup agents
+  create-households n-households [
+    set shape "circle"     
+    set size 0.5
+  ]
+  
+  distribute-unequal-liquidity
+  setup-firms
+  
+  initialize-framework-agreements
+  ;position-agents
+  
+  ask households[
+    set-household-xcor
+    create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
+      init-consumer-link
+    ]
+    ifelse random-float 1 > 0.98[
+      if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
+      set reservation-wage [wage-rate] of household-my-employer
+    ][
+      set reservation-wage MIN-WAGE-RATE
+    ]
+    household-set-consumption             ; this has to be set after households have trading connections to calculate mean price
+  ]
+  
+  ask firms [    
+    set liquidity firm-raise-funds
+    set lifetime-profits liquidity * -1
+    set months-without-vacancies 0
+    set demand firm-max-production   ; demand initialized to be the intial output of the firm
+    set desired-n-workers n-workers   ; workers initially want the number of workers they have
+    firm-set-input-demands   
+    set previous-sales firm-max-production
+    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
+    
+    ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
+;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
+;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
+;    ]
+    set average-previous-sales firm-max-production
+  ]    
+  
+  set-colors
+  ask one-of firms [ask my-links [show-link]]
+  
+  setup-patches
+  
+  
+  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
+  set BANKRUPT-FIRM-PROFITS (list)
+  set UNEMPLOYMENT-RATES (list 0)
+  set MEAN-PRICES (list mean [price] of firms)
+      
+  position-agents  
+  
+  set STARTUP-LIQUIDITY 100
+  
+  reset-ticks
+  tick
+end
+
+to distribute-unequal-liquidity
+  
+  let total-liquidity (n-households * 100)
+  let wealthy-portion (0.9 * total-liquidity)
+  let top-five-percent round (n-households * 0.05)
+  let households-left top-five-percent
+  
+  ask n-of top-five-percent households[
+    ifelse households-left = 1[
+      set liquidity wealthy-portion
+    ][
+      let proportion ((random-float 0.1) + 0.02)
+      set liquidity (wealthy-portion * proportion)
+      set wealthy-portion (wealthy-portion - liquidity)
+      set households-left (households-left - 1)
+    ]
+  ]
+  let liquidity-left (total-liquidity - (0.9 * total-liquidity))
+  ask households[
+    if liquidity = 0[
+      set liquidity (liquidity-left / (n-households - top-five-percent))
+    ]
+  ]
+  
+;  let total-liquidity (n-households * 100)
+;  ask one-of households[
+;    set liquidity total-liquidity
+;  ]
+end
+
+to position-households
+  let household-size  10 / patch-size
+  ask households [ 
+    set ycor -0.5 + min-pycor + ((who - min [who] of households) / count households) * (world-height / 3)
+    set size household-size
+  ]
 end
