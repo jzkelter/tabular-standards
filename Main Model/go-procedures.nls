@@ -28,18 +28,18 @@ end
 to go-beginning-of-month-firms
   
   ask firms [    
-    firm-pay-wages  ; pay workers for last month's work
+    FIRM.pay-wages  ; pay workers for last month's work
     
     if liquidity <= wage-rate [  
-      firm-replace-firm
+      FIRM.replace-firm
     ]
-    firm-calculate-average-sales
-    firm-search-for-framework-agreements
+    FIRM.calculate-average-sales
+    FIRM.search-for-framework-agreements
     ;search-delivery-capable-supplier and vendor used to be here
     
-    firm-adjust-wage-rate
-    firm-adjust-output-and-price
-    firm-lay-off-workers
+    FIRM.adjust-wage-rate
+    FIRM.adjust-output-and-price
+    FIRM.lay-off-workers
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month          
   ]
@@ -49,11 +49,11 @@ end
 to go-beginning-of-month-households
   ask households [
     if liquidity < 0 [error "negative liquidity beginning of month"] 
-    household-guarantee-consumer-links
-    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [household-search-cheaper-vendor]
-    if random-float 1 < PROB-REPLACE-FIRM-QUANT [household-search-delivery-capable-vendor]  
-    household-search-for-employement
-    household-set-consumption
+    HOUSEHOLD.guarantee-consumer-links
+    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [HOUSEHOLD.search-cheaper-vendor]
+    if random-float 1 < PROB-REPLACE-FIRM-QUANT [HOUSEHOLD.search-delivery-capable-vendor]  
+    HOUSEHOLD.search-for-employement
+    HOUSEHOLD.set-consumption
   ]
 end
 
@@ -62,11 +62,11 @@ to go-month
   repeat transactions-per-month [
     ask firms [
       ;check-framework-profitability   ; needs to occur after all frameworks are generated at beginning of month
-      firm-buy-input-goods
-      firm-produce-goods
+      FIRM.buy-input-goods
+      FIRM.produce-goods
     ]
     ask households [
-      household-buy-consumption-goods
+      HOUSEHOLD.buy-consumption-goods
     ]
   ]
 end
@@ -80,7 +80,7 @@ to go-end-of-month
   
   ask firms [
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
-    firm-distribute-profits
+    FIRM.distribute-profits
     (ifelse desired-n-workers <= n-workers [
       set months-without-vacancies months-without-vacancies + 1
     ] [
@@ -91,7 +91,7 @@ to go-end-of-month
   set mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
   
   ask households [ 
-    household-adjust-reservation-wage
+    HOUSEHOLD.adjust-reservation-wage
   ]
 
   set-firm-xcor

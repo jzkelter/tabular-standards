@@ -92,25 +92,25 @@ to setup
       init-consumer-link
     ]
     if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
-    set reservation-wage [wage-rate] of household-my-employer
-    household-set-consumption             ; this has to be set after households have trading connections to calculate mean price
+    set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
+    HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
 
   ask firms [    
-    set liquidity firm-raise-funds
+    set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand firm-max-production   ; demand initialized to be the intial output of the firm
+    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
-    firm-set-input-demands   
-    set previous-sales firm-max-production
+    FIRM.set-input-demands   
+    set previous-sales FIRM.max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales firm-max-production
+    set average-previous-sales FIRM.max-production
   ]    
   
   set-colors
@@ -300,28 +300,28 @@ to setup-crash
     ]
     ifelse random-float 1 > 0.98[
       if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
-      set reservation-wage [wage-rate] of household-my-employer
+      set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     ][
       set reservation-wage MIN-WAGE-RATE
     ]
-    household-set-consumption             ; this has to be set after households have trading connections to calculate mean price
+    HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
   
   ask firms [    
-    set liquidity firm-raise-funds
+    set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand firm-max-production   ; demand initialized to be the intial output of the firm
+    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
-    firm-set-input-demands   
-    set previous-sales firm-max-production
+    FIRM.set-input-demands   
+    set previous-sales FIRM.max-production
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales firm-max-production
+    set average-previous-sales FIRM.max-production
   ]    
   
   set-colors

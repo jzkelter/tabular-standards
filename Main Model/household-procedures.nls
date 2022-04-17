@@ -8,12 +8,12 @@ households-own [
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
-to household-search-cheaper-vendor  
+to HOUSEHOLD.search-cheaper-vendor  
   if count my-consumer-links = 0 [
     error "Household has no consumer links to compare to"
   ]
   let current-trading-link max-one-of my-consumer-links [[price] of other-end]
-  let random-firm household-pick-random-consumer-firm
+  let random-firm HOUSEHOLD.pick-random-consumer-firm
   let current-price [price] of [other-end] of current-trading-link
   if ([price] of random-firm) < current-price [
     ask current-trading-link [die]
@@ -22,16 +22,16 @@ to household-search-cheaper-vendor
 end
 
 ;household procedure, searches for a vendor to replace a current vendor that was unable to satisfy demand
-to household-search-delivery-capable-vendor
+to HOUSEHOLD.search-delivery-capable-vendor
   let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
   if count my-consumer-links < N-TRADING-LINKS or [demand-not-satisfied] of link-failed-to-satisfy > 0 [
-    create-consumer-link-with household-pick-random-consumer-firm [init-consumer-link]
+    create-consumer-link-with HOUSEHOLD.pick-random-consumer-firm [init-consumer-link]
     ask link-failed-to-satisfy [die]
   ]
 end
 
 ;household procedure, makes sure every household has exactly N-TRADING-LINKS consumer-links. Ideally, I wouldn't even need this in the end, since consumer links should stay constant
-to household-guarantee-consumer-links
+to HOUSEHOLD.guarantee-consumer-links
   let curr-trading-links count my-consumer-links
   if curr-trading-links > N-TRADING-LINKS [
     ask n-of (curr-trading-links - N-TRADING-LINKS) my-consumer-links[
@@ -46,45 +46,45 @@ to household-guarantee-consumer-links
 end
 
 ;household procedure, searches for employment if unemployed or better paying employment if employed
-to household-search-for-employement  
-  ifelse household-unhousehold-employed? [
-    household-search-job
+to HOUSEHOLD.search-for-employement  
+  ifelse HOUSEHOLD.unhousehold-employed? [
+    HOUSEHOLD.search-job
   ] [
-    household-search-better-paid-job
+    HOUSEHOLD.search-better-paid-job
   ]
 end
 
 ;household proceudre, searches for a potential employer under the condition that this household is unemployed, a more rigorous search than "search better paid job"
-to household-search-job  
+to HOUSEHOLD.search-job  
   let firms-tried 0
-  while [household-unhousehold-employed? and firms-tried < 5] [ ; 5 is  β in Lengnick
-    household-check-random-firm-for-job reservation-wage
+  while [HOUSEHOLD.unhousehold-employed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+    HOUSEHOLD.check-random-firm-for-job reservation-wage
     set firms-tried firms-tried + 1
   ]
 end
 
 ;household procedure, searches for a better paying job under the condition that this household is employed
-to household-search-better-paid-job  
-  household-search-better-paid-job-logic random-float 1 < 0.1  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
+to HOUSEHOLD.search-better-paid-job  
+  HOUSEHOLD.search-better-paid-job-logic random-float 1 < 0.1  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
 end
 
 ;household procedure, the logic behind searching for a better paid job
-to household-search-better-paid-job-logic [search-even-if-satisfied?]
-  if (household-unsatisfied-with-wage? or search-even-if-satisfied?) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage they might still look
-    household-check-random-firm-for-job [wage-rate] of household-my-employer
+to HOUSEHOLD.search-better-paid-job-logic [search-even-if-satisfied?]
+  if (HOUSEHOLD.unsatisfied-with-wage? or search-even-if-satisfied?) [ ; if wage-rate fell below reservation wage, then look for a new job or if the person is satisfied with current wage they might still look
+    HOUSEHOLD.check-random-firm-for-job [wage-rate] of HOUSEHOLD.my-employer
   ]
 end
 
 ;household procedure, checks a random firm for job availability and takes the position based on logic defined in the job search procedures
-to household-check-random-firm-for-job [min-wage]  ; household procedure
+to HOUSEHOLD.check-random-firm-for-job [min-wage]  ; household procedure
   let the-firm nobody
-  ifelse household-unhousehold-employed?
+  ifelse HOUSEHOLD.unhousehold-employed?
   [set the-firm one-of firms]
-  [set the-firm [one-of other firms] of household-my-employer]
+  [set the-firm [one-of other firms] of HOUSEHOLD.my-employer]
 
   if [desired-n-workers > n-workers] of the-firm and [wage-rate] of the-firm >= min-wage [
 
-    if household-employed? [household-quit-job]
+    if HOUSEHOLD.employed? [HOUSEHOLD.quit-job]
 
     create-employment-link-with the-firm [init-employment-link]    
 
@@ -92,12 +92,12 @@ to household-check-random-firm-for-job [min-wage]  ; household procedure
 end
 
 ;household procedure, quits current job by deleting the employment link
-to household-quit-job
+to HOUSEHOLD.quit-job
   ask my-employment-links [die]
 end
 
 ;household procedure, sets daily consumption
-to household-set-consumption
+to HOUSEHOLD.set-consumption
   if liquidity < 0 [error "no money to consume"]
   let money-to-spend 0
   ; let autonomous-consumption-in-dollars (AUTONOMOUS-CONSUMPTION * mean [price] of consumer-link-neighbors) ; we aren't usin autonomous consumption for now
@@ -112,7 +112,7 @@ to household-set-consumption
 end
 
 ;household procedure, purchases consumption goods by purchasing the maximum amount possible from trading partners until either demand is satisfied or no partners remain
-to household-buy-consumption-goods  ; household procedure
+to HOUSEHOLD.buy-consumption-goods  ; household procedure
   let remaining-demand demanded-consumption
   let firms-to-try consumer-link-neighbors
 
@@ -125,7 +125,7 @@ to household-buy-consumption-goods  ; household procedure
     
     let goods-wanted min list remaining-demand (liquidity / [price] of the-firm)  ; demand is remaining-demand or as much as the buyer could afford.
     if goods-wanted < 0 [ error "must want more than 0 goods"]
-    let amount-bought [firm-sell-good goods-wanted price] of the-firm
+    let amount-bought [FIRM.sell-good goods-wanted price] of the-firm
 
     ; adjust household variables
     set liquidity max (list 0 (liquidity - amount-bought * [price] of the-firm))
@@ -140,39 +140,39 @@ to household-buy-consumption-goods  ; household procedure
 end
 
 ;household procedure, adjusts the reservation wage of a household, or the minimum wage the household is willing to accept
-to household-adjust-reservation-wage
+to HOUSEHOLD.adjust-reservation-wage
   (ifelse
-    household-unhousehold-employed? [
+    HOUSEHOLD.unhousehold-employed? [
       set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
     ]
-    [wage-rate] of household-my-employer > reservation-wage [
-      set reservation-wage [wage-rate] of household-my-employer
+    [wage-rate] of HOUSEHOLD.my-employer > reservation-wage [
+      set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     ]
   )
 end
 
 ;household procedure, reports the employer of a household
-to-report household-my-employer
+to-report HOUSEHOLD.my-employer
   report [other-end] of one-of my-employment-links  ; each household has only 1 b link, so this is the same everytime
 
 end
 
 ;household procedure, reports true if the household is unemployed
-to-report household-unhousehold-employed?  ; household procedure
+to-report HOUSEHOLD.unhousehold-employed?  ; household procedure
   report count my-employment-links = 0
 end
 
 ;household procedure, reports true if the household is employed
-to-report household-employed?
+to-report HOUSEHOLD.employed?
   report count my-employment-links = 1
 end
 
 ;household procedure, reports true if the household is making too small of a wage
-to-report household-unsatisfied-with-wage?  ; household procedure
-  report [wage-rate] of household-my-employer < reservation-wage
+to-report HOUSEHOLD.unsatisfied-with-wage?  ; household procedure
+  report [wage-rate] of HOUSEHOLD.my-employer < reservation-wage
 end
 
 ;household procedure, picks a random consumer good firm that is not a current trading partner of this household, weighted by # of employees
-to-report household-pick-random-consumer-firm 
+to-report HOUSEHOLD.pick-random-consumer-firm 
   report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer-good-firm?] [count my-employment-links]
 end
