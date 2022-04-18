@@ -4,6 +4,7 @@
 extensions [rnd table]
 
 __includes[
+  "multifirm-unit-tests.nls"
   "unit testing.nls"
   "household-procedures.nls"
   "firm-procedures.nls"
