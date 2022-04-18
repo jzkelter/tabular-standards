@@ -24,6 +24,7 @@ to LAND.setup-patches
     set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
     set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
     set patch-pointer 0
+    hide-turtle
   ] 
   ask firms [
     set firm-location one-of lands with [patch-pointer = 0]
@@ -56,7 +57,7 @@ to LAND.update-soil-health
       set soil-health soil-health + (LAND.labors-effect-on-land temp-competency temp-n-workers)
       let patch-health soil-health
       ask patch-pointer [
-        set pcolor scale-color black patch-health 0 150
+        set pcolor scale-color black patch-health 0 200
       ]
     ]
   ]
