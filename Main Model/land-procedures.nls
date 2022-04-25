@@ -16,24 +16,23 @@ to LAND.endogenously-renews  ; TODO
   
 end
 
-
 to LAND.setup-patches 
-  create-lands n-firms [
+  create-lands count PRIMARY-GOOD-FIRMS [
+    let min-land-who min [who] of lands
+    let x-per-land world-width / count lands
+    setxy (who - min-land-who) * x-per-land max-pycor
+    set shape "square"
+    set color green
+    
     set soil-health random-normal 50 5
     set optimal-soil-health 100
     set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
     set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
     set patch-pointer 0
-    hide-turtle
+    set color scale-color green soil-health 0 200
   ] 
   ask firms [
     set firm-location one-of lands with [patch-pointer = 0]
-    let starting-health [soil-health] of firm-location
-    let me-num who
-    ask firm-location [
-      set patch-pointer (patch (((me-num - n-households) mod world-width) + min-pycor) (max-pxcor - (floor ((me-num - n-households) / world-width))))
-      set pcolor scale-color black starting-health 0 200
-    ]
     
     set competency random-normal 0 0.1
   ]
@@ -55,10 +54,7 @@ to LAND.update-soil-health
     let temp-n-workers n-workers
     ask firm-location [
       set soil-health soil-health + (LAND.labors-effect-on-land temp-competency temp-n-workers)
-      let patch-health soil-health
-      ask patch-pointer [
-        set pcolor scale-color black patch-health 0 200
-      ]
+      set color scale-color green soil-health 0 200
     ]
   ]
 end
