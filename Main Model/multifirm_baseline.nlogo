@@ -331,7 +331,7 @@ false
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [current-stock 2] of CONSUMER-GOOD-FIRMS"
+"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [FIRM.current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 983
@@ -416,8 +416,8 @@ true
 "" ""
 PENS
 "demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -5509967 true "" "plot sum [max-production] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * max-production] of PRIMARY-GOOD-FIRMS"
+"cg-output" 1.0 0 -5509967 true "" "plot sum [FIRM.max-production] of CONSUMER-GOOD-FIRMS"
+"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * FIRM.max-production] of PRIMARY-GOOD-FIRMS"
 
 PLOT
 1061
@@ -437,7 +437,7 @@ true
 PENS
 "primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
 "household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of turtles"
+"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of (turtle-set households firms)"
 "consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
@@ -502,7 +502,7 @@ true
 "" ""
 PENS
 "inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"outflow" 1.0 0 -2674135 true "" "plot sum [price * max-production] of CONSUMER-GOOD-FIRMS"
+"outflow" 1.0 0 -2674135 true "" "plot sum [price * FIRM.max-production] of CONSUMER-GOOD-FIRMS"
 
 PLOT
 855
@@ -692,7 +692,7 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot mean [framework-price] of framework-agreements"
+"default" 1.0 0 -16777216 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
 TEXTBOX
 210
