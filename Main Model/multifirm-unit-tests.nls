@@ -1,5 +1,5 @@
 ;__includes["unit testing.nls"]  ;including this for purpose of using the helpful
-
+extensions [csv]
 
 to unit-tests
   run-tests (list    
@@ -158,3 +158,39 @@ to-report test-average-sales
   ]
 end
 
+to test-soil-health-change
+  let inputs csv:from-file "land_tests.csv"
+  foreach inputs[i ->
+    let workers (item 0 i)
+    let f-competency (item 1 i)
+    let expected-change (item 2 i)
+    run-land-test workers f-competency 20 0.25 1 10 expected-change
+  ]
+end
+
+to run-land-test [n-workers firm-competency opt-health change-fraction beta start-health expected-change]
+  ca
+  set-constants
+  create-firms 1[
+    set competency firm-competency
+    set firm-location one-of patches
+    ask firm-location[
+      set soil-health start-health
+      set optimal-soil-health opt-health
+      set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION change-fraction
+      set MARGINAL-EFFECT-OF-LABOR-ON-LAND beta
+    ]
+  ]
+  create-households n-workers[
+    create-employment-link-with one-of firms
+  ]
+  
+  ask one-of firms[
+    let actual-effect 0
+    ask firm-location[
+      set actual-effect LAND.labors-effect-on-land
+    ]
+    let difference (abs (expected-change - actual-effect))
+    assert (difference < 0.01) "Actual change different from expected"
+  ]
+end
