@@ -24,7 +24,7 @@ firms-own [
   
   lifetime-profits                 ; the total sum of profits - startup costs
   
-  firm-location                    ; a single number representing the single piece of land that the firm operates on
+  firm-location                    ; the patch that a firm is tied to
   competency                       ; the ability for a firm to make 
 ]
 

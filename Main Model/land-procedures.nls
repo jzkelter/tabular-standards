@@ -1,8 +1,9 @@
-;breed [lands  land]
+breed [lands  land]
 
 ;;changed this to patches, but we can always change back
-patches-own [
+lands-own [
   soil-health                      ; the soil health located under the firm, possible change to patch variable?
+  patch-pointer                    ; points to corresponding patch
   
   maximum-soil-health-increase
   maximum-soil-health-decrease
@@ -15,17 +16,24 @@ to LAND.endogenously-renews  ; TODO
   
 end
 
-
-to LAND.setup-patches  
+to LAND.setup-patches 
+  create-lands count PRIMARY-GOOD-FIRMS [
+    let min-land-who min [who] of lands
+    let x-per-land world-width / count lands
+    setxy (who - min-land-who) * x-per-land max-pycor
+    set shape "square"
+    set color green
+    
+    set soil-health random-normal 50 5
+    set optimal-soil-health 100
+    set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
+    set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
+    set patch-pointer 0
+    set color scale-color green soil-health 0 200
+  ] 
   ask firms [
-    set firm-location (patch (((who - n-households) mod world-width) + min-pycor) (max-pxcor - (floor ((who - n-households) / world-width))))
-    ask firm-location [
-      set soil-health random-normal 50 5
-      set optimal-soil-health 100
-      set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
-      set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
-      set pcolor scale-color black soil-health 0 200
-    ]
+    set firm-location one-of lands with [patch-pointer = 0]
+    
     set competency random-normal 0 0.1
   ]
 end
@@ -41,29 +49,27 @@ end
 
 ;observer procedure, updates the soil health of the patches 
 to LAND.update-soil-health
-  ask firms [
-    set soil-health soil-health + LAND.labors-effect-on-land
-    let patch-health soil-health
+  ask firms [  
+    let temp-competency competency
+    let temp-n-workers n-workers
     ask firm-location [
-      set pcolor scale-color black patch-health 0 150
+      set soil-health soil-health + (LAND.labors-effect-on-land temp-competency temp-n-workers)
+      set color scale-color green soil-health 0 200
     ]
   ]
 end
 
-to-report LAND.labors-effect-on-land
+to-report LAND.labors-effect-on-land [f-competency f-labor]
   let marginal-effect 1
   let change-factor 0
-  let temp-competency competency
-  ask firm-location [
-    LAND.calculate-maximum-soil-health-change
-    ifelse temp-competency > 0 [   ;we could reasonably change this back to 0, if it is easier to understand, but I will leave it for consistency
-      set change-factor maximum-soil-health-increase
-    ] [
-      set change-factor -1 * maximum-soil-health-decrease
-    ]
-    set marginal-effect MARGINAL-EFFECT-OF-LABOR-ON-LAND
+  LAND.calculate-maximum-soil-health-change
+  ifelse f-competency > 0 [   ;we could reasonably change this back to 0, if it is easier to understand, but I will leave it for consistency
+    set change-factor maximum-soil-health-increase
+  ] [
+    set change-factor -1 * maximum-soil-health-decrease
   ]
-  report 2 * ((change-factor / (1 + e ^ (-1 * (competency) * ((n-workers / n-households) * n-firms) ^ marginal-effect))) - (change-factor / 2))
+  set marginal-effect MARGINAL-EFFECT-OF-LABOR-ON-LAND
+  report 2 * ((change-factor / (1 + e ^ (-1 * (f-competency) * ((f-labor / n-households) * n-firms) ^ marginal-effect))) - (change-factor / 2))
   ;Equation: https://www.desmos.com/calculator/8zmmossndi
 end
 
