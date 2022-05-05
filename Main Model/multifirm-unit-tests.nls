@@ -164,6 +164,7 @@ to test-soil-health-change
     let workers (item 0 i)
     let f-competency (item 1 i)
     let expected-change (item 2 i)
+    show i
     run-land-test workers f-competency 20 0.25 1 10 expected-change
   ]
 end
@@ -171,15 +172,16 @@ end
 to run-land-test [n-workers firm-competency opt-health change-fraction beta start-health expected-change]
   ca
   set-constants
+  create-lands 1[
+    set soil-health start-health
+    set optimal-soil-health opt-health
+    set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION change-fraction
+    set MARGINAL-EFFECT-OF-LABOR-ON-LAND beta
+  ]
+  
   create-firms 1[
     set competency firm-competency
-    set firm-location one-of patches
-    ask firm-location[
-      set soil-health start-health
-      set optimal-soil-health opt-health
-      set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION change-fraction
-      set MARGINAL-EFFECT-OF-LABOR-ON-LAND beta
-    ]
+    set firm-location one-of lands
   ]
   create-households n-workers[
     create-employment-link-with one-of firms
@@ -187,9 +189,14 @@ to run-land-test [n-workers firm-competency opt-health change-fraction beta star
   
   ask one-of firms[
     let actual-effect 0
+    let temp-competency competency
+    let workers n-workers
     ask firm-location[
-      set actual-effect LAND.labors-effect-on-land
+      set actual-effect LAND.labors-effect-on-land temp-competency workers
     ]
+    
+    show (word "Actual effect: " actual-effect)
+    show (word "Expected change: " expected-change)
     let difference (abs (expected-change - actual-effect))
     assert (difference < 0.01) "Actual change different from expected"
   ]
