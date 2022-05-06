@@ -69,7 +69,12 @@ to-report LAND.labors-effect-on-land [f-competency f-labor]
     set change-factor -1 * maximum-soil-health-decrease
   ]
   set marginal-effect MARGINAL-EFFECT-OF-LABOR-ON-LAND
-  report 2 * ((change-factor / (1 + e ^ (-1 * (f-competency) * ((f-labor / n-households) * n-firms) ^ marginal-effect))) - (change-factor / 2))
+  let effect-on-land 2 * ((change-factor / (1 + e ^ (-1 * (f-competency) * ((f-labor / (count households)) * (count firms)) ^ marginal-effect))) - (change-factor / 2))
+  ifelse change-factor < 0 [
+    report -1 * effect-on-land
+  ] [
+    report effect-on-land
+  ]
   ;Equation: https://www.desmos.com/calculator/8zmmossndi
 end
 

@@ -186,8 +186,12 @@ to run-land-test [n-workers firm-competency opt-health change-fraction beta star
   create-households n-workers[
     create-employment-link-with one-of firms
   ]
-  
-  ask one-of firms[
+  create-firms (n-workers - 1) [
+    ;;This is a placeholder to balance out the ratio of workers to firms.
+    ;;We have an input of n-workers that is meant to represent how much more you have, in relation to the average number of workers
+    ;;If we have 10 firms and 40 workers, and a firm has 8 workers, his labor value will be 2 (twice as many as the average, 4)
+  ]
+  ask one-of firms with [count my-employment-links > 0] [
     let actual-effect 0
     let temp-competency competency
     let workers n-workers
