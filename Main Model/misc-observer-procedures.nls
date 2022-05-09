@@ -41,7 +41,7 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-pringle
-  set pringle-index-value sum [equity] of equity-links         ;fixed firm implementation fixes index to be equal to firm number
+  set pringle-index-value sum [firm-value] of firms         ;fixed firm implementation fixes index to be equal to firm number
 end
 
 ;observer procedure, recalculates the current index
