@@ -49,22 +49,20 @@ to LAND.update-productive-capacity
   ask firms [  
     let temp-competency competency
     let temp-n-workers n-workers
-    let temp-productive-capacity productive-capacity
-    let temp-optimal-productive-capacity optimal-productive-capacity
     ask firm-location [
-      set productive-capacity productive-capacity + (LAND.calculate-endogenous-renewal temp-productive-capacity temp-optimal-productive-capacity)
+      set productive-capacity productive-capacity + LAND.calculate-endogenous-renewal
       set productive-capacity productive-capacity + (LAND.labors-effect-on-land temp-competency temp-n-workers)
       set color scale-color green productive-capacity 0 200
     ]
   ]
 end
 
-to-report LAND.calculate-endogenous-renewal [f-productive-capacity f-optimal-productive-capacity]
-  let alpha ((-4 * MAXIMUM-RENEWAL-FRACTION) / (f-optimal-productive-capacity ^ 2)) ; y-intercept balancer
-  let beta f-optimal-productive-capacity / 2 ;reaches maximum amount at half the productive capacity
+to-report LAND.calculate-endogenous-renewal 
+  let alpha ((-4 * MAXIMUM-RENEWAL-FRACTION) / (optimal-productive-capacity ^ 2)) ; y-intercept balancer
+  let beta optimal-productive-capacity / 2 ;reaches maximum amount at half the productive capacity
   let gamma MAXIMUM-RENEWAL-FRACTION ;maximum value
-  let renewal-rate alpha * ((f-productive-capacity - beta) ^ 2) + gamma
-  report renewal-rate * f-optimal-productive-capacity
+  let renewal-rate alpha * ((productive-capacity - beta) ^ 2) + gamma
+  report renewal-rate * optimal-productive-capacity
 end
 
 to-report LAND.labors-effect-on-land [f-competency f-labor]

@@ -15,7 +15,6 @@ end
 
 ;egeneral beginning of the month procedure for resetting all model-wide varibales 
 to go-beginning-of-month-observer 
-  LAND.endogenously-renews
   LAND.update-productive-capacity
   recalculate-index-pringle 
   recalculate-index-coats
