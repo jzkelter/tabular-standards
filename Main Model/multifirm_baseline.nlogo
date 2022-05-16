@@ -295,10 +295,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
-650
-495
-850
-645
+1340
+340
+1540
+490
 Mean Demand Not Satisfied
 NIL
 NIL
@@ -740,10 +740,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1340
-460
-1557
-493
+205
+650
+422
+683
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -781,6 +781,27 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+650
+495
+850
+645
+Indices
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"Pringle" 1.0 0 -16777216 true "" "plot pringle-index-value"
+"Potvin" 1.0 0 -8330359 true "" "plot potvin-index-value"
+"Coats " 1.0 0 -13791810 true "" "plot coats-index-value"
+"Ussher" 1.0 0 -1184463 true "" "plot ussher-index-value"
 
 @#$#@#$#@
 ## WHAT IS IT?
