@@ -169,7 +169,7 @@ to test-productive-capacity-change
   ]
 end
 
-to run-land-test [n-workers firm-competency opt change-fraction beta start-productive-capacity expected-change]
+to run-land-test [n-workers opt change-fraction beta start-productive-capacity expected-change]
   ca
   set-constants
   create-lands 1[

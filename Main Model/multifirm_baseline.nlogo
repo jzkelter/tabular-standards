@@ -783,10 +783,10 @@ NIL
 1
 
 SLIDER
-230
-660
-402
-693
+645
+495
+817
+528
 firm-competency
 firm-competency
 -1

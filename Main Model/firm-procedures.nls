@@ -41,6 +41,68 @@ end
 
 ;firm procedure: adjust output and price based on expected demand and ability to produce
 to FIRM.adjust-output-and-price  
+  let ideal-production-data FIRM.calculate-ideal-production
+  let ideal-production table:get ideal-production-data "amount"
+  let ideal-buffer table:get ideal-production-data "buffer"
+  
+  ; Figure out how much producing ideal-production will cost  
+  let ideal-n-workers (ideal-production / tech-parameter)
+  let cost-data FIRM.calculate-production-costs ideal-n-workers ideal-production ideal-buffer
+  let total-price-of-production table:get cost-data "total-price"
+  let ideal-input-goods table:get cost-data "input-amounts"
+  
+  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
+  let liquidity-limiter 1
+  if total-price-of-production > liquidity [
+    set liquidity-limiter liquidity / total-price-of-production
+  ]
+  
+  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
+  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
+  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
+  
+  let index-i 0
+  foreach table:keys input-data [ i ->
+    FIRM.set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods))     
+    set index-i index-i + 1 
+  ]
+  
+  FIRM.adjust-price ideal-buffer liquidity-limiter  
+  ;  (ifelse expected-future-sales > FIRM.max-production [ 
+  ;    ;excess demand
+  ;    if price < (mean [price] of other FIRM.firms-with-my-type) [ 
+  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
+  ;    ]
+  ;  ] [
+  ;    ;excess supply
+  ;    if price > (mean [price] of other FIRM.firms-with-my-type) [
+  ;      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
+  ;    ]
+  ;  ])
+  
+end
+
+to FIRM.adjust-price [ideal-buffer liquidity-limiter]
+  ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
+  (ifelse 
+    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
+    and price < (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is below competition's average 
+      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
+    ] 
+    
+    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
+    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
+    and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
+                                                                     ; Then: lower price to increase sales (without going below marginal cost of production)
+      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
+    ]
+  ) 
+end
+
+to-report FIRM.calculate-ideal-production
   let expected-future-sales average-previous-sales  ; expect the future to be like the average of the past
   
   ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
@@ -52,10 +114,16 @@ to FIRM.adjust-output-and-price
   set ideal-production max (list 0 ideal-production)  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer 
   
   ; now fix ideal-produuction to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
-  set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter  
+  set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter
+  let production-data table:make
   
-  ; Figure out how much producing ideal-production will cost  
-  let ideal-n-workers (ideal-production / tech-parameter)
+  table:put production-data "amount" ideal-production
+  table:put production-data "buffer" ideal-buffer
+  
+  report production-data
+end
+
+to-report FIRM.calculate-production-costs [ideal-n-workers ideal-production ideal-buffer]
   let ideal-input-goods (list)
   let total-price-of-production ideal-n-workers * wage-rate  ; start with labor costs and then add input costs
   foreach table:keys input-data [ i ->
@@ -73,54 +141,12 @@ to FIRM.adjust-output-and-price
     let estimated-price (FIRM.estimate-price i)
     set total-price-of-production total-price-of-production + (ideal-input-amount * estimated-price)
   ]
+  let cost-data table:make
   
-  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
-  let liquidity-limiter 1
-  if total-price-of-production > liquidity [
-    set liquidity-limiter liquidity / total-price-of-production
-    
-  ]
+  table:put cost-data "total-price" total-price-of-production
+  table:put cost-data "input-amounts" ideal-input-goods
   
-  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
-  set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
-  if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
-  
-  let index-i 0
-  foreach table:keys input-data [ i ->
-    FIRM.set-demand-per-month i (liquidity-limiter * (item index-i ideal-input-goods))     
-    set index-i index-i + 1 
-  ]
-  
-  ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
-  (ifelse 
-    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
-    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
-    and price < (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is below competition's average 
-      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
-    ] 
-    
-    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
-    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
-    and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
-                                                                ; Then: lower price to increase sales (without going below marginal cost of production)
-      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
-    ]
-  )    
-  
-  ;  (ifelse expected-future-sales > FIRM.max-production [ 
-  ;    ;excess demand
-  ;    if price < (mean [price] of other FIRM.firms-with-my-type) [ 
-  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-  ;    ]
-  ;  ] [
-  ;    ;excess supply
-  ;    if price > (mean [price] of other FIRM.firms-with-my-type) [
-  ;      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-  ;    ]
-  ;  ])
-  
+  report cost-data
 end
 
 ;firm procedure, measures estimated future sales given a weighted average of past sales with exponentially decaying weights

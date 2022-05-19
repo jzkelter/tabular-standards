@@ -31,7 +31,7 @@ to LAND.setup-patches
   ask firms [
     set firm-location one-of lands with [patch-pointer = 0]
     ask firm-location[
-      set patch-pointer 1
+      set patch-pointer 0
     ]
     set competency firm-competency
   ]
