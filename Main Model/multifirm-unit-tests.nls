@@ -165,11 +165,11 @@ to test-soil-health-change
     let f-competency (item 1 i)
     let expected-change (item 2 i)
     show i
-    run-land-test workers f-competency 20 0.25 1 10 expected-change
+    run-land-test workers 20 0.25 1 10 expected-change
   ]
 end
 
-to run-land-test [n-workers firm-competency opt-health change-fraction beta start-health expected-change]
+to run-land-test [n-workers opt-health change-fraction beta start-health expected-change]
   ca
   set-constants
   create-lands 1[

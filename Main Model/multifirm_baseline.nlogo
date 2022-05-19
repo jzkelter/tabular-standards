@@ -782,6 +782,21 @@ NIL
 NIL
 1
 
+SLIDER
+230
+660
+402
+693
+firm-competency
+firm-competency
+-1
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
