@@ -111,6 +111,7 @@ to setup
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
     set average-previous-sales FIRM.max-production
+    set firm-value 0
   ]    
   
   set-colors

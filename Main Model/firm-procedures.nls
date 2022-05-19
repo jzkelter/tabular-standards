@@ -26,6 +26,8 @@ firms-own [
   
   firm-location                    ; the patch that a firm is tied to
   competency                       ; the ability for a firm to make 
+  
+  firm-value                       ; estimate of the value of the firm
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
@@ -411,6 +413,7 @@ to FIRM.distribute-profits
   let buffer FIRM.decide-reserve
   if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
     let profits-to-allocate liquidity - buffer
+    set firm-value firm-value * 0.5 + profits-to-allocate * 0.5
     set liquidity buffer
     ;; distribute profits proportionately to initial investment
     let profits-to-be-allocated profits-to-allocate

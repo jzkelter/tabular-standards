@@ -158,7 +158,7 @@ to-report test-average-sales
   ]
 end
 
-to test-soil-health-change
+to test-productive-capacity-change
   let inputs csv:from-file "land_tests.csv"
   foreach inputs[i ->
     let workers (item 0 i)
@@ -169,13 +169,13 @@ to test-soil-health-change
   ]
 end
 
-to run-land-test [n-workers opt-health change-fraction beta start-health expected-change]
+to run-land-test [n-workers firm-competency opt change-fraction beta start-productive-capacity expected-change]
   ca
   set-constants
   create-lands 1[
-    set soil-health start-health
-    set optimal-soil-health opt-health
-    set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION change-fraction
+    set productive-capacity start-productive-capacity
+    set optimal-productive-capacity opt
+    set MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION change-fraction
     set MARGINAL-EFFECT-OF-LABOR-ON-LAND beta
   ]
   

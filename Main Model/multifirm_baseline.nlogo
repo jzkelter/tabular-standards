@@ -295,10 +295,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
-650
-495
-850
-645
+1340
+340
+1540
+490
 Mean Demand Not Satisfied
 NIL
 NIL
@@ -740,10 +740,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-1340
-460
-1557
-493
+205
+650
+422
+683
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1

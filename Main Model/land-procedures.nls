@@ -2,19 +2,16 @@ breed [lands  land]
 
 ;;changed this to patches, but we can always change back
 lands-own [
-  soil-health                      ; the soil health located under the firm, possible change to patch variable?
+  productive-capacity              ; the soil health located under the firm, possible change to patch variable?
   patch-pointer                    ; points to corresponding patch
-  
-  maximum-soil-health-increase
-  maximum-soil-health-decrease
-  optimal-soil-health
-  MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION ;constant, should be elsewhere, here for now
+  optimal-productive-capacity
+  maximum-productive-capacity-increase
+  maximum-productive-capacity-decrease
+  optimal-productive-capacity
+  MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION ;constant, should be elsewhere, here for now
   MARGINAL-EFFECT-OF-LABOR-ON-LAND
+  MAXIMUM-RENEWAL-FRACTION
 ]
-
-to LAND.endogenously-renews  ; TODO
-  
-end
 
 to LAND.setup-patches 
   create-lands count PRIMARY-GOOD-FIRMS [
@@ -24,12 +21,12 @@ to LAND.setup-patches
     set shape "square"
     set color green
     
-    set soil-health random-normal 50 5
-    set optimal-soil-health 100
-    set MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION 0.25
-    set MARGINAL-EFFECT-OF-LABOR-ON-LAND 1
+    set productive-capacity random-normal 50 5
+    set optimal-productive-capacity 100
+    set MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION 0.25
+    set MAXIMUM-RENEWAL-FRACTION 0.1 ;Arbitrary
     set patch-pointer 0
-    set color scale-color green soil-health 0 200
+    set color scale-color green productive-capacity 0 200
   ] 
   ask firms [
     set firm-location one-of lands with [patch-pointer = 0]
@@ -50,25 +47,34 @@ to-report LAND.calculate-productivity-multiplier
 end
 
 ;observer procedure, updates the soil health of the patches 
-to LAND.update-soil-health
+to LAND.update-productive-capacity
   ask firms [  
     let temp-competency competency
     let temp-n-workers n-workers
     ask firm-location [
-      set soil-health soil-health + (LAND.labors-effect-on-land temp-competency temp-n-workers)
-      set color scale-color green soil-health 0 200
+      set productive-capacity productive-capacity + LAND.calculate-endogenous-renewal
+      set productive-capacity productive-capacity + (LAND.labors-effect-on-land temp-competency temp-n-workers)
+      set color scale-color green productive-capacity 0 200
     ]
   ]
+end
+
+to-report LAND.calculate-endogenous-renewal 
+  let alpha ((-4 * MAXIMUM-RENEWAL-FRACTION) / (optimal-productive-capacity ^ 2)) ; y-intercept balancer
+  let beta optimal-productive-capacity / 2 ;reaches maximum amount at half the productive capacity
+  let gamma MAXIMUM-RENEWAL-FRACTION ;maximum value
+  let renewal-rate alpha * ((productive-capacity - beta) ^ 2) + gamma
+  report renewal-rate * optimal-productive-capacity
 end
 
 to-report LAND.labors-effect-on-land [f-competency f-labor]
   let marginal-effect 1
   let change-factor 0
-  LAND.calculate-maximum-soil-health-change
+  LAND.calculate-maximum-productive-capacity-change
   ifelse f-competency > 0 [   ;we could reasonably change this back to 0, if it is easier to understand, but I will leave it for consistency
-    set change-factor maximum-soil-health-increase
+    set change-factor maximum-productive-capacity-increase
   ] [
-    set change-factor -1 * maximum-soil-health-decrease
+    set change-factor -1 * maximum-productive-capacity-decrease
   ]
   set marginal-effect MARGINAL-EFFECT-OF-LABOR-ON-LAND
   let effect-on-land 2 * ((change-factor / (1 + e ^ (-1 * (f-competency) * ((f-labor / (count households)) * (count firms)) ^ marginal-effect))) - (change-factor / 2))
@@ -80,7 +86,7 @@ to-report LAND.labors-effect-on-land [f-competency f-labor]
   ;Equation: https://www.desmos.com/calculator/8zmmossndi
 end
 
-to LAND.calculate-maximum-soil-health-change
-  set maximum-soil-health-increase (optimal-soil-health - soil-health) * MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION
-  set maximum-soil-health-decrease (soil-health) * MAXIMUM-SOIL-HEALTH-CHANGE-FRACTION ;worst case normalized to 0
+to LAND.calculate-maximum-productive-capacity-change
+  set maximum-productive-capacity-increase (optimal-productive-capacity - productive-capacity) * MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION
+  set maximum-productive-capacity-decrease (productive-capacity) * MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION ;worst case normalized to 0
 end
