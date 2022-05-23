@@ -60,10 +60,10 @@ to LAND.update-productive-capacity
 end
 
 to-report LAND.calculate-endogenous-renewal 
-  let alpha ((-4 * MAXIMUM-RENEWAL-FRACTION) / (optimal-productive-capacity ^ 2)) ; y-intercept balancer
-  let beta optimal-productive-capacity / 2 ;reaches maximum amount at half the productive capacity
-  let gamma MAXIMUM-RENEWAL-FRACTION ;maximum value
-  let renewal-rate alpha * ((productive-capacity - beta) ^ 2) + gamma
+  let y-intercept-balancer ((-4 * MAXIMUM-RENEWAL-FRACTION) / (optimal-productive-capacity ^ 2)) ; y-intercept balancer, allows this to go through the origin
+  let x-value-maximum optimal-productive-capacity / 2 ;reaches maximum amount at half the productive capacity
+  let maximum-value MAXIMUM-RENEWAL-FRACTION ;maximum value
+  let renewal-rate y-intercept-balancer * ((productive-capacity - x-value-maximum) ^ 2) + maximum-value
   report renewal-rate * optimal-productive-capacity
 end
 
