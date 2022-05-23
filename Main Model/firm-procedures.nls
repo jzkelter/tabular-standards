@@ -612,7 +612,7 @@ end
 
 ;firm procedure, reports the maximum production possible
 to-report FIRM.max-production
-  report n-workers * tech-parameter
+  report (min FIRM.get-productive-capacity (n-workers * tech-parameter))
 end
 
 ;firm procedure, reports an agentset of firms with the same firm-type as the caller

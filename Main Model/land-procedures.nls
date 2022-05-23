@@ -52,7 +52,7 @@ to LAND.update-productive-capacity
     let temp-competency competency
     let temp-n-workers n-workers
     ask firm-location [
-      set productive-capacity productive-capacity + LAND.calculate-endogenous-renewal
+      set productive-capacity productive-capacity + LAND.calculate-endogenous-renewal ;;Needs to happen before harvest-based degradation because it is impacted by the productive capacity
       set productive-capacity productive-capacity + (LAND.labors-effect-on-land temp-competency temp-n-workers)
       set color scale-color green productive-capacity 0 200
     ]
