@@ -111,16 +111,30 @@ to-report FIRM.calculate-ideal-production
   
   ; adjust ideal-production based on current inventory
   set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 
-  set ideal-production max (list 0 ideal-production)  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer 
+  ifelse use-land?[
+    set ideal-production (min (list (max (list 0 ideal-production)) FIRM.get-productive-capacity)) ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer 
+  ][
+    set ideal-production max (list 0 ideal-production)
+  ]
   
   ; now fix ideal-produuction to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
-  set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter
+  set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter ; maybe change this to round instead of ceiling?
   let production-data table:make
   
   table:put production-data "amount" ideal-production
   table:put production-data "buffer" ideal-buffer
   
   report production-data
+end
+
+to-report FIRM.get-productive-capacity
+  let my-productive-capacity 0
+  
+  ask firm-location[
+    set my-productive-capacity productive-capacity 
+  ]
+  
+  report my-productive-capacity
 end
 
 to-report FIRM.calculate-production-costs [ideal-n-workers ideal-production ideal-buffer]
