@@ -6,9 +6,6 @@ to go
   go-beginning-of-month-households  
   go-month  
   go-end-of-month
-  if go-crashed?[
-    stop
-  ]
   tick
 end
 

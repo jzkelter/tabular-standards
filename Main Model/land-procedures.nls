@@ -21,8 +21,8 @@ to LAND.setup-patches
     set shape "square"
     set color green
     
-    set productive-capacity random-normal 50 5
     set optimal-productive-capacity max-productive-capacity
+    set productive-capacity max (list 0 (random-normal (max-productive-capacity / 2) (max-productive-capacity / 10)))
     set MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION 0.25
     set MAXIMUM-RENEWAL-FRACTION 0.1 ;Arbitrary
     set patch-pointer 0

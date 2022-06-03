@@ -805,7 +805,7 @@ SWITCH
 563
 use-land?
 use-land?
-1
+0
 1
 -1000
 
@@ -818,7 +818,7 @@ max-productive-capacity
 max-productive-capacity
 0
 200
-100.0
+7.0
 1
 1
 NIL
@@ -1523,6 +1523,78 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-productive-capacity">
       <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Varying-productivity" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <metric>unemployment-rate</metric>
+    <metric>mean-price-all-firms</metric>
+    <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>total-sales</metric>
+    <metric>mean-current-profit-all-firms</metric>
+    <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>turnover-rate</metric>
+    <metric>bankrupt-firms</metric>
+    <metric>household-wealth-concentration</metric>
+    <enumeratedValueSet variable="use-land?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-productive-capacity">
+      <value value="10"/>
+      <value value="20"/>
+      <value value="30"/>
+      <value value="40"/>
+      <value value="50"/>
+      <value value="60"/>
+      <value value="70"/>
+      <value value="80"/>
+      <value value="90"/>
+      <value value="100"/>
+      <value value="110"/>
+      <value value="120"/>
+      <value value="130"/>
+      <value value="140"/>
+      <value value="150"/>
+      <value value="160"/>
+      <value value="170"/>
+      <value value="180"/>
+      <value value="190"/>
+      <value value="200"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
