@@ -760,7 +760,7 @@ layoff-probability
 layoff-probability
 0
 1
-0.59
+0.5
 0.01
 1
 NIL
@@ -1508,7 +1508,16 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
   <experiment name="baseline-run-no-land" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <metric>count turtles</metric>
+    <timeLimit steps="3000"/>
+    <metric>unemployment-rate</metric>
+    <metric>mean-price-all-firms</metric>
+    <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>total-sales</metric>
+    <metric>mean-current-profit-all-firms</metric>
+    <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>turnover-rate</metric>
+    <metric>bankrupt-firms</metric>
+    <metric>household-wealth-concentration</metric>
     <enumeratedValueSet variable="use-land?">
       <value value="false"/>
     </enumeratedValueSet>
@@ -1516,7 +1525,7 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
       <value value="100"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
-      <value value="0.59"/>
+      <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-firms">
       <value value="30"/>

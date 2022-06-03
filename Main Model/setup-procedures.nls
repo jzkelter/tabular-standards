@@ -81,9 +81,10 @@ to setup
     set liquidity STARTUP-LIQUIDITY  
   ]
   
+  
   setup-firms         
   
-  ;setup-lands 
+  LAND.setup-patches
   
   initialize-framework-agreements
       
@@ -117,8 +118,6 @@ to setup
   
   set-colors
   ask one-of firms [ask my-links [show-link]]
-  
-  LAND.setup-patches
   
   
   set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
