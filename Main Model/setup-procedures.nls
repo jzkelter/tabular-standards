@@ -33,6 +33,7 @@ globals [
   PRIMARY-GOOD-FIRMS               ; defined as firms that produce goods without needing an input                 
   INTERMEDIATE-GOOD-FIRMS          ; defined as firms that do not produce consumer goods and take input             
   TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
+  NEW-BANKRUPT-FIRMS               ; the number of bankrupt firms added in the current period
   PRIMARY-INVENTORY-VALUE-HISTORY  ; defined as the rolling average of the total inventory of the last two years of the primary good firms
   BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
   UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
@@ -185,6 +186,7 @@ to set-constants
   set BACKGROUND-IMPROVEMENT 10
   set DESIRED-BUFFER-PERCENT 0.5
   set TOTAL-BANKRUPT-FIRMS 0
+  set NEW-BANKRUPT-FIRMS 0
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
     set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
@@ -232,6 +234,8 @@ to setup-firms
       set fired-worker? false
       
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
+      set firm-age 0
+      set current-profits 0
                   
     ]
   ]

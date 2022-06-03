@@ -28,6 +28,8 @@ firms-own [
   competency                       ; the ability for a firm to make 
   
   firm-value                       ; estimate of the value of the firm
+  firm-age                         ; the age of a firm in ticks
+  current-profits                  ; current profit of a firm
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
@@ -232,7 +234,7 @@ to FIRM.replace-firm
   ]    
     
   FIRM.add-firm
-  
+  set NEW-BANKRUPT-FIRMS NEW-BANKRUPT-FIRMS + 1
   die
 end
 
@@ -268,6 +270,8 @@ to FIRM.add-firm
     if intermediate-good-firm? [
       set INTERMEDIATE-GOOD-FIRMS (turtle-set INTERMEDIATE-GOOD-FIRMS self)
     ]
+    set firm-age 0
+    set current-profits 0
   ]
 end
 
@@ -453,6 +457,7 @@ to FIRM.distribute-profits
   let buffer FIRM.decide-reserve
   if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
     let profits-to-allocate liquidity - buffer
+    set current-profits profits-to-allocate
     set firm-value firm-value * 0.5 + profits-to-allocate * 0.5
     set liquidity buffer
     ;; distribute profits proportionately to initial investment

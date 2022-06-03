@@ -1,0 +1,44 @@
+to-report unemployment-rate
+  report (1 - (count employment-links / count households))
+end
+
+to-report mean-price-all-firms 
+  report mean [price] of firms
+end
+
+to-report mean-consumer-demand-not-satisfied
+  report mean [demand-not-satisfied] of consumer-links
+end
+
+to-report total-sales
+  report sum [previous-sales] of firms
+end
+
+to-report mean-current-profit-all-firms
+  report mean [current-profits] of firms
+end
+
+to-report mean-lifetime-profit-all-firms
+  report mean [lifetime-profits] of firms
+end
+
+to-report turnover-rate
+  report NEW-BANKRUPT-FIRMS / n-firms
+end
+
+to-report bankrupt-firms
+  report TOTAL-BANKRUPT-FIRMS
+end
+
+to-report household-wealth-concentration
+  let total_liquidity sum [liquidity] of households
+  let hhi 0
+  ask households[
+    let wealth-share (liquidity / total_liquidity)
+    let wealth-percentage (wealth-share * 100)
+    set hhi (hhi + (wealth-percentage ^ 2))
+  ]
+  report (hhi / 10000)
+end
+
+
