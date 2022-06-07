@@ -68,9 +68,9 @@ to set-colors
   ]
   ask households [
     ifelse HOUSEHOLD.employed? [
-      set color red
-    ] [
       set color blue
+    ] [
+      set color red
     ]
   ]
 end

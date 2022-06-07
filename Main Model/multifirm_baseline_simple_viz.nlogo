@@ -44,9 +44,9 @@ months
 
 BUTTON
 0
-300
+450
 66
-333
+483
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -61,9 +61,9 @@ NIL
 
 BUTTON
 124
-300
+450
 205
-333
+483
 go-once
 go\n
 NIL
@@ -78,9 +78,9 @@ NIL
 
 BUTTON
 67
-300
+450
 122
-333
+483
 NIL
 go
 T
@@ -95,9 +95,9 @@ NIL
 
 SLIDER
 0
-55
-172
-88
+60
+200
+93
 n-households
 n-households
 10
@@ -110,9 +110,9 @@ HORIZONTAL
 
 PLOT
 0
-335
-200
-483
+490
+210
+638
 Unemployment rate
 NIL
 unemployment
@@ -128,9 +128,9 @@ PENS
 "mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
-650
+645
 165
-973
+968
 335
 Wage Rate Stats 
 NIL
@@ -152,9 +152,9 @@ PENS
 "Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
 
 BUTTON
-805
+800
 125
-899
+894
 158
 hide-links
 ask links [hide-link]
@@ -169,9 +169,9 @@ NIL
 1
 
 BUTTON
-805
+800
 18
-967
+962
 51
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
@@ -186,9 +186,9 @@ NIL
 1
 
 PLOT
-0
+215
 490
-200
+425
 640
 Household Liquidity Distribution
 NIL
@@ -204,9 +204,9 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-650
+645
 340
-975
+970
 485
 Mean Price
 NIL
@@ -221,13 +221,13 @@ true
 PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
-"fw-agreements" 1.0 0 -7500403 true "" "plot mean [framework-price] of framework-agreements"
+"fw-agreements" 1.0 0 -7500403 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
 SLIDER
 0
-122
-170
-155
+140
+200
+173
 transactions-per-month
 transactions-per-month
 1
@@ -239,9 +239,9 @@ NIL
 HORIZONTAL
 
 BUTTON
-805
+800
 54
-966
+961
 87
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
@@ -256,9 +256,9 @@ NIL
 1
 
 BUTTON
-805
+800
 90
-965
+960
 123
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
@@ -283,9 +283,9 @@ setup-structure
 1
 
 MONITOR
-650
+645
 20
-797
+792
 65
 # Primary Good Firms
 count PRIMARY-GOOD-FIRMS
@@ -294,9 +294,9 @@ count PRIMARY-GOOD-FIRMS
 11
 
 MONITOR
-650
+645
 67
-796
+791
 112
 # Intermediate Good Firms
 count INTERMEDIATE-GOOD-FIRMS
@@ -305,9 +305,9 @@ count INTERMEDIATE-GOOD-FIRMS
 11
 
 MONITOR
-649
+644
 115
-795
+790
 160
 # Consumer Good Firms
 count CONSUMER-GOOD-FIRMS
@@ -317,9 +317,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 0
-87
-172
-120
+100
+200
+133
 n-firms
 n-firms
 10
@@ -332,23 +332,23 @@ HORIZONTAL
 
 SLIDER
 0
-157
-170
-190
+180
+200
+213
 framework-duration
 framework-duration
 1
 60
-1.0
+24.0
 1
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-100
+105
 10
-192
+200
 55
 index-in-use
 index-in-use
@@ -357,9 +357,9 @@ index-in-use
 
 SLIDER
 0
-190
+220
 205
-223
+253
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -391,9 +391,9 @@ https://ccl.northwestern.edu/
 1
 
 TEXTBOX
-510
+505
 35
-660
+655
 53
 https://xalgorithms.org/
 11
@@ -402,14 +402,14 @@ https://xalgorithms.org/
 
 SLIDER
 0
-227
-205
 260
+205
+293
 firm-memory-constant
 firm-memory-constant
 0
 1
-1.0
+0.7
 0.1
 1
 NIL
@@ -426,48 +426,26 @@ fix-n-framework-agreements?
 1
 -1000
 
-SWITCH
-0
-265
-202
-298
-only-fire-1-per-month?
-only-fire-1-per-month?
-0
-1
--1000
-
-SWITCH
-415
-595
-522
-628
-use-land?
-use-land?
-1
-1
--1000
-
 SLIDER
-415
-490
-635
-523
+0
+300
+205
+333
 layoff-probability
 layoff-probability
 0
 1
-0.59
+0.6
 0.01
 1
 NIL
 HORIZONTAL
 
 SLIDER
-415
-525
-635
-558
+0
+340
+205
+373
 firm-competency
 firm-competency
 -1
@@ -479,24 +457,24 @@ NIL
 HORIZONTAL
 
 SLIDER
-415
-560
-635
-593
+0
+410
+205
+443
 max-productive-capacity
 max-productive-capacity
 0
 200
-200.0
+76.0
 1
 1
 NIL
 HORIZONTAL
 
 PLOT
-210
+430
 490
-410
+640
 640
 Mean Equity
 NIL
@@ -512,9 +490,9 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [firm-value] of firms"
 
 PLOT
-650
+645
 490
-975
+970
 640
 Inventory
 NIL
@@ -529,6 +507,17 @@ true
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
+
+SWITCH
+0
+380
+117
+413
+use-land?
+use-land?
+0
+1
+-1000
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -919,7 +908,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
