@@ -2,13 +2,15 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["unit testing.nls"
-           "household-procedures.nls"
-           "firm-procedures.nls"
-           "go-procedures.nls"
-           "setup-procedures.nls"
-           "earth-reserve-procedures.nls"
-           "misc-observer-procedures.nls"]
+__includes[
+  "unit testing.nls"
+  "household-procedures.nls"
+  "firm-procedures.nls"
+  "go-procedures.nls"
+  "setup-procedures.nls"
+  "misc-observer-procedures.nls"
+  "land-procedures.nls"
+]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
@@ -42,9 +44,9 @@ months
 
 BUTTON
 0
-300
+450
 66
-333
+483
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -59,9 +61,9 @@ NIL
 
 BUTTON
 124
-300
+450
 205
-333
+483
 go-once
 go\n
 NIL
@@ -76,9 +78,9 @@ NIL
 
 BUTTON
 67
-300
+450
 122
-333
+483
 NIL
 go
 T
@@ -93,9 +95,9 @@ NIL
 
 SLIDER
 0
-55
-172
-88
+60
+200
+93
 n-households
 n-households
 10
@@ -108,9 +110,9 @@ HORIZONTAL
 
 PLOT
 0
-340
-200
-488
+490
+210
+638
 Unemployment rate
 NIL
 unemployment
@@ -126,9 +128,9 @@ PENS
 "mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
-650
+645
 165
-973
+968
 335
 Wage Rate Stats 
 NIL
@@ -149,28 +151,10 @@ PENS
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
 "Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
 
-PLOT
-210
-495
-435
-645
-Worker Per Firm Distribution
-NIL
-NIL
-0.0
-40.0
-0.0
-20.0
-true
-false
-"" "set-plot-x-range 0 max [n-workers] of firms\nset-plot-y-range 0 10"
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
-
 BUTTON
-805
+800
 125
-899
+894
 158
 hide-links
 ask links [hide-link]
@@ -185,9 +169,9 @@ NIL
 1
 
 BUTTON
-805
+800
 18
-967
+962
 51
 show random firm's links
 ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
@@ -202,9 +186,9 @@ NIL
 1
 
 PLOT
-0
+215
 490
-200
+425
 640
 Household Liquidity Distribution
 NIL
@@ -220,10 +204,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-650
+645
 340
-985
-490
+970
+485
 Mean Price
 NIL
 NIL
@@ -237,13 +221,13 @@ true
 PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
-"fw-agreements" 1.0 0 -7500403 true "" "plot mean [framework-price] of framework-agreements"
+"fw-agreements" 1.0 0 -7500403 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
 SLIDER
 0
-122
-170
-155
+140
+200
+173
 transactions-per-month
 transactions-per-month
 1
@@ -255,9 +239,9 @@ NIL
 HORIZONTAL
 
 BUTTON
-805
+800
 54
-966
+961
 87
 show largest firm's links
 ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
@@ -272,9 +256,9 @@ NIL
 1
 
 BUTTON
-805
+800
 90
-965
+960
 123
 show smallest firm's links
 ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
@@ -288,24 +272,6 @@ NIL
 NIL
 1
 
-PLOT
-440
-495
-645
-645
-Total Bankrupt Firms
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
-
 CHOOSER
 0
 10
@@ -314,12 +280,12 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
-650
+645
 20
-797
+792
 65
 # Primary Good Firms
 count PRIMARY-GOOD-FIRMS
@@ -328,9 +294,9 @@ count PRIMARY-GOOD-FIRMS
 11
 
 MONITOR
-650
+645
 67
-796
+791
 112
 # Intermediate Good Firms
 count INTERMEDIATE-GOOD-FIRMS
@@ -339,9 +305,9 @@ count INTERMEDIATE-GOOD-FIRMS
 11
 
 MONITOR
-649
+644
 115
-795
+790
 160
 # Consumer Good Firms
 count CONSUMER-GOOD-FIRMS
@@ -351,9 +317,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 0
-87
-172
-120
+100
+200
+133
 n-firms
 n-firms
 10
@@ -366,53 +332,34 @@ HORIZONTAL
 
 SLIDER
 0
-157
-170
-190
+180
+200
+213
 framework-duration
 framework-duration
 1
 60
-1.0
+24.0
 1
 1
 NIL
 HORIZONTAL
 
 CHOOSER
-100
+105
 10
-192
+200
 55
 index-in-use
 index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
 0
 
-PLOT
-650
-495
-985
-645
-Mean Lifetime Profits
-NIL
-NIL
-0.0
-0.0
--100.0
--100.0
-true
-true
-"" ""
-PENS
-"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
-"In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
-
 SLIDER
 0
-190
+220
 205
-223
+253
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -444,9 +391,9 @@ https://ccl.northwestern.edu/
 1
 
 TEXTBOX
-510
+505
 35
-660
+655
 53
 https://xalgorithms.org/
 11
@@ -455,51 +402,122 @@ https://xalgorithms.org/
 
 SLIDER
 0
-227
-205
 260
+205
+293
 firm-memory-constant
 firm-memory-constant
 0
 1
-1.0
+0.7
 0.1
 1
 NIL
 HORIZONTAL
 
 SWITCH
-0
-660
-217
-693
+5
+645
+222
+678
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
 1
 -1000
+
+SLIDER
+0
+300
+205
+333
+layoff-probability
+layoff-probability
+0
+1
+0.6
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+340
+205
+373
+firm-competency
+firm-competency
+-1
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+410
+205
+443
+max-productive-capacity
+max-productive-capacity
+0
+200
+76.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+430
+490
+640
+640
+Mean Equity
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [firm-value] of firms"
+
+PLOT
+645
+490
+970
+640
+Inventory
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 
 SWITCH
 0
-265
-202
-298
-only-fire-1-per-month?
-only-fire-1-per-month?
+380
+117
+413
+use-land?
+use-land?
 0
 1
 -1000
-
-MONITOR
-570
-585
-640
-630
-this month
-count firms with [color = yellow]
-17
-1
-11
 
 @#$#@#$#@
 ## WHAT IS IT?
