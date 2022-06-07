@@ -2,13 +2,15 @@
 ; - it could be that dividing dividends based off of current wealth leads to an instability eventually
 
 extensions [rnd table]
-__includes["unit testing.nls"
-           "household-procedures.nls"
-           "firm-procedures.nls"
-           "go-procedures.nls"
-           "setup-procedures.nls"
-           "earth-reserve-procedures.nls"
-           "misc-observer-procedures.nls"]
+__includes[
+  "unit testing.nls"
+  "household-procedures.nls"
+  "firm-procedures.nls"
+  "go-procedures.nls"
+  "setup-procedures.nls"
+  "misc-observer-procedures.nls"
+  "land-procedures.nls"
+]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
@@ -108,9 +110,9 @@ HORIZONTAL
 
 PLOT
 0
-340
+335
 200
-488
+483
 Unemployment rate
 NIL
 unemployment
@@ -148,24 +150,6 @@ PENS
 "med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
 "Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
-
-PLOT
-210
-495
-435
-645
-Worker Per Firm Distribution
-NIL
-NIL
-0.0
-40.0
-0.0
-20.0
-true
-false
-"" "set-plot-x-range 0 max [n-workers] of firms\nset-plot-y-range 0 10"
-PENS
-"default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
 BUTTON
 805
@@ -222,8 +206,8 @@ PENS
 PLOT
 650
 340
-985
-490
+975
+485
 Mean Price
 NIL
 NIL
@@ -288,24 +272,6 @@ NIL
 NIL
 1
 
-PLOT
-440
-495
-645
-645
-Total Bankrupt Firms
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot TOTAL-BANKRUPT-FIRMS"
-
 CHOOSER
 0
 10
@@ -314,7 +280,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 650
@@ -389,25 +355,6 @@ index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
 0
 
-PLOT
-650
-495
-985
-645
-Mean Lifetime Profits
-NIL
-NIL
-0.0
-0.0
--100.0
--100.0
-true
-true
-"" ""
-PENS
-"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
-"In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
-
 SLIDER
 0
 190
@@ -469,10 +416,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-0
-660
-217
-693
+5
+645
+222
+678
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -490,16 +437,98 @@ only-fire-1-per-month?
 1
 -1000
 
-MONITOR
-570
-585
-640
-630
-this month
-count firms with [color = yellow]
-17
+SWITCH
+415
+595
+522
+628
+use-land?
+use-land?
 1
-11
+1
+-1000
+
+SLIDER
+415
+490
+635
+523
+layoff-probability
+layoff-probability
+0
+1
+0.59
+0.01
+1
+NIL
+HORIZONTAL
+
+SLIDER
+415
+525
+635
+558
+firm-competency
+firm-competency
+-1
+1
+0.0
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+415
+560
+635
+593
+max-productive-capacity
+max-productive-capacity
+0
+200
+200.0
+1
+1
+NIL
+HORIZONTAL
+
+PLOT
+210
+490
+410
+640
+Mean Equity
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot mean [firm-value] of firms"
+
+PLOT
+650
+490
+975
+640
+Inventory
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -890,7 +919,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.2
+NetLogo 6.2.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
