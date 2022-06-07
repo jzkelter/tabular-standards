@@ -14,10 +14,15 @@ lands-own [
 ]
 
 to LAND.setup-patches 
-  create-lands count PRIMARY-GOOD-FIRMS [
+  let n count PRIMARY-GOOD-FIRMS
+  if setup-structure = "single-firm"[
+    show "in if"
+    set n count firms
+  ]
+  create-lands n [
     let min-land-who min [who] of lands
     let x-per-land world-width / count lands
-    setxy (who - min-land-who) * x-per-land max-pycor
+    setxy (min (list max-pxcor ((who - min-land-who) * x-per-land))) max-pycor
     set shape "square"
     set color green
     
@@ -28,6 +33,7 @@ to LAND.setup-patches
     set patch-pointer 0
     set color scale-color green productive-capacity 0 200
   ] 
+  show count lands
   ask firms [
     set firm-location one-of lands with [patch-pointer = 0]
     ask firm-location[

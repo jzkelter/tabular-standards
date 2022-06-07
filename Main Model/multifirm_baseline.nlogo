@@ -531,7 +531,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-1
+0
 
 MONITOR
 1186
@@ -805,7 +805,7 @@ SWITCH
 563
 use-land?
 use-land?
-1
+0
 1
 -1000
 
@@ -818,7 +818,7 @@ max-productive-capacity
 max-productive-capacity
 0
 200
-210.0
+36.0
 1
 1
 NIL
