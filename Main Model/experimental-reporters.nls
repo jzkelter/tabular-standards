@@ -41,4 +41,12 @@ to-report household-wealth-concentration
   report (hhi / 10000)
 end
 
+to-report mean-age
+  report mean [firm-age] of firms
+end
+
+to-report mean-inventories
+  report mean [inventory] of firms
+end
+
 

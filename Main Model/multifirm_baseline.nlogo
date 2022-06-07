@@ -805,7 +805,7 @@ SWITCH
 563
 use-land?
 use-land?
-0
+1
 1
 -1000
 
@@ -818,7 +818,7 @@ max-productive-capacity
 max-productive-capacity
 0
 200
-7.0
+210.0
 1
 1
 NIL
@@ -1518,11 +1518,13 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     <metric>turnover-rate</metric>
     <metric>bankrupt-firms</metric>
     <metric>household-wealth-concentration</metric>
+    <metric>mean-age</metric>
+    <metric>mean-inventories</metric>
     <enumeratedValueSet variable="use-land?">
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-productive-capacity">
-      <value value="100"/>
+      <value value="210"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
@@ -1571,6 +1573,8 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     <metric>turnover-rate</metric>
     <metric>bankrupt-firms</metric>
     <metric>household-wealth-concentration</metric>
+    <metric>mean-age</metric>
+    <metric>mean-inventories</metric>
     <enumeratedValueSet variable="use-land?">
       <value value="true"/>
     </enumeratedValueSet>
