@@ -14,11 +14,13 @@ lands-own [
 ]
 
 to LAND.setup-patches 
+  ; ********************* this is a hodge podge fix **************************
   let n count PRIMARY-GOOD-FIRMS
   if setup-structure = "single-firm"[
     show "in if"
     set n count firms
   ]
+  ; ********************* end fix *************************
   create-lands n [
     let min-land-who min [who] of lands
     let x-per-land world-width / count lands
