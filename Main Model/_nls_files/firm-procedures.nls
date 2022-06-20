@@ -48,7 +48,7 @@ to FIRM.adjust-output-and-price
   let ideal-buffer table:get ideal-production-data "buffer"
   
   ; Figure out how much producing ideal-production will cost  
-  let ideal-n-workers (ideal-production / tech-parameter)
+  let ideal-n-workers FIRM.calc-ideal-n-workers ideal-production
   let cost-data FIRM.calculate-production-costs ideal-n-workers ideal-production ideal-buffer
   let total-price-of-production table:get cost-data "total-price"
   let ideal-input-goods table:get cost-data "input-amounts"
@@ -82,6 +82,15 @@ to FIRM.adjust-output-and-price
   ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
   ;    ]
   ;  ])
+  
+end
+
+
+to-report FIRM.calc-ideal-n-workers [ideal-production] ;; firm procedure
+  (ifelse
+    primary-production-function = "linear-with-max" [report (ideal-production / tech-parameter)]
+    primary-production-function = "CES" []
+  )
   
 end
 
@@ -130,13 +139,7 @@ to-report FIRM.calculate-ideal-production
 end
 
 to-report FIRM.get-productive-capacity
-  let my-productive-capacity 0
-  
-  ask firm-location[
-    set my-productive-capacity productive-capacity 
-  ]
-  
-  report my-productive-capacity
+  report [productive-capacity] of firm-location
 end
 
 to-report FIRM.calculate-production-costs [ideal-n-workers ideal-production ideal-buffer]

@@ -47,9 +47,9 @@ months
 
 BUTTON
 0
-360
+545
 66
-393
+578
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -64,9 +64,9 @@ NIL
 
 BUTTON
 124
-360
+545
 205
-393
+578
 go-once
 go\n
 NIL
@@ -81,9 +81,9 @@ NIL
 
 BUTTON
 67
-360
+545
 122
-393
+578
 NIL
 go
 T
@@ -112,10 +112,10 @@ NIL
 HORIZONTAL
 
 PLOT
-0
-395
-200
-543
+220
+495
+420
+643
 Unemployment rate
 NIL
 unemployment
@@ -207,10 +207,10 @@ NIL
 1
 
 PLOT
-0
-547
-200
-697
+650
+495
+850
+645
 Household Liquidity Distribution
 NIL
 NIL
@@ -487,25 +487,6 @@ count firms with [color = yellow]
 11
 
 PLOT
-415
-495
-645
-645
-Firm Money Outflow/Inflow
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"inflow" 1.0 0 -13791810 true "" "plot sum [price * previous-sales] of CONSUMER-GOOD-FIRMS "
-"outflow" 1.0 0 -2674135 true "" "plot sum [price * FIRM.max-production] of CONSUMER-GOOD-FIRMS"
-
-PLOT
 855
 340
 1054
@@ -531,7 +512,7 @@ CHOOSER
 setup-structure
 setup-structure
 "single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
-0
+1
 
 MONITOR
 1186
@@ -607,9 +588,9 @@ index-in-use
 0
 
 PLOT
-205
+430
 495
-410
+635
 645
 Profitability
 NIL
@@ -741,10 +722,10 @@ NIL
 HORIZONTAL
 
 SWITCH
-205
-650
-422
-683
+0
+345
+215
+378
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -784,10 +765,10 @@ NIL
 1
 
 SLIDER
-645
-495
-817
-528
+0
+380
+172
+413
 firm-competency
 firm-competency
 -1
@@ -799,27 +780,42 @@ NIL
 HORIZONTAL
 
 SWITCH
-645
-530
-762
-563
-use-land?
-use-land?
 0
+425
+117
+458
+use-land?
+use-land?
+1
 1
 -1000
 
 SLIDER
-645
-560
-830
-593
+0
+455
+185
+488
 max-productive-capacity
 max-productive-capacity
 0
 200
-84.0
+200.0
 1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+495
+185
+528
+primary-labor-elasticity
+primary-labor-elasticity
+.1
+1
+1.0
+.1
 1
 NIL
 HORIZONTAL
