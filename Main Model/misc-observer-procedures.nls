@@ -19,7 +19,7 @@ end
 ;observer procedure, initializes a single framework agreement
 to init-framework-agreement 
   set demand-not-satisfied 0
-  set index-type choose-index
+  set index-type FIRM.choose-index
   (ifelse index-type = 0 [
     set index-multiplier [price] of end1
   ] 
@@ -41,7 +41,7 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-pringle
-  set pringle-index-value sum [equity] of equity-links         ;fixed firm implementation fixes index to be equal to firm number
+  set pringle-index-value sum [firm-value] of firms         ;fixed firm implementation fixes index to be equal to firm number
 end
 
 ;observer procedure, recalculates the current index
@@ -67,10 +67,10 @@ to set-colors
     set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types
   ]
   ask households [
-    ifelse unemployed? [
-      set color red
-    ] [
+    ifelse HOUSEHOLD.employed? [
       set color blue
+    ] [
+      set color red
     ]
   ]
 end

@@ -1,11 +1,11 @@
-__includes["unit testing.nls"]  ;including this for purpose of using the helpful
-
+;__includes["unit testing.nls"]  ;including this for purpose of using the helpful
+extensions [csv]
 
 to unit-tests
   run-tests (list    
     (list "Price and output tests" test-adjust-price-and-output)
     (list "Pay wage tests" test-pay-wages)
-    (list "Fire worker tests" test-fire-workers)
+    ;(list "Fire worker tests" test-fire-workers)
     (list "Average sales tests" test-average-sales)
     (list "Wage rate tests" test-adjust-wage-rate)
   )
@@ -27,23 +27,24 @@ to test-unemployment
   ]
 end
 
-to-report test-remove-firm
-  report [->
-    set BANKRUPT-FIRM-PROFITS (list)
-    create-households 1
-    create-firms 1 [
-      set firm-type 0
-    ]
-    create-firms 1 [
-      ask households [create-equity-link-with myself]
-      ask my-equity-links [set equity 100]
-      set liquidity 100
-      set firm-type 0
-      remove-firm
-    ]
-    assert (count firms = 1) "Removed firm should be replaced"
-  ]
-end
+;;OUTDATED: NEEDS UPDATING
+;to-report test-remove-firm
+;  report [->
+;    set BANKRUPT-FIRM-PROFITS (list)
+;    create-households 1
+;    create-firms 1 [
+;      set firm-type 0
+;    ]
+;    create-firms 1 [
+;      ask households [create-equity-link-with myself]
+;      ask my-equity-links [set equity 100]
+;      set liquidity 100
+;      set firm-type 0
+;      remove-firm
+;    ]
+;    assert (count firms = 1) "Removed firm should be replaced"
+;  ]
+;end
 
 
 to-report test-adjust-wage-rate
@@ -58,23 +59,23 @@ to-report test-adjust-wage-rate
       set desired-n-workers 5 
       set fired-worker? false
       
-      adjust-wage-rate
+      FIRM.adjust-wage-rate
       assert (wage-rate > 1) "wage should increase"
       
       set wage-rate 1
       set fired-worker? true
-      adjust-wage-rate
+      FIRM.adjust-wage-rate
       assert (wage-rate < 1) "wage should decrease when we fired a worker last time period"
       
       set wage-rate 1
       set months-without-vacancies 3
-      adjust-wage-rate
+      FIRM.adjust-wage-rate
       assert (wage-rate < 1) "wage should decrease when we have had a vacant position for too many months"
       
       set wage-rate 1
       set months-without-vacancies 1
       set fired-worker? false
-      adjust-wage-rate
+      FIRM.adjust-wage-rate
       assert (wage-rate = 1) "wage should not change"
       
     ]
@@ -91,7 +92,7 @@ to-report test-adjust-price-and-output
       set input-data table:make
       set liquidity 999999
       
-      adjust-output-and-price
+      FIRM.adjust-output-and-price
       assert (price = before-price) "price should not have changed"
     ]
   ]
@@ -107,7 +108,7 @@ to-report test-pay-wages
       set wage-rate 1
       set liquidity 4
       
-      pay-wages
+      FIRM.pay-wages
       assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
       assert (liquidity = 1) "firm should have $1 left (23)"
                   
@@ -115,25 +116,27 @@ to-report test-pay-wages
   ]
 end
   
-to-report test-fire-workers
-  report [->
-    create-households 5
-    create-firms 1 [
-      ask households [create-employment-link-with myself]
-      assert (count my-employment-links = 5) "firms should initially have all 5 workers"
-      
-      set only-fire-1-per-month? false
-      set desired-n-workers 3
-      fire-workers
-      assert (count my-employment-links = 3) "firms should only fire two workers"
-      
-      set only-fire-1-per-month? true
-      set desired-n-workers 1
-      fire-workers
-      assert (count my-employment-links = 2) "firms should only fire one worker"
-    ]
-  ]
-end
+;;OUTDATED: NEEDS UPDATING
+;to-report test-fire-workers
+;  report [->
+;    create-households 5
+;    create-firms 1 [
+;      ask households [create-employment-link-with myself]
+;      assert (count my-employment-links = 5) "firms should initially have all 5 workers"
+;      
+;      set only-fire-1-per-month? false
+;      set desired-n-workers 3
+;      fire-workers
+;      assert (count my-employment-links = 3) "firms should only fire two workers"
+;      
+;      set only-fire-1-per-month? true
+;      set desired-n-workers 1
+;      fire-workers
+;      assert (count my-employment-links = 2) "firms should only fire one worker"
+;    ]
+;  ]
+;end
+
 
 to-report test-average-sales
   report [->
@@ -141,17 +144,64 @@ to-report test-average-sales
       set firm-memory-constant 0.5
       set average-previous-sales 0
       set previous-sales 0
-      calculate-average-sales
+      FIRM.calculate-average-sales
       assert average-previous-sales = 0 "average-previous-sales should not have changed"
       
       set previous-sales 1
-      calculate-average-sales
+      FIRM.calculate-average-sales
       assert average-previous-sales = 0.5 "average-previous-sales should be 0.5"
       
       set previous-sales 1
-      calculate-average-sales
+      FIRM.calculate-average-sales
       assert average-previous-sales = 0.75 "average-previous-sales should be 0.75"
     ]
   ]
 end
 
+to test-productive-capacity-change
+  let inputs csv:from-file "land_tests.csv"
+  foreach inputs[i ->
+    let workers (item 0 i)
+    let f-competency (item 1 i)
+    let expected-change (item 2 i)
+    show i
+    run-land-test workers 20 0.25 1 10 expected-change
+  ]
+end
+
+to run-land-test [n-workers opt change-fraction beta start-productive-capacity expected-change]
+  ca
+  set-constants
+  create-lands 1[
+    set productive-capacity start-productive-capacity
+    set optimal-productive-capacity opt
+    set MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION change-fraction
+    set MARGINAL-EFFECT-OF-LABOR-ON-LAND beta
+  ]
+  
+  create-firms 1[
+    set competency firm-competency
+    set firm-location one-of lands
+  ]
+  create-households n-workers[
+    create-employment-link-with one-of firms
+  ]
+  create-firms (n-workers - 1) [
+    ;;This is a placeholder to balance out the ratio of workers to firms.
+    ;;We have an input of n-workers that is meant to represent how much more you have, in relation to the average number of workers
+    ;;If we have 10 firms and 40 workers, and a firm has 8 workers, his labor value will be 2 (twice as many as the average, 4)
+  ]
+  ask one-of firms with [count my-employment-links > 0] [
+    let actual-effect 0
+    let temp-competency competency
+    let workers n-workers
+    ask firm-location[
+      set actual-effect LAND.labors-effect-on-land temp-competency workers
+    ]
+    
+    show (word "Actual effect: " actual-effect)
+    show (word "Expected change: " expected-change)
+    let difference (abs (expected-change - actual-effect))
+    assert (difference < 0.01) "Actual change different from expected"
+  ]
+end
