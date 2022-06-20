@@ -3,13 +3,15 @@
 
 extensions [rnd table]
 __includes[
-  "unit testing.nls"
-  "household-procedures.nls"
-  "firm-procedures.nls"
-  "go-procedures.nls"
-  "setup-procedures.nls"
-  "misc-observer-procedures.nls"
-  "land-procedures.nls"
+  "_nls_files/multifirm-unit-tests.nls"
+  "_nls_files/unit testing.nls"
+  "_nls_files/household-procedures.nls"
+  "_nls_files/firm-procedures.nls"
+  "_nls_files/go-procedures.nls"
+  "_nls_files/setup-procedures.nls"
+  "_nls_files/misc-observer-procedures.nls"
+  "_nls_files/land-procedures.nls"
+  "_nls_files/experimental-reporters.nls"
 ]
 
 

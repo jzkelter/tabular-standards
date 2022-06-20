@@ -4,15 +4,15 @@
 extensions [rnd table]
 
 __includes[
-  "multifirm-unit-tests.nls"
-  "unit testing.nls"
-  "household-procedures.nls"
-  "firm-procedures.nls"
-  "go-procedures.nls"
-  "setup-procedures.nls"
-  "misc-observer-procedures.nls"
-  "land-procedures.nls"
-  "experimental-reporters.nls"
+  "_nls_files/multifirm-unit-tests.nls"
+  "_nls_files/unit testing.nls"
+  "_nls_files/household-procedures.nls"
+  "_nls_files/firm-procedures.nls"
+  "_nls_files/go-procedures.nls"
+  "_nls_files/setup-procedures.nls"
+  "_nls_files/misc-observer-procedures.nls"
+  "_nls_files/land-procedures.nls"
+  "_nls_files/experimental-reporters.nls"
 ]
 
 
@@ -818,7 +818,7 @@ max-productive-capacity
 max-productive-capacity
 0
 200
-36.0
+84.0
 1
 1
 NIL
@@ -1213,7 +1213,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.2.0
+NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@

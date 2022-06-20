@@ -188,19 +188,19 @@ to set-constants
   set NEW-BANKRUPT-FIRMS 0
   
   (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
-    set FIRM-STRUCTURE table:get (table:from-json-file "Single-Firm-structure.json") "Firms"
+    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Single-Firm-structure.json") "Firms"
   ] 
   setup-structure = "two-layer" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "Two-Layer-Firm-structure.json") "Firms"
+    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Two-Layer-Firm-structure.json") "Firms"
   ]
   setup-structure = "three-layer" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "Three-Layer-Firm-structure.json") "Firms"
+    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Three-Layer-Firm-structure.json") "Firms"
   ]
   setup-structure = "diamond" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "Diamond-Firm-structure.json") "Firms"
+    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Diamond-Firm-structure.json") "Firms"
   ]
   setup-structure = "looped-diamond" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "Looped-Diamond-Firm-structure.json") "Firms"
+    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Looped-Diamond-Firm-structure.json") "Firms"
   ])
   
 end
