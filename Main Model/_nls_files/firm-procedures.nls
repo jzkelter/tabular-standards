@@ -87,11 +87,12 @@ end
 
 
 to-report FIRM.calc-ideal-n-workers [ideal-production] ;; firm procedure
-  (ifelse
-    primary-production-function = "linear-with-max" [report (ideal-production / tech-parameter)]
-    primary-production-function = "CES" []
-  )
-  
+  ifelse primary-good-firm? [
+    ;; output = tech-parameter * (n-workers ^ primary-labor-elasticity)
+    report (ideal-production / tech-parameter) ^ (1 / primary-labor-elasticity)
+    ] [ 
+    report (ideal-production / tech-parameter)
+  ]
 end
 
 to FIRM.adjust-price [ideal-buffer liquidity-limiter]

@@ -507,11 +507,11 @@ PENS
 CHOOSER
 0
 10
-133
+200
 55
 setup-structure
 setup-structure
-"single-firm" "two-layer" "three-layer" "diamond" "looped-diamond"
+"Single-CG-Firm.json" "Two-Layer-PG-CG.json" "three-layer" "diamond" "looped-diamond"
 1
 
 MONITOR
@@ -786,7 +786,7 @@ SWITCH
 458
 use-land?
 use-land?
-1
+0
 1
 -1000
 
@@ -814,7 +814,7 @@ primary-labor-elasticity
 primary-labor-elasticity
 .1
 1
-1.0
+0.5
 .1
 1
 NIL
@@ -1596,6 +1596,64 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
       <value value="190"/>
       <value value="200"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="Varying-primary-labor-elasticity" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <metric>unemployment-rate</metric>
+    <metric>mean-price-all-firms</metric>
+    <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>total-sales</metric>
+    <metric>mean-current-profit-all-firms</metric>
+    <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>turnover-rate</metric>
+    <metric>bankrupt-firms</metric>
+    <metric>household-wealth-concentration</metric>
+    <metric>mean-age</metric>
+    <metric>mean-inventories</metric>
+    <enumeratedValueSet variable="use-land?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-productive-capacity">
+      <value value="50"/>
+      <value value="100"/>
+      <value value="200"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="primary-labor-elasticity" first="0.1" step="0.1" last="1"/>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
     </enumeratedValueSet>

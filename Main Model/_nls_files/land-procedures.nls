@@ -16,10 +16,7 @@ lands-own [
 to LAND.setup-patches 
   ; ********************* this is a hodge podge fix **************************
   let n count PRIMARY-GOOD-FIRMS
-  if setup-structure = "single-firm"[
-    show "in if"
-    set n count firms
-  ]
+  
   ; ********************* end fix *************************
   create-lands n [
     let min-land-who min [who] of lands
@@ -36,7 +33,8 @@ to LAND.setup-patches
     set color scale-color green productive-capacity 0 200
   ] 
   show count lands
-  ask firms [
+  
+  ask PRIMARY-GOOD-FIRMS [
     set firm-location one-of lands with [patch-pointer = 0]
     ask firm-location[
       set patch-pointer 0

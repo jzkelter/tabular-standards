@@ -187,21 +187,10 @@ to set-constants
   set TOTAL-BANKRUPT-FIRMS 0
   set NEW-BANKRUPT-FIRMS 0
   
-  (ifelse setup-structure = "single-firm" [ ;diminishing utility constant = 0.2-0.3 works well
-    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Single-Firm-structure.json") "Firms"
-  ] 
-  setup-structure = "two-layer" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Two-Layer-Firm-structure.json") "Firms"
-  ]
-  setup-structure = "three-layer" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Three-Layer-Firm-structure.json") "Firms"
-  ]
-  setup-structure = "diamond" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Diamond-Firm-structure.json") "Firms"
-  ]
-  setup-structure = "looped-diamond" [
-    set FIRM-STRUCTURE table:get (table:from-json-file "_firm_structures/Looped-Diamond-Firm-structure.json") "Firms"
-  ])
+
+  let filepath word "_firm_structures/" setup-structure
+  set FIRM-STRUCTURE table:get (table:from-json-file filepath) "Firms"
+  
   
 end
 
