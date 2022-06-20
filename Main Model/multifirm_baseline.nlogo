@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-500.0
+510.0
 10
 1
 NIL
@@ -152,7 +152,7 @@ PENS
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 "med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor"
+"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
 
 PLOT
 855
@@ -507,11 +507,11 @@ PENS
 CHOOSER
 0
 10
-200
+210
 55
 setup-structure
 setup-structure
-"Single-CG-Firm.json" "Two-Layer-PG-CG.json" "three-layer" "diamond" "looped-diamond"
+"Single-CG-Firm.json" "Single-PG&CG-Firm.json" "Two-Layer-PG-CG.json" "three-layer" "diamond" "looped-diamond"
 1
 
 MONITOR
@@ -786,21 +786,21 @@ SWITCH
 458
 use-land?
 use-land?
-0
+1
 1
 -1000
 
 SLIDER
 0
 455
-185
+205
 488
-max-productive-capacity
-max-productive-capacity
-0
-200
-200.0
-1
+max-prod-capacity-per-capita
+max-prod-capacity-per-capita
+.1
+5
+4.0
+.1
 1
 NIL
 HORIZONTAL
@@ -814,7 +814,7 @@ primary-labor-elasticity
 primary-labor-elasticity
 .1
 1
-0.5
+0.4
 .1
 1
 NIL
