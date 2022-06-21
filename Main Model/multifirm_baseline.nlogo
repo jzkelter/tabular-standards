@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-510.0
+3.0
 10
 1
 NIL
@@ -715,7 +715,7 @@ firm-memory-constant
 firm-memory-constant
 0
 1
-0.8
+0.5
 0.1
 1
 NIL
@@ -741,7 +741,7 @@ layoff-probability
 layoff-probability
 0
 1
-0.5
+1.0
 0.01
 1
 NIL
@@ -786,7 +786,7 @@ SWITCH
 458
 use-land?
 use-land?
-1
+0
 1
 -1000
 
@@ -799,7 +799,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 .1
 5
-4.0
+3.0
 .1
 1
 NIL
@@ -814,7 +814,7 @@ primary-labor-elasticity
 primary-labor-elasticity
 .1
 1
-0.4
+1.0
 .1
 1
 NIL
@@ -1214,235 +1214,6 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="20" step="10" last="200"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="double-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="double-firm_varying_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="20" step="10" last="200"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm_low_firm_number" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 200 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean ALL-FIRM-PROFITS</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <steppedValueSet variable="n-firms" first="10" step="1" last="30"/>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm_varying_memory_constant" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 1000 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set ALL-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-REVENUE 0
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>mean [lifetime-profits] of firms</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <metric>TOTAL-REVENUE</metric>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;single-firm&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="firm-memory-constant" first="0" step="0.1" last="0.9"/>
-  </experiment>
-  <experiment name="double-firm_varying_framework_duration" repetitions="1" runMetricsEveryStep="false">
-    <setup>setup
-repeat 1000 [go]
-set BANKRUPT-FIRM-PROFITS (list)
-set UNEMPLOYMENT-RATES (list)
-set MEAN-PRICES (list)
-set TOTAL-BANKRUPT-FIRMS 0</setup>
-    <go>go</go>
-    <timeLimit steps="200"/>
-    <metric>TOTAL-BANKRUPT-FIRMS / n-firms</metric>
-    <metric>mean UNEMPLOYMENT-RATES</metric>
-    <metric>mean MEAN-PRICES</metric>
-    <metric>standard-deviation MEAN-PRICES</metric>
-    <metric>mean [lifetime-profits] of firms</metric>
-    <metric>mean BANKRUPT-FIRM-PROFITS</metric>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="framework-duration" first="1" step="1" last="10"/>
-  </experiment>
   <experiment name="economy-crash-experiment" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
@@ -1496,61 +1267,6 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="baseline-run-no-land" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-productive-capacity">
-      <value value="210"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="framework-duration">
       <value value="24"/>
@@ -1674,6 +1390,63 @@ set TOTAL-BANKRUPT-FIRMS 0</setup>
     </enumeratedValueSet>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;two-layer&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="single-firm-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="3000"/>
+    <metric>unemployment-rate</metric>
+    <metric>mean-price-all-firms</metric>
+    <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>total-sales</metric>
+    <metric>mean-current-profit-all-firms</metric>
+    <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>turnover-rate</metric>
+    <metric>bankrupt-firms</metric>
+    <metric>household-wealth-concentration</metric>
+    <metric>mean-age</metric>
+    <metric>mean-inventories</metric>
+    <enumeratedValueSet variable="use-land?">
+      <value value="true"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="max-prod-capacity-per-capita" first="1" step="0.2" last="5"/>
+    <enumeratedValueSet variable="primary-labor-elasticity">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.5"/>
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>

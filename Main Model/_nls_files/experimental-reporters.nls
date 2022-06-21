@@ -41,6 +41,23 @@ to-report household-wealth-concentration
   report (hhi / 10000)
 end
 
+to-report household-wealth-range
+  report (max [liquidity] of households) - (min [liquidity] of households)
+end
+
+to-report household-wealth-variance
+  let mean-liquidity mean [liquidity] of households
+  report sum [(liquidity - mean-liquidity) ^ 2] of households / count households
+end
+
+to-report gini-coefficient
+  let total-liquidity sum [liquidity] of households
+  let sorted-liquidities map [t -> [liquidity] of t] sort-on [liquidity] households  
+  report ((2 * (sum map [i -> (i + 1) * item i sorted-liquidities] (range n-households))) / (n-households * total-liquidity)) - ((n-households + 1) / n-households)
+  
+end
+
+
 to-report mean-age
   report mean [firm-age] of firms
 end

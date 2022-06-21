@@ -1,3 +1,4 @@
 .DS_Store
 *.tmp.nlogo
+*.ipynb_checkpoints
 Sim4edu-Lengnick-code/*
