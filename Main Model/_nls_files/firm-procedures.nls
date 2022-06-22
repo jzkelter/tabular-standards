@@ -95,13 +95,12 @@ to-report FIRM.calc-ideal-n-workers [ideal-production] ;; firm procedure
       ;; output = M * (1 - exp(-s * n-workers))
       ;; M = productive capacity of the land 
       ;; s is an arbitrary constant in this assumed function. It was picked so othe slope of the production function would be about 3 at thet beginning to match the linear cas
-      let M FIRM.get-productive-capacity
-      let s 0.1
+      let M FIRM.get-productive-capacity      
       ; In the case of decreasing returns to labor from the land, the firm needs to calculate most profitable amount oto produce, not the maximum
-      ;; So, we set up a profit equation: profit = production - cost = M * (1 - exp(-s * n-workers)) - wage-rate * n-workers
+      ;; So, we set up a profit equation: profit = output * price - cost = M * price * (1 - exp(-s * n-workers)) - wage-rate * n-workers
       ;; Take the derivate of profit with respect to workers and solve for workers to fine most profitable number of workers. 
-      ;; n-workers = - ln( wage-rate / (M * s)) / s
-      let ideal-n-workers round(-(ln( wage-rate / (M * s)) / s))
+      ;; n-workers = - ln( wage-rate / (M * price * s)) / s
+      let ideal-n-workers round(-(ln( wage-rate / (M * s * price)) / s))
       report max (list ideal-n-workers 0)
         
       ] [  

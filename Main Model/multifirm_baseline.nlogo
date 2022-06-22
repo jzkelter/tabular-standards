@@ -741,7 +741,7 @@ layoff-probability
 layoff-probability
 0
 1
-0.5
+1.0
 0.01
 1
 NIL
@@ -781,9 +781,9 @@ HORIZONTAL
 
 SWITCH
 0
-425
+415
 117
-458
+448
 use-land?
 use-land?
 0
@@ -798,8 +798,8 @@ SLIDER
 max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 .1
-20
-2.0
+30
+30.0
 .1
 1
 NIL
@@ -822,14 +822,29 @@ HORIZONTAL
 
 SWITCH
 0
-460
+450
 197
-493
+483
 asymptotic-land-prod?
 asymptotic-land-prod?
 0
 1
 -1000
+
+SLIDER
+0
+485
+172
+518
+s
+s
+.1
+.3
+0.1
+.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
