@@ -43,6 +43,8 @@ end
 
 ;firm procedure: adjust output and price based on expected demand and ability to produce
 to FIRM.adjust-output-and-price  
+  
+  ;; get ideal production
   let ideal-production-data FIRM.calculate-ideal-production
   let ideal-production table:get ideal-production-data "amount"
   let ideal-buffer table:get ideal-production-data "buffer"
@@ -53,11 +55,18 @@ to FIRM.adjust-output-and-price
   let total-price-of-production table:get cost-data "total-price"
   let ideal-input-goods table:get cost-data "input-amounts"
   
-  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
+  ;; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
   let liquidity-limiter 1
   if total-price-of-production > liquidity [
     set liquidity-limiter liquidity / total-price-of-production
   ]
+  
+  ;; If the firm produces primary goods, they may be limited by land
+  let limited-by-land-productivity? false
+  if primary-good-firm? and FIRM.productive-capacity-of-land < ideal-production [
+    set ideal-production FIRM.productive-capacity-of-land
+    set limited-by-land-productivity? true
+  ]  
   
   ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
   set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
@@ -69,56 +78,109 @@ to FIRM.adjust-output-and-price
     set index-i index-i + 1 
   ]
   
-  FIRM.adjust-price ideal-buffer liquidity-limiter  
-  ;  (ifelse expected-future-sales > FIRM.max-production [ 
-  ;    ;excess demand
-  ;    if price < (mean [price] of other FIRM.firms-with-my-type) [ 
-  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-  ;    ]
-  ;  ] [
-  ;    ;excess supply
-  ;    if price > (mean [price] of other FIRM.firms-with-my-type) [
-  ;      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-  ;    ]
-  ;  ])
+  FIRM.adjust-price ideal-buffer liquidity-limiter limited-by-land-productivity?
   
 end
 
 
-to-report FIRM.calc-ideal-n-workers [ideal-production] ;; firm procedure
+to-report FIRM.calc-ideal-n-workers [prod-to-meet-demand] ;; firm procedure
+  
+  ;; Since a firm might already have inventories, the production-to-meet-demand is not the same as expected-demand. 
+  ;; It also isn't automatically "ideal" since with non-linear production functions, "ideal" maximizes profit, not meeting demand
+  
   ifelse primary-good-firm? [
-    ;; output = tech-parameter * (n-workers ^ primary-labor-elasticity)    
-
-    ifelse use-land? and asymptotic-land-prod? [    
-      ;; land production is asympototic
-      ;; output = M * (1 - exp(-s * n-workers))
-      ;; M = productive capacity of the land 
-      ;; s is an arbitrary constant in this assumed function. It was picked so othe slope of the production function would be about 3 at thet beginning to match the linear cas
-      let M FIRM.get-productive-capacity      
-      ; In the case of decreasing returns to labor from the land, the firm needs to calculate most profitable amount oto produce, not the maximum
-      ;; So, we set up a profit equation: profit = output * price - cost = M * price * (1 - exp(-s * n-workers)) - wage-rate * n-workers
-      ;; Take the derivate of profit with respect to workers and solve for workers to fine most profitable number of workers. 
-      ;; n-workers = - ln( wage-rate / (M * price * s)) / s
-      let ideal-n-workers round(-(ln( wage-rate / (M * s * price)) / s))
-      report max (list ideal-n-workers 0)
-        
-      ] [  
-      report (ideal-production / tech-parameter) ^ (1 / primary-labor-elasticity)              
-    ] 
+    report FIRM.primary-good-firm-calc-ideal-n-workers prod-to-meet-demand
     
-
-    ] [ 
-    report (ideal-production / tech-parameter)
+    ] [ ;; non-primary good firms or primary good firms when not using land
+    report (prod-to-meet-demand / tech-parameter)
   ]
 end
 
-to FIRM.adjust-price [ideal-buffer liquidity-limiter]
+
+to-report FIRM.primary-good-firm-calc-ideal-n-workers [prod-to-meet-demand]
+  
+  (ifelse
+    primary-good-prod-function = "linear" [  ; 
+      report prod-to-meet-demand / tech-parameter
+    ]
+    primary-good-prod-function = "asymptotic" [
+      report FIRM.calc-ideal-workers-asymptotic-land-prod prod-to-meet-demand        
+    ]
+    primary-good-prod-function = "Cobb-Douglas" [
+      report (prod-to-meet-demand / tech-parameter) ^ (1 / alpha)                    
+    ]
+
+  )
+
+end
+
+;firm procedure, reports the maximum production possible based on labor (and land if applicable)
+to-report FIRM.max-labor-production  
+  ifelse primary-good-firm?  [
+    report FIRM.primary-good-firm-max-production        
+  ][
+    report (n-workers * tech-parameter)
+  ]
+end
+
+to-report FIRM.primary-good-firm-max-production  ;; primary good firm procedure  
+   (ifelse    
+    primary-good-prod-function = "linear" [
+      ; minimum of max productive capacity of the land or the most that the workers can produce
+      report min list FIRM.productive-capacity-of-land (n-workers * tech-parameter)
+    ]
+    
+    primary-good-prod-function = "asymptotic" [
+      ; output = M * (1 - exp(-s * n-workers))                 
+      report FIRM.productive-capacity-of-land * (1 - exp(-(s * n-workers))) 
+    ]
+        
+    primary-good-prod-function = "Cobb-Douglas" [
+      report min list FIRM.productive-capacity-of-land (tech-parameter * (n-workers ^ alpha))
+    ]
+  )
+  
+end
+
+
+
+to-report  FIRM.calc-ideal-workers-asymptotic-land-prod [prod-to-meet-demand]  
+  ;; production is asympototic to maximum with number of workers:  output = M * (1 - exp(-s * n-workers))
+  ;; M = productive capacity of the land 
+  ;; s is an arbitrary constant in this assumed function. It was picked so othe slope of the production function would be about 3 at thet beginning to match the linear cas
+  
+  let M FIRM.productive-capacity-of-land                        
+  
+  ;; In the case of decreasing returns to labor from the land, the firm needs to calculate most profitable amount to produce, assuming full sales
+  ;;     if expected-demand < most profitable production -> get number of workers for expected-demand
+  ;;     if expected-demand > most profitable production  -> get number of workers for most profitable production
+  
+  ;; Calculate most profitable number of workers
+  ;; We set up a profit equation: profit = price * output  - cost = price * M * (1 - exp(-s * n-workers)) - wage-rate * n-workers
+  ;; Take the derivate of profit with respect to workers and solve for workers to find most profitable number of workers. 
+  ;; n-workers = - ln( wage-rate / (M * price * s)) / s
+  let ideal-workers-full-sales (-(ln( wage-rate / (M * s * price)) / s))
+  
+  ;; workers to produce expected demand
+  let workers-for-expected-demand ifelse-value (prod-to-meet-demand / M) < 1 [(-(ln(1 - (prod-to-meet-demand / M)) / s))] [0]
+  
+  ; ideal number of workers is the minimum of the two options
+  ;let ideal-n-workers round min (list ideal-workers-full-sales workers-for-expected-demand)  
+   let ideal-n-workers round ideal-workers-full-sales
+  ; let ideal-n-workers round workers-for-expected-demand
+  
+  ;let ideal-n-workers round workers-for-expected-demand
+  report max (list ideal-n-workers 0)  ; to prevent negative number of workers
+  
+end
+
+to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivity?]
   ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
-  (ifelse 
-    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
-    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
-    and price < (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is below competition's average 
+  (ifelse                                                         ; IF all three conditions are true:
+    inventory < ideal-buffer                                      ; 1) inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and (liquidity-limiter < 1                                    ; 2) (can't produce enough to fulfill expected demand at the current price
+         or limited-by-land-productivity?)                        ;     OR a primary good firm is limited by the land in how much they can produce)
+    and price < (mean [price] of other FIRM.firms-with-my-type) [ ; 3) price is below competition's average 
       set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
     ] 
     
@@ -132,7 +194,11 @@ to FIRM.adjust-price [ideal-buffer liquidity-limiter]
   ) 
 end
 
-to-report FIRM.calculate-ideal-production
+to-report land-limited?
+  
+end
+
+to-report FIRM.calculate-ideal-production  ;; calculate ideal production regardless of limitations (just based on expected sales and current inventory)
   let expected-future-sales average-previous-sales  ; expect the future to be like the average of the past
   
   ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
@@ -142,12 +208,9 @@ to-report FIRM.calculate-ideal-production
   ; adjust ideal-production based on current inventory
   set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 
   
-  set ideal-production max (list 0 ideal-production) ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer
-  
-  if use-land? and primary-good-firm? [
-    set ideal-production (min (list ideal-production FIRM.get-productive-capacity))  ; can't 
-  ]
-  
+  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer
+  set ideal-production max (list 0 ideal-production) 
+    
   ; now fix ideal-production to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
   set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter ; maybe change this to round instead of ceiling?
   let production-data table:make
@@ -158,7 +221,7 @@ to-report FIRM.calculate-ideal-production
   report production-data
 end
 
-to-report FIRM.get-productive-capacity
+to-report FIRM.productive-capacity-of-land
   report [productive-capacity] of firm-location
 end
 
@@ -518,11 +581,11 @@ end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
 to-report FIRM.production-potential 
-  (ifelse table:length input-data = 0[
-    report FIRM.max-production
+  (ifelse table:length input-data = 0 [
+    report FIRM.max-labor-production
   ][    
     let input-potential min map [i -> ((FIRM.marginal-productivity i) * (FIRM.current-stock i))] table:keys input-data
-    report (min (list input-potential (FIRM.max-production)))
+    report (min (list input-potential (FIRM.max-labor-production)))
   ])
 end
 
@@ -638,14 +701,6 @@ to-report FIRM.input-firm-type
    report [firm-type] of end1
 end
 
-;firm procedure, reports the maximum production possible
-to-report FIRM.max-production
-  ifelse use-land? and primary-good-firm? [
-    report (min (list FIRM.get-productive-capacity (n-workers * tech-parameter)))
-  ][
-    report (n-workers * tech-parameter)
-  ]
-end
 
 ;firm procedure, reports an agentset of firms with the same firm-type as the caller
 to-report FIRM.firms-with-my-type  

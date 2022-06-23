@@ -9,6 +9,7 @@ to unit-tests
     (list "Average sales tests" test-average-sales)
     (list "Wage rate tests" test-adjust-wage-rate)
     (list "gini-coefficient tests" test-gini-coefficient)
+    (list "asymptotic land production tests" test-asymptotic-land-production)
   )
 end
 
@@ -183,6 +184,28 @@ to-report test-gini-coefficient
   ]
 end
 
+to-report test-asymptotic-land-production
+  report [-> 
+    set s 0.1  ; override what is on interface
+    create-firms 1 [
+      set  primary-good-firm? true
+      set price 0.9
+      set wage-rate 2.5
+    ]    
+    LAND.setup-patches 
+    ask lands [set productive-capacity 60]  ; override what is on the interface
+    
+    let prod-to-meet-demand 10
+    let n-desired-workers [FIRM.calc-ideal-workers-asymptotic-land-prod prod-to-meet-demand] of firm 0
+    assert n-desired-workers = 21 "1. asymptotic land production output is wrong"
+    
+    
+  ]
+end
+
+
+
+;; ;; TESTS for laands
 
 to test-productive-capacity-change
   let inputs csv:from-file "land_tests.csv"
@@ -194,6 +217,7 @@ to test-productive-capacity-change
     run-land-test workers 20 0.25 1 10 expected-change
   ]
 end
+
 
 to run-land-test [n-workers opt change-fraction beta start-productive-capacity expected-change]
   ca
@@ -231,4 +255,7 @@ to run-land-test [n-workers opt change-fraction beta start-productive-capacity e
     assert (difference < 0.01) "Actual change different from expected"
   ]
 end
+
+
+
 

@@ -102,17 +102,17 @@ to setup
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
+    set demand FIRM.max-labor-production    ; demand initialized to be the amount the firm can produce with its starting amount of labor
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
     FIRM.set-input-demands   
-    set previous-sales FIRM.max-production
+    set previous-sales demand
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales FIRM.max-production
+    set average-previous-sales demand
     set firm-value 0
   ]    
   
@@ -304,17 +304,17 @@ to setup-crash
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
+    set demand FIRM.max-labor-production   ; demand initialized to be the intial output of the firm
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
     FIRM.set-input-demands   
-    set previous-sales FIRM.max-production
+    set previous-sales demand
     set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales FIRM.max-production
+    set average-previous-sales demand
   ]    
   
   set-colors
