@@ -1,0 +1,101 @@
+to-report unemployment-rate
+  report (1 - (count employment-links / count households))
+end
+
+
+
+to-report mean-consumer-demand-not-satisfied
+  report mean [demand-not-satisfied] of consumer-links
+end
+
+
+to-report mean-firm-demand-not-satisfied
+  ifelse any? framework-agreements [
+    report mean [demand-not-satisfied] of framework-agreements
+  ] [
+    report 0
+  ]
+end
+
+to-report total-sales
+  report sum [previous-sales] of firms
+end
+
+to-report mean-current-profit-all-firms
+  report mean [current-profits] of firms
+end
+
+to-report mean-lifetime-profit-all-firms
+  report mean [lifetime-profits] of firms
+end
+
+to-report turnover-rate
+  report NEW-BANKRUPT-FIRMS / n-firms
+end
+
+to-report bankrupt-firms
+  report TOTAL-BANKRUPT-FIRMS
+end
+
+to-report household-wealth-concentration
+  let total_liquidity sum [liquidity] of households
+  let hhi 0
+  ask households[
+    let wealth-share (liquidity / total_liquidity)
+    let wealth-percentage (wealth-share * 100)
+    set hhi (hhi + (wealth-percentage ^ 2))
+  ]
+  report (hhi / 10000)
+end
+
+to-report household-wealth-range
+  report (max [liquidity] of households) - (min [liquidity] of households)
+end
+
+to-report household-wealth-variance
+  let mean-liquidity mean [liquidity] of households
+  report sum [(liquidity - mean-liquidity) ^ 2] of households / count households
+end
+
+to-report gini-coefficient
+  let total-liquidity sum [liquidity] of households
+  let sorted-liquidities map [t -> [liquidity] of t] sort-on [liquidity] households  
+  report ((2 * (sum map [i -> (i + 1) * item i sorted-liquidities] (range n-households))) / (n-households * total-liquidity)) - ((n-households + 1) / n-households)
+  
+end
+
+
+to-report mean-age
+  report mean [firm-age] of firms
+end
+
+to-report mean-inventories
+  report mean [inventory] of firms
+end
+
+
+to-report mean-cg-price
+  report mean [price] of CONSUMER-GOOD-FIRMS
+end
+
+to-report mean-pg-price
+  report mean [price] of CONSUMER-GOOD-FIRMS
+end
+
+
+to-report sd-cg-price
+  report standard-deviation [price] of CONSUMER-GOOD-FIRMS
+end
+
+
+to-report sd-pg-price
+  report standard-deviation [price] of PRIMARY-GOOD-FIRMS
+end
+
+
+to-report stop?
+  (ifelse
+    setup-structure = "Single-PG&CG-Firm.json" [report ticks >= 3000]
+    setup-structure = "Two-Layer-PG-CG.json" [report ticks >= 6000]
+  )
+end

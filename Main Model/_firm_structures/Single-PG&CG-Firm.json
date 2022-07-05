@@ -3,7 +3,7 @@
         {
             "Firm type": 1,
             "Input data": [],
-            "Tech constant": 3,
+            "Tech constant": 1,
             "Firm count": 1,
             "Consumer?":true,
 	    "Intermediate?":false,

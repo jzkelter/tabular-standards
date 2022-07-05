@@ -12,7 +12,7 @@ __includes[
   "_nls_files/setup-procedures.nls"
   "_nls_files/misc-observer-procedures.nls"
   "_nls_files/land-procedures.nls"
-  "_nls_files/experimental-reporters.nls"
+  "_nls_files/stats-reporters.nls"
 ]
 
 
@@ -144,7 +144,7 @@ NIL
 5.0
 true
 true
-"set-plot-y-range (MIN-WAGE-RATE * 0.9) precision (mean [tech-parameter] of firms * 1.1) 1" ""
+"set-plot-y-range 0 precision (mean [tech-parameter] of firms * 1.1) 1" ""
 PENS
 "mean firm wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
 "min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
@@ -298,7 +298,7 @@ PENS
 PLOT
 1355
 340
-1555
+1640
 490
 Mean Demand Not Satisfied
 NIL
@@ -308,11 +308,11 @@ NIL
 0.0
 0.1
 true
-false
+true
 "" ""
 PENS
-"Consumers" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
-"Consumer firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
+"households" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
 
 PLOT
 665
@@ -332,7 +332,6 @@ false
 PENS
 "consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
 "primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [FIRM.current-stock 2] of CONSUMER-GOOD-FIRMS"
 
 BUTTON
 998
@@ -787,8 +786,8 @@ SLIDER
 max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
-40
-10.0
+10
+0.1
 .1
 1
 NIL
@@ -1278,72 +1277,17 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="Varying-primary-labor-elasticity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-productive-capacity">
-      <value value="50"/>
-      <value value="100"/>
-      <value value="200"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="alpha" first="0.1" step="0.1" last="1"/>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
   <experiment name="single-firm-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <timeLimit steps="3000"/>
     <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
     <metric>total-sales</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>sd-cg-price</metric>
+    <metric>sd-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
     <metric>turnover-rate</metric>
@@ -1360,7 +1304,7 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="primary-good-prod-function">
       <value value="&quot;linear&quot;"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="max-prod-capacity-per-capita" first="0.5" step="0.5" last="10"/>
+    <steppedValueSet variable="max-prod-capacity-per-capita" first="11" step="1" last="20"/>
     <enumeratedValueSet variable="alpha">
       <value value="1"/>
     </enumeratedValueSet>
@@ -1395,14 +1339,18 @@ NetLogo 6.2.2
       <value value="24"/>
     </enumeratedValueSet>
   </experiment>
-  <experiment name="single-firm-primary-labor-elasticity" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="1-and-2-layer-vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="3000"/>
+    <exitCondition>stop?</exitCondition>
     <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>mean-firm-demand-not-satisfied</metric>
     <metric>total-sales</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>sd-cg-price</metric>
+    <metric>sd-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
     <metric>turnover-rate</metric>
@@ -1413,17 +1361,17 @@ NetLogo 6.2.2
     <metric>household-wealth-variance</metric>
     <metric>household-wealth-range</metric>
     <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="false"/>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
+      <value value="&quot;Two-Layer-PG-CG.json&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="max-prod-capacity-per-capita">
+    <enumeratedValueSet variable="primary-good-prod-function">
+      <value value="&quot;linear&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="max-prod-capacity-per-capita" first="0.1" step="0.5" last="10"/>
+    <enumeratedValueSet variable="alpha">
       <value value="1"/>
-      <value value="2"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="primary-labor-elasticity" first="0.1" step="0.1" last="1"/>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
     </enumeratedValueSet>
@@ -1441,76 +1389,6 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
       <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm-asymptotic-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="asymptotic-land-prod?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="s">
-      <value value="0.1"/>
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="max-prod-capacity-per-capita" first="1" step="1" last="30"/>
-    <enumeratedValueSet variable="primary-labor-elasticity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>

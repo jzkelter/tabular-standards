@@ -3,7 +3,7 @@
         {
             "Firm type": 1,
             "Input data":[],
-            "Tech constant": 3.75,
+            "Tech constant": 2,
             "Firm count": 0.25,
             "Consumer?":false,
 	    "Intermediate?":false,
@@ -14,10 +14,10 @@
             "Input data": [
                 {
                     "Input firm type": 1,
-                    "Marginal productivity": 4
+                    "Marginal productivity": 2
                 }
             ],
-            "Tech constant": 3.75,
+            "Tech constant": 2,
             "Firm count": 1,
             "Consumer?":true,
 	    "Intermediate?":false,
