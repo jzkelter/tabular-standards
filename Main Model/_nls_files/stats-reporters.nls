@@ -79,7 +79,7 @@ to-report mean-cg-price
 end
 
 to-report mean-pg-price
-  report mean [price] of CONSUMER-GOOD-FIRMS
+  report mean [price] of PRIMARY-GOOD-FIRMS
 end
 
 

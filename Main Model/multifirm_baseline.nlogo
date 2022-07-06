@@ -156,9 +156,9 @@ PENS
 
 PLOT
 870
-495
-1070
 645
+1070
+795
 Worker Per Firm Distribution
 NIL
 NIL
@@ -207,9 +207,9 @@ NIL
 1
 
 PLOT
-665
+870
 495
-865
+1070
 645
 Household Liquidity Distribution
 NIL
@@ -510,8 +510,8 @@ CHOOSER
 55
 setup-structure
 setup-structure
-"Single-CG-Firm.json" "Single-PG&CG-Firm.json" "Two-Layer-PG-CG.json" "three-layer" "diamond" "looped-diamond"
-1
+"Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-PG-CG.json"
+2
 
 MONITOR
 1201
@@ -787,7 +787,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-0.1
+2.5
 .1
 1
 NIL
@@ -882,6 +882,39 @@ primary good firm settings
 11
 105.0
 1
+
+PLOT
+665
+495
+865
+645
+gini-coefficient
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot gini-coefficient"
+
+SLIDER
+0
+640
+172
+673
+minimum-wage
+minimum-wage
+.1
+3
+2.5
+.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

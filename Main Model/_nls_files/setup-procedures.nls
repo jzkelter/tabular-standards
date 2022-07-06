@@ -170,7 +170,7 @@ end
 to set-constants
   set SEED new-seed
   random-seed SEED
-  set MIN-WAGE-RATE 0.1  ; really low, just don't let it go to zero
+  set MIN-WAGE-RATE minimum-wage
   set MAX-WAGE-GROWTH 0.019                
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.05                 
@@ -212,7 +212,7 @@ to setup-firms
       
       set shape "building store"
       set tech-parameter firm-tech-parameter 
-      set price 10 * small-random-change
+      set price 5 / tech-parameter * small-random-change
       set firm-type group
       set input-data make-input-data-table table:get f "Input data"
       set wage-rate tech-parameter
