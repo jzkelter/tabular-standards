@@ -99,3 +99,12 @@ to-report stop?
     setup-structure = "Two-Layer-PG-CG.json" [report ticks >= 6000]
   )
 end
+
+to-report consumer-demand
+  report sum [demanded-consumption * transactions-per-month] of households 
+end
+
+to-report cg-production
+  ;; if FIRM.production-potential is called after the beginning of the month
+  report sum [month-production] of CONSUMER-GOOD-FIRMS
+end

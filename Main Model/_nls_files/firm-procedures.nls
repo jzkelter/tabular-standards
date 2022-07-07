@@ -5,6 +5,7 @@ firms-own [
   firm-type                        ; # a label for the firm
   input-data                       ; the firm types and productivity that firms need to buy from
   inventory                        ; # amount of goods stored and ready to be sold
+  month-production                 ; stores the amount the firm produced this month
   price                            
   wage-rate                        
   liquidity                        ; i.e. money currently available
@@ -518,8 +519,9 @@ end
 ;firm procedure, adjusts inventory by a calculated production amount and adjusts input stocks accordingly by calling FIRM.use-inputs
 to FIRM.produce-goods  
   let production-amount FIRM.production-potential
-  set inventory inventory + production-amount
+  set month-production month-production + production-amount
   FIRM.use-inputs production-amount
+  set inventory inventory + production-amount  
 end
 
 ;firm procedure, pays wages to workers
@@ -541,8 +543,8 @@ end
 to FIRM.distribute-profits 
   if liquidity < 0 [error "liquidity should not be negative"]  
   let buffer FIRM.decide-reserve
-  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
-    let profits-to-allocate liquidity - buffer
+  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders    
+    let profits-to-allocate liquidity - buffer    
     set current-profits profits-to-allocate
     set firm-value firm-value * 0.5 + profits-to-allocate * 0.5
     set liquidity buffer

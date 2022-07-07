@@ -44,8 +44,7 @@ globals [
   MAX-WAGE-GROWTH                  ; defined as the max amount a firm can increase or decrease their wage if they decide to change their wage
   MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
   MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by
-  BUFFER-LABOR-FRACTION            ; the fraction of labor costs to keep as a buffer
-  DIMINISHING-UTILITY-CONSTANT     ; the decay rate of how much wealth is used on consumption by households, used in consumption function
+  BUFFER-LABOR-FRACTION            ; the fraction of labor costs to keep as a buffer  
   PROB-REPLACE-FIRM-PRICE          ; the probability of switching trading firms to a new firm with a better price
   PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
   N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
@@ -175,7 +174,7 @@ to set-constants
   set MONTHS-TO-LOWER-WAGE 1              
   set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.5  
+  set DIMINISHING-UTILITY-CONSTANT 0.25 ;  0.5  
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    
