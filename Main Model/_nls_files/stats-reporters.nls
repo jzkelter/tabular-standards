@@ -99,8 +99,8 @@ to-report stop?
 ;    setup-structure = "Two-Layer-PG-CG.json" [report ticks >= 6000]
 ;  )
   ifelse max-prod-capacity-per-capita < 2 
-  [report 6000]
-  [report 3000]
+  [report ticks > 6000]
+  [report ticks > 3000]
     
 end
 

@@ -511,7 +511,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-PG-CG.json"
-3
+1
 
 MONITOR
 1201
@@ -787,7 +787,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-3.0
+0.1
 .1
 1
 NIL
@@ -910,7 +910,7 @@ minimum-wage
 minimum-wage
 .1
 3
-2.5
+0.8
 .1
 1
 NIL
@@ -1328,7 +1328,7 @@ NetLogo 6.2.2
   <experiment name="single-firm-vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <exitCondition>max-productive-capacity</exitCondition>
+    <exitCondition>stop?</exitCondition>
     <metric>unemployment-rate</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
     <metric>mean-firm-demand-not-satisfied</metric>
