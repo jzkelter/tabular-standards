@@ -415,8 +415,8 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -5509967 true "" "plot sum [FIRM.production-potential] of CONSUMER-GOOD-FIRMS"
+"demand" 1.0 0 -13791810 true "" "plot consumer-demand"
+"cg-output" 1.0 0 -5509967 true "" "plot cg-production"
 "pg-output" 1.0 0 -6459832 true "" ";; to be meaningful, need to multiply by the marginal productivity of\n;; one unit of pg for one unit of cg\n; plot sum [FIRM.max-production] of PRIMARY-GOOD-FIRMS\n"
 
 PLOT
@@ -925,7 +925,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.8
+0.25
 .05
 1
 NIL
@@ -1325,76 +1325,16 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="single-firm-vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-cg-price</metric>
-    <metric>mean-pg-price</metric>
-    <metric>sd-cg-price</metric>
-    <metric>sd-pg-price</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="primary-good-prod-function">
-      <value value="&quot;linear&quot;"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="max-prod-capacity-per-capita" first="11" step="1" last="20"/>
-    <enumeratedValueSet variable="alpha">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="1-and-2-layer-vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <exitCondition>stop?</exitCondition>
+    <exitCondition>max-productive-capacity</exitCondition>
     <metric>unemployment-rate</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
     <metric>mean-firm-demand-not-satisfied</metric>
     <metric>total-sales</metric>
+    <metric>cg-production</metric>
+    <metric>consumer-demand</metric>
     <metric>mean-cg-price</metric>
     <metric>mean-pg-price</metric>
     <metric>sd-cg-price</metric>
@@ -1405,103 +1345,10 @@ NetLogo 6.2.2
     <metric>bankrupt-firms</metric>
     <metric>mean-age</metric>
     <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
-      <value value="&quot;Two-Layer-PG-CG.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="primary-good-prod-function">
-      <value value="&quot;linear&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.5"/>
-      <value value="3"/>
-      <value value="3.5"/>
-      <value value="4"/>
-      <value value="4.5"/>
-      <value value="5"/>
-      <value value="5.5"/>
-      <value value="6"/>
-      <value value="6.5"/>
-      <value value="7"/>
-      <value value="7.5"/>
-      <value value="8"/>
-      <value value="8.5"/>
-      <value value="9"/>
-      <value value="9.5"/>
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm-vary-primary-prod-capacity-and-tech-constant" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="4000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>mean-firm-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-cg-price</metric>
-    <metric>mean-pg-price</metric>
-    <metric>sd-cg-price</metric>
-    <metric>sd-pg-price</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
       <value value="&quot;Single-PG&amp;CG-TC=2.json&quot;"/>
-      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="primary-good-prod-function">
-      <value value="&quot;linear&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1511,15 +1358,21 @@ NetLogo 6.2.2
       <value value="2"/>
       <value value="2.5"/>
       <value value="3"/>
+      <value value="3.25"/>
       <value value="3.5"/>
       <value value="4"/>
       <value value="4.5"/>
       <value value="5"/>
       <value value="6"/>
+      <value value="6.5"/>
       <value value="7"/>
       <value value="8"/>
-      <value value="9"/>
       <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
+      <value value="0.25"/>
+      <value value="0.5"/>
+      <value value="0.9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="alpha">
       <value value="1"/>
