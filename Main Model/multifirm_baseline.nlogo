@@ -152,7 +152,7 @@ PENS
 "max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
 "med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
+"Labor Value" 1.0 0 -955883 true "" "plot pg-labor-value\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
 
 PLOT
 870
@@ -511,7 +511,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-PG-CG.json"
-1
+2
 
 MONITOR
 1201
@@ -555,7 +555,7 @@ n-firms
 n-firms
 10
 100
-30.0
+100.0
 10
 1
 NIL
@@ -787,7 +787,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-0.1
+5.0
 .1
 1
 NIL
@@ -903,9 +903,9 @@ PENS
 
 SLIDER
 0
-640
+665
 172
-673
+698
 minimum-wage
 minimum-wage
 .1
@@ -918,9 +918,9 @@ HORIZONTAL
 
 SLIDER
 0
-675
+705
 230
-708
+738
 DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
@@ -930,6 +930,27 @@ DIMINISHING-UTILITY-CONSTANT
 1
 NIL
 HORIZONTAL
+
+SWITCH
+180
+665
+405
+698
+min-wage-80%-of-tech-param?
+min-wage-80%-of-tech-param?
+1
+1
+-1000
+
+TEXTBOX
+415
+665
+565
+691
+Overrides minimum-wage slider if true
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1335,10 +1356,9 @@ NetLogo 6.2.2
     <metric>total-sales</metric>
     <metric>cg-production</metric>
     <metric>consumer-demand</metric>
+    <metric>mean-wage-rate</metric>
     <metric>mean-cg-price</metric>
     <metric>mean-pg-price</metric>
-    <metric>sd-cg-price</metric>
-    <metric>sd-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
     <metric>turnover-rate</metric>
@@ -1349,6 +1369,7 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
       <value value="&quot;Single-PG&amp;CG-TC=2.json&quot;"/>
+      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1368,11 +1389,13 @@ NetLogo 6.2.2
       <value value="7"/>
       <value value="8"/>
       <value value="10"/>
+      <value value="12"/>
+      <value value="15"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.25"/>
       <value value="0.5"/>
-      <value value="0.9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="alpha">
       <value value="1"/>

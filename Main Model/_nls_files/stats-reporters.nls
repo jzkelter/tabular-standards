@@ -112,3 +112,11 @@ to-report cg-production
   ;; if FIRM.production-potential is called after the beginning of the month
   report sum [month-production] of CONSUMER-GOOD-FIRMS
 end
+
+to-report mean-wage-rate
+  report mean [wage-rate] of firms
+end
+
+to-report pg-labor-value
+  report mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS
+end

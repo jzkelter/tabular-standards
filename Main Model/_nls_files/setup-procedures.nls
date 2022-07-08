@@ -66,8 +66,7 @@ globals [
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
 to setup
   ca
-  
-  set-constants  
+  set-constants
   set pringle-index-value 1
   set coats-index-value 1            
   set ussher-index-value 1              
@@ -125,6 +124,10 @@ to setup
   set MEAN-PRICES (list mean [price] of firms)
       
   position-agents  
+  
+  if min-wage-80%-of-tech-param? [
+    set MIN-WAGE-RATE 0.8 * mean [tech-parameter] of firms
+  ]
   
   reset-ticks
   tick

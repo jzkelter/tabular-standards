@@ -337,7 +337,7 @@ to FIRM.add-firm
   hatch 1 [
     set color yellow                    ; set color to yellow for one month to visually indicate which firms are going bankrupt
     set price mean [price] of FIRM.firms-with-my-type
-    set wage-rate mean [wage-rate] of FIRM.firms-with-my-type
+    set wage-rate max (list mean [wage-rate] of FIRM.firms-with-my-type MIN-WAGE-RATE)
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set desired-n-workers max (list 1 (floor (mean [average-previous-sales] of FIRM.firms-with-my-type / tech-parameter)))
