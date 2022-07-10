@@ -217,7 +217,7 @@ to setup-firms
       set price 5 / tech-parameter * small-random-change
       set firm-type group
       set input-data make-input-data-table table:get f "Input data"
-      set wage-rate tech-parameter
+      set wage-rate MIN-WAGE-RATE
       set consumer-good-firm? is-consumer?
       set intermediate-good-firm? is-intermediate?
       set primary-good-firm? is-primary?

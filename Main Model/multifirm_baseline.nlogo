@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-500.0
+1000.0
 10
 1
 NIL
@@ -511,7 +511,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-PG-CG.json"
-2
+1
 
 MONITOR
 1201
@@ -555,7 +555,7 @@ n-firms
 n-firms
 10
 100
-100.0
+60.0
 10
 1
 NIL
@@ -787,7 +787,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-5.0
+0.1
 .1
 1
 NIL
@@ -910,7 +910,7 @@ minimum-wage
 minimum-wage
 .1
 3
-0.8
+2.5
 .1
 1
 NIL
@@ -1368,8 +1368,6 @@ NetLogo 6.2.2
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
-      <value value="&quot;Single-PG&amp;CG-TC=2.json&quot;"/>
-      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1377,34 +1375,39 @@ NetLogo 6.2.2
       <value value="1"/>
       <value value="1.5"/>
       <value value="2"/>
+      <value value="2.25"/>
       <value value="2.5"/>
+      <value value="2.75"/>
       <value value="3"/>
-      <value value="3.25"/>
-      <value value="3.5"/>
       <value value="4"/>
-      <value value="4.5"/>
       <value value="5"/>
       <value value="6"/>
-      <value value="6.5"/>
       <value value="7"/>
       <value value="8"/>
       <value value="10"/>
       <value value="12"/>
-      <value value="15"/>
-      <value value="20"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="60"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="minimum-wage">
+      <value value="0.8"/>
+      <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
-      <value value="0.25"/>
       <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="alpha">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>
@@ -1415,23 +1418,14 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="transactions-per-month">
       <value value="1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fix-n-framework-agreements?">
       <value value="false"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="framework-duration">
       <value value="24"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="minimum-wage">
-      <value value="0.8"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
