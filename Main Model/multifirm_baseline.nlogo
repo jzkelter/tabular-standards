@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-1000.0
+500.0
 10
 1
 NIL
@@ -146,11 +146,10 @@ true
 true
 "set-plot-y-range 0 precision (mean [tech-parameter] of firms * 1.1) 1" ""
 PENS
-"mean firm wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
+"mean cg-wage" 1.0 0 -10899396 true "" "plot mean-cg-wage-rate"
+"mean pg-wage" 1.0 0 -6459832 true "" "plot mean-pg-wage-rate"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
-"max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
-"med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"mean wage" 1.0 0 -2674135 true "" "plot mean [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
 "Labor Value" 1.0 0 -955883 true "" "plot pg-labor-value\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
 
@@ -415,9 +414,9 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot consumer-demand"
 "cg-output" 1.0 0 -5509967 true "" "plot cg-production"
-"pg-output" 1.0 0 -6459832 true "" ";; to be meaningful, need to multiply by the marginal productivity of\n;; one unit of pg for one unit of cg\n; plot sum [FIRM.max-production] of PRIMARY-GOOD-FIRMS\n"
+"pg-output" 1.0 0 -6459832 true "" "plot pg-production ;; to line up, need to multiply by the marginal productivity of one unit of pg for one unit of cg\n"
+"demand" 1.0 0 -13345367 true "" "plot consumer-demand"
 
 PLOT
 1076
@@ -506,12 +505,12 @@ PENS
 CHOOSER
 0
 10
-217
+237
 55
 setup-structure
 setup-structure
-"Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-PG-CG.json"
-1
+"Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
+6
 
 MONITOR
 1201
@@ -555,7 +554,7 @@ n-firms
 n-firms
 10
 100
-60.0
+30.0
 10
 1
 NIL
@@ -787,7 +786,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-0.1
+9.6
 .1
 1
 NIL
@@ -910,7 +909,7 @@ minimum-wage
 minimum-wage
 .1
 3
-2.5
+0.8
 .1
 1
 NIL
@@ -951,6 +950,27 @@ Overrides minimum-wage slider if true
 11
 0.0
 1
+
+PLOT
+665
+650
+865
+800
+Indices
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"pringle " 1.0 0 -16777216 true "" "plot pringle-index-value"
+"coats" 1.0 0 -7500403 true "" "plot coats-index-value"
+"ussher" 1.0 0 -2674135 true "" "plot ussher-index-value"
+"potvin" 1.0 0 -955883 true "" "plot potvin-index-value"
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1346,7 +1366,7 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="single-firm-vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
     <exitCondition>stop?</exitCondition>
@@ -1357,17 +1377,28 @@ NetLogo 6.2.2
     <metric>cg-production</metric>
     <metric>consumer-demand</metric>
     <metric>mean-wage-rate</metric>
+    <metric>mean-cg-wage-rate</metric>
+    <metric>mean-pg-wage-rate</metric>
     <metric>mean-cg-price</metric>
     <metric>mean-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>mean-current-profit-cg-firms</metric>
+    <metric>mean-lifetime-profit-cg-firms</metric>
+    <metric>mean-current-profit-pg-firms</metric>
+    <metric>mean-lifetime-profit-pg-firms</metric>
     <metric>turnover-rate</metric>
     <metric>bankrupt-firms</metric>
     <metric>mean-age</metric>
     <metric>mean-inventories</metric>
+    <metric>pringle-index-value</metric>
+    <metric>coats-index-value</metric>
+    <metric>ussher-index-value</metric>
+    <metric>potvin-index-value</metric>
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
+      <value value="&quot;Two-Layer-.25PG-to-1CG.json&quot;"/>
+      <value value="&quot;Two-Layer-1PG-1CG.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1378,24 +1409,23 @@ NetLogo 6.2.2
       <value value="2.25"/>
       <value value="2.5"/>
       <value value="2.75"/>
+      <value value="2.85"/>
       <value value="3"/>
       <value value="4"/>
       <value value="5"/>
       <value value="6"/>
-      <value value="7"/>
       <value value="8"/>
       <value value="10"/>
-      <value value="12"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="60"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="minimum-wage">
       <value value="0.8"/>
       <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.5"/>
