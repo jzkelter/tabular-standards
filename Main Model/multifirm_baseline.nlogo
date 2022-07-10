@@ -510,7 +510,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-6
+4
 
 MONITOR
 1201
@@ -786,7 +786,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-9.6
+0.1
 .1
 1
 NIL

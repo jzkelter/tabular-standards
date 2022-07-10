@@ -29,6 +29,22 @@ to-report mean-lifetime-profit-all-firms
   report mean [lifetime-profits] of firms
 end
 
+to-report mean-current-profit-cg-firms
+  report mean [current-profits] of CONSUMER-GOOD-FIRMS
+end
+
+to-report mean-lifetime-profit-cg-firms
+  report mean [lifetime-profits] of CONSUMER-GOOD-FIRMS
+end
+
+to-report mean-current-profit-pg-firms
+  report mean [current-profits] of PRIMARY-GOOD-FIRMS
+end
+
+to-report mean-lifetime-profit-pg-firms
+  report mean [lifetime-profits] of PRIMARY-GOOD-FIRMS
+end
+
 to-report turnover-rate
   report NEW-BANKRUPT-FIRMS / n-firms
 end
