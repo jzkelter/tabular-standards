@@ -613,7 +613,7 @@ mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
 10
-5.9
+2.1
 0.1
 1
 NIL
@@ -786,7 +786,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-1.5
+1.6
 .1
 1
 NIL
@@ -816,7 +816,7 @@ s
 s
 .01
 .3
-0.03
+0.1
 .01
 1
 NIL

@@ -113,7 +113,7 @@ to-report test-pay-wages
       set wage-rate 1
       set liquidity 4
       
-      FIRM.pay-wages
+      FIRM.pay-wages-or-go-bankrupt
       assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
       assert (liquidity = 1) "firm should have $1 left (23)"
                   

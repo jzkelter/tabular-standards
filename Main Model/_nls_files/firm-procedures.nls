@@ -517,19 +517,23 @@ to FIRM.produce-goods
 end
 
 ;firm procedure, pays wages to workers
-to FIRM.pay-wages
-  if n-workers > 0 [
-    ifelse wage-rate * n-workers > liquidity [ 
-      let remaining-money-per-worker liquidity / n-workers
-      ask employment-link-neighbors [set liquidity liquidity + remaining-money-per-worker]      
-      set liquidity 0            
-      
-    ] [      
-      set liquidity precision (liquidity - wage-rate * n-workers) 10
-      if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
-      ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
-    ]  
+to FIRM.pay-wages-or-go-bankrupt
+  
+  ifelse wage-rate * n-workers > liquidity [ 
+    let remaining-money-per-worker liquidity / n-workers
+    ask employment-link-neighbors [set liquidity liquidity + remaining-money-per-worker]      
+    set liquidity 0              
+    
+  ] [      
+    set liquidity precision (liquidity - wage-rate * n-workers) 10
+    if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
+    ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
   ]
+  
+  if n-workers = 0 and liquidity < wage-rate [  ; no workers and not enough money to pay one
+    FIRM.replace-firm      
+  ]
+  
 end
 
 ;firm procedure, distrubtes all profits allocated by firms to households

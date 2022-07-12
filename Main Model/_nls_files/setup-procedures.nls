@@ -88,10 +88,15 @@ to setup
       
   ask households[
     set-household-xcor
+    
     create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
       init-consumer-link
     ]
-    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
+    
+    if count my-employment-links = 0 [ ; households that didn't get employed when firms were created get employed
+      create-employment-link-with one-of firms [init-employment-link]
+    ]  
+    
     set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
   ]
@@ -222,7 +227,7 @@ to setup-firms
       set intermediate-good-firm? is-intermediate?
       set primary-good-firm? is-primary?
       set wanted-to-fire-worker? false
-      
+            
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
       set firm-age 0
       set current-profits 0

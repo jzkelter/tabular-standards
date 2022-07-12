@@ -75,11 +75,7 @@ to go-end-of-month
   ask firms [
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
     
-    FIRM.pay-wages  
-    
-    if liquidity < wage-rate [  ; firm won't be able to hire even one worker
-      FIRM.replace-firm
-    ]
+    FIRM.pay-wages-or-go-bankrupt       
     
     FIRM.distribute-profits
     
