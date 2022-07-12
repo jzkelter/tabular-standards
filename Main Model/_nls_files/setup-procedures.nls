@@ -173,8 +173,8 @@ to set-constants
   set SEED new-seed
   random-seed SEED
   set MIN-WAGE-RATE minimum-wage
-  set MAX-WAGE-GROWTH 0.019                
-  set MONTHS-TO-LOWER-WAGE 12              
+  set MAX-WAGE-GROWTH 0.02                
+  set MONTHS-TO-LOWER-WAGE 12          
   set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 3               
   set DIMINISHING-UTILITY-CONSTANT 0.5  
@@ -221,7 +221,7 @@ to setup-firms
       set consumer-good-firm? is-consumer?
       set intermediate-good-firm? is-intermediate?
       set primary-good-firm? is-primary?
-      set fired-worker? false
+      set wanted-to-fire-worker? false
       
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
       set firm-age 0

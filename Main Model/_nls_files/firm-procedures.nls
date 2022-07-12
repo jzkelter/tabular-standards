@@ -11,7 +11,7 @@ firms-own [
   liquidity                        ; i.e. money currently available
   
   months-without-vacancies         ; consecutive months that firms have filled every position they desired
-  fired-worker?                    ; flag triggered if during firm-pay-wages a firm had to fire a worker. This is used when determining wage.
+  wanted-to-fire-worker?          ; flag triggered if firm wanted to layoff a worker, even if they didn't succeed. This is during adjust wage.
   
   desired-n-workers                ; represents the desired number of workers for the month
   previous-sales                   ; previous time period's sales
@@ -35,9 +35,9 @@ firms-own [
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
 to FIRM.adjust-wage-rate  
-  (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not fired-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
+  (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not wanted-to-fire-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
     set wage-rate (1 + random-float MAX-WAGE-GROWTH) * wage-rate
-  ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or fired-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
+  ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or wanted-to-fire-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
     set wage-rate max (list ((1 - random-float MAX-WAGE-GROWTH) * wage-rate) MIN-WAGE-RATE)
   ])
 end
@@ -286,21 +286,13 @@ to-report FIRM.estimate-price [input-i]
 end
 
 ;firm procedure, fires all workers that firm does not want
-to FIRM.lay-off-workers
-  ;************** old code ****************
-;  if desired-n-workers < n-workers and n-workers > 0 [  
-;    ifelse only-fire-1-per-month? [
-;      ask one-of my-employment-links [die]    
-;    ] [
-;      ask up-to-n-of (n-workers - desired-n-workers) my-employment-links [die]    
-;    ]        
-;  ]
-  ;************* new code *************
+to FIRM.lay-off-workers    
   
   let max-layoffs (n-workers - desired-n-workers)
+  set wanted-to-fire-worker? max-layoffs > 0  
   repeat max-layoffs[
     if ((random-float 1) < layoff-probability)[
-      ask one-of my-employment-links [die]    
+      ask one-of my-employment-links [die]       
     ]
   ]
 end
@@ -310,7 +302,7 @@ end
 to FIRM.replace-firm
   FIRM.add-lifetime-profits    
   
-  ;; give any liquidity back to investors
+  ;; give any liquidity back to investors (there was a time when we had a firm go bankrupt even if liquidity wasn't 0)
   let firm-liquidity liquidity  
   let total-equity sum [equity] of my-equity-links
   ask my-equity-links [
@@ -526,16 +518,17 @@ end
 
 ;firm procedure, pays wages to workers
 to FIRM.pay-wages
-  set fired-worker? false
   if n-workers > 0 [
-    while [wage-rate * n-workers > liquidity] [ 
-      ask one-of my-employment-links [die]                   ; no change to desired-n-workers
-      set fired-worker? true
-    ]
-    set liquidity precision (liquidity - wage-rate * n-workers) 10
-    if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
-    let temp-wr wage-rate
-    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
+    ifelse wage-rate * n-workers > liquidity [ 
+      let remaining-money-per-worker liquidity / n-workers
+      ask employment-link-neighbors [set liquidity liquidity + remaining-money-per-worker]      
+      set liquidity 0            
+      
+    ] [      
+      set liquidity precision (liquidity - wage-rate * n-workers) 10
+      if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
+      ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
+    ]  
   ]
 end
 

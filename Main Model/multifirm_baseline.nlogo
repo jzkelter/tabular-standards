@@ -510,7 +510,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-0
+1
 
 MONITOR
 1201
@@ -613,7 +613,7 @@ mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
 10
-2.0
+5.9
 0.1
 1
 NIL
@@ -786,7 +786,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-0.1
+1.5
 .1
 1
 NIL
@@ -909,7 +909,7 @@ minimum-wage
 minimum-wage
 .1
 3
-0.8
+2.5
 .1
 1
 NIL
@@ -924,7 +924,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.25
+0.5
 .05
 1
 NIL

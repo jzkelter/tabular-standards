@@ -62,13 +62,13 @@ to-report test-adjust-wage-rate
       set months-without-vacancies 0
       ask households [create-employment-link-with myself]
       set desired-n-workers 5 
-      set fired-worker? false
+      set wanted-to-fire-worker?  false
       
       FIRM.adjust-wage-rate
       assert (wage-rate > 1) "wage should increase"
       
       set wage-rate 1
-      set fired-worker? true
+      set wanted-to-fire-worker? true
       FIRM.adjust-wage-rate
       assert (wage-rate < 1) "wage should decrease when we fired a worker last time period"
       
@@ -79,7 +79,7 @@ to-report test-adjust-wage-rate
       
       set wage-rate 1
       set months-without-vacancies 1
-      set fired-worker? false
+      set wanted-to-fire-worker? false
       FIRM.adjust-wage-rate
       assert (wage-rate = 1) "wage should not change"
       
