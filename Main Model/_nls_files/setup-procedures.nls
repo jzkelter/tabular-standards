@@ -174,10 +174,10 @@ to set-constants
   random-seed SEED
   set MIN-WAGE-RATE minimum-wage
   set MAX-WAGE-GROWTH 0.019                
-  set MONTHS-TO-LOWER-WAGE 1              
+  set MONTHS-TO-LOWER-WAGE 12              
   set MAX-PRICE-GROWTH 0.05                 
   set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.25 ;  0.5  
+  set DIMINISHING-UTILITY-CONSTANT 0.5  
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    

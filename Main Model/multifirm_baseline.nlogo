@@ -505,12 +505,12 @@ PENS
 CHOOSER
 0
 10
-237
+220
 55
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-4
+0
 
 MONITOR
 1201
@@ -675,9 +675,9 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
 TEXTBOX
-225
+230
 10
-510
+515
 31
 Economic Petri Dish\n
 16
@@ -685,9 +685,9 @@ Economic Petri Dish\n
 1
 
 TEXTBOX
-225
+230
 35
-375
+380
 53
 https://ccl.northwestern.edu/
 11
