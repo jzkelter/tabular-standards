@@ -57,7 +57,7 @@ end
 ;household proceudre, searches for a potential employer under the condition that this household is unemployed, a more rigorous search than "search better paid job"
 to HOUSEHOLD.search-job  
   let firms-tried 0
-  while [HOUSEHOLD.unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+  while [HOUSEHOLD.unemployed? and firms-tried < SEARCH-N] [ 
     HOUSEHOLD.check-random-firm-for-job reservation-wage
     set firms-tried firms-tried + 1
   ]
@@ -65,7 +65,7 @@ end
 
 ;household procedure, searches for a better paying job under the condition that this household is employed
 to HOUSEHOLD.search-better-paid-job  
-  HOUSEHOLD.search-better-paid-job-logic random-float 1 < 0.1  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
+  HOUSEHOLD.search-better-paid-job-logic random-float 1 < SEARCH-BETTER-JOB-PROB  ; This is the random probability that a household searches for a better paid job even if they are currently satisfied (pi in Lengnick
 end
 
 ;household procedure, the logic behind searching for a better paid job
@@ -143,13 +143,14 @@ end
 to HOUSEHOLD.adjust-reservation-wage
   (ifelse
     HOUSEHOLD.unemployed? [
-      set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
+      set reservation-wage reservation-wage * RES-WAGE-CHANGE  ; Lengnick says at the end of 2.4, this happens
       
-      if reservation-wage < (.9 * MIN-WAGE-RATE) [ ; reservation-wage shouldn't actually go below MIN-WAGE-RATE, but I want to let it a little so I can see it on the graph
-        set reservation-wage .9 * MIN-WAGE-RATE
+      if reservation-wage < (.85 * MIN-WAGE-RATE) [ ; reservation-wage shouldn't actually go below MIN-WAGE-RATE, but I want to let it a little so I can see it on the graph
+        set reservation-wage .85 * MIN-WAGE-RATE
       ]
     ]
-    [wage-rate] of HOUSEHOLD.my-employer > reservation-wage [
+    
+    [wage-rate] of HOUSEHOLD.my-employer > reservation-wage [  ; if I'm getting paid more than my previous res-wage, then rase my res-wage to current wage
       set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     ]
   )

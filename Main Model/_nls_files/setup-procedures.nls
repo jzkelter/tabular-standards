@@ -38,17 +38,9 @@ globals [
   BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
   UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
   MEAN-PRICES                      ; stores a list of historical data for the mean price every year    
-  FIRM-STRUCTURE                   ; global data holding how many firms are initialized  
-  MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
-  MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by  
-  PROB-REPLACE-FIRM-PRICE          ; the probability of switching trading firms to a new firm with a better price
-  PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
-  N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
-  N-FRAMEWORK-AGREEMENTS           ; number of firms contacted by non-primary firms trying to buy input goods
-  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
-  STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
-  BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
-  DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
+  FIRM-STRUCTURE                   ; global data holding how many firms are initialized                
+  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage                               
+             
   SEED                             ; the random seed for the current run
   
   month                            ; the current tick
@@ -105,7 +97,7 @@ to setup
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
     FIRM.set-input-demands   
     set previous-sales demand
-    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
+    set inventory (DESIRED-BUFFER-FRAC * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
@@ -134,20 +126,10 @@ to setup
   tick
 end
 
-;to setup-lands 
-;  create-lands count PRIMARY-GOOD-FIRMS 
-;  let min-land-who min [who] of lands
-;  let x-per-land world-width / count lands
-;  ask lands [
-;    setxy (who - min-land-who) * x-per-land max-pycor
-;    set shape "square"
-;    set color green
-;  ]
-;end
+
 
 to position-agents  
   ; land-plots get top row
-  
   
   ; household get 1 / 3 of the world        
   let household-size  10 / patch-size
@@ -169,27 +151,20 @@ to position-agents
   ]
 end
 
+
 ;procedure to initialize all global constants
 to set-constants
   set SEED new-seed
   random-seed SEED  
-               
-  set MONTHS-TO-LOWER-WAGE 1                         
-  set PROB-REPLACE-FIRM-PRICE 0.25         
-  set PROB-REPLACE-FIRM-QUANT 0.5          
-  set N-TRADING-LINKS 7                    
-  set N-FRAMEWORK-AGREEMENTS 7             
+                 
+   
   ; set AUTONOMOUS-CONSUMPTION 0         
-  set STARTUP-LIQUIDITY 100                
-  set BACKGROUND-IMPROVEMENT 10
-  set DESIRED-BUFFER-PERCENT 0.5
+      
   set TOTAL-BANKRUPT-FIRMS 0
   set NEW-BANKRUPT-FIRMS 0
   
-
   let filepath word "_firm_structures/" setup-structure
   set FIRM-STRUCTURE table:get (table:from-json-file filepath) "Firms"
-  
   
 end
 

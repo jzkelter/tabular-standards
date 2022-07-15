@@ -204,7 +204,7 @@ to-report FIRM.calculate-ideal-production  ;; calculate ideal production regardl
   
   ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
   let ideal-production expected-future-sales    ; we will chnage this later to find the true production amount given inventory
-  let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
+  let ideal-buffer DESIRED-BUFFER-FRAC * expected-future-sales
   
   ; adjust ideal-production based on current inventory
   set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 

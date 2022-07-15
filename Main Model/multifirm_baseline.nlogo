@@ -267,10 +267,10 @@ PENS
 "pg-firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 
 SLIDER
-340
-940
-510
-973
+670
+815
+840
+848
 transactions-per-month
 transactions-per-month
 1
@@ -411,9 +411,9 @@ HORIZONTAL
 
 SLIDER
 0
+1410
 170
-170
-203
+1443
 framework-duration
 framework-duration
 1
@@ -455,9 +455,9 @@ PENS
 
 SLIDER
 0
-200
+1440
 215
-233
+1473
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -526,7 +526,7 @@ PENS
 SLIDER
 0
 1025
-205
+175
 1058
 firm-memory-constant
 firm-memory-constant
@@ -540,12 +540,12 @@ HORIZONTAL
 
 SWITCH
 0
-235
+1475
 215
-268
+1508
 fix-n-framework-agreements?
 fix-n-framework-agreements?
-0
+1
 1
 -1000
 
@@ -566,9 +566,9 @@ HORIZONTAL
 
 SLIDER
 0
-1125
-172
-1158
+180
+215
+213
 firm-competency
 firm-competency
 -1
@@ -581,14 +581,14 @@ HORIZONTAL
 
 SLIDER
 0
-1160
-205
-1193
+210
+215
+243
 max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-10.0
+3.0
 .1
 1
 NIL
@@ -596,9 +596,9 @@ HORIZONTAL
 
 SLIDER
 0
-1275
+1355
 105
-1308
+1388
 alpha
 alpha
 .1
@@ -611,9 +611,9 @@ HORIZONTAL
 
 SLIDER
 0
-1240
+1320
 105
-1273
+1353
 s
 s
 .01
@@ -626,9 +626,9 @@ HORIZONTAL
 
 CHOOSER
 0
-1195
+1275
 207
-1240
+1320
 primary-good-prod-function
 primary-good-prod-function
 "linear" "asymptotic" "Cobb-Douglas"
@@ -636,9 +636,9 @@ primary-good-prod-function
 
 TEXTBOX
 115
-1240
+1320
 210
-1270
+1350
 only relevant for asymptotic prod
 11
 0.0
@@ -646,9 +646,9 @@ only relevant for asymptotic prod
 
 TEXTBOX
 115
-1275
+1355
 205
-1305
+1385
 only relevant for Cobb-Douglas
 11
 0.0
@@ -656,9 +656,9 @@ only relevant for Cobb-Douglas
 
 TEXTBOX
 0
-155
+1395
 150
-173
+1413
 framework settings
 11
 105.0
@@ -676,9 +676,9 @@ general firm settings
 
 TEXTBOX
 0
-1110
+1255
 150
-1128
+1273
 primary good firm settings
 11
 105.0
@@ -704,9 +704,9 @@ PENS
 
 SLIDER
 0
-300
+265
 172
-333
+298
 MIN-WAGE-RATE
 MIN-WAGE-RATE
 .1
@@ -719,9 +719,9 @@ HORIZONTAL
 
 SLIDER
 0
-400
+380
 225
-433
+413
 DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
@@ -734,9 +734,9 @@ HORIZONTAL
 
 SWITCH
 0
-335
+300
 220
-368
+333
 min-wage-80%-of-tech-param?
 min-wage-80%-of-tech-param?
 1
@@ -745,9 +745,9 @@ min-wage-80%-of-tech-param?
 
 TEXTBOX
 0
-370
+335
 215
-396
+361
 Overrides minimum-wage slider if true
 11
 0.0
@@ -896,20 +896,20 @@ Firm Constants
 1
 
 TEXTBOX
-335
+365
 790
-485
+515
 808
 Household constants
-11
+13
 0.0
 1
 
 TEXTBOX
 0
-285
+250
 150
-303
+268
 Firm settings
 11
 105.0
@@ -917,20 +917,283 @@ Firm settings
 
 TEXTBOX
 5
-385
+365
 155
-403
+383
 Household settings
 11
 105.0
 1
 
 TEXTBOX
-345
-915
-495
-933
+675
+790
+825
+808
 General constants
+11
+0.0
+1
+
+TEXTBOX
+0
+160
+150
+178
+pg-firm / land settings
+11
+105.0
+1
+
+SLIDER
+365
+810
+542
+843
+RES-WAGE-CHANGE
+RES-WAGE-CHANGE
+.1
+1
+0.9
+.1
+1
+NIL
+HORIZONTAL
+
+INPUTBOX
+365
+845
+475
+905
+SEARCH-N
+5.0
+1
+0
+Number
+
+TEXTBOX
+480
+855
+605
+911
+Number of firms to try when unemployed (β in Lengnick = 5)
+11
+0.0
+1
+
+SLIDER
+365
+910
+580
+943
+SEARCH-BETTER-JOB-PROB
+SEARCH-BETTER-JOB-PROB
+0
+1
+0.1
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+1105
+180
+1138
+MONTHS-TO-LOWER-WAGE
+MONTHS-TO-LOWER-WAGE
+1
+24
+1.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1100
+335
+1141
+after this many months of having all positions filled, a firm will decrease wages  
+11
+0.0
+1
+
+SLIDER
+365
+945
+580
+978
+PROB-REPLACE-FIRM-PRICE
+PROB-REPLACE-FIRM-PRICE
+0
+1
+0.25
+.05
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+950
+810
+980
+probability of switching trading firms to a new firm with a better price
+11
+0.0
+1
+
+SLIDER
+365
+980
+580
+1013
+PROB-REPLACE-FIRM-QUANT
+PROB-REPLACE-FIRM-QUANT
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+985
+805
+1026
+probability of switching trading firms based on lack of quantity
+11
+0.0
+1
+
+SLIDER
+365
+1015
+580
+1048
+N-TRADING-LINKS
+N-TRADING-LINKS
+1
+10
+10.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+1015
+810
+1056
+number of firms contacted by consumers trying to buy consumer goods
+11
+0.0
+1
+
+SLIDER
+0
+1140
+180
+1173
+N-FRAMEWORK-AGREEMENTS
+N-FRAMEWORK-AGREEMENTS
+1
+10
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1145
+345
+1186
+number of firms contacted by non-pg-firms to buy inputs
+11
+0.0
+1
+
+INPUTBOX
+365
+1055
+512
+1115
+STARTUP-LIQUIDITY
+100.0
+1
+0
+Number
+
+TEXTBOX
+545
+1065
+695
+1091
+Households start with this much liquidity
+11
+0.0
+1
+
+TEXTBOX
+360
+1180
+510
+1198
+Land Constants
+13
+0.0
+1
+
+INPUTBOX
+355
+1200
+530
+1260
+BACKGROUND-IMPROVEMENT
+10
+1
+0
+String
+
+TEXTBOX
+540
+1215
+750
+1255
+the background improvement on each land's productive capacity per tick 
+11
+0.0
+1
+
+SLIDER
+0
+1175
+192
+1208
+DESIRED-BUFFER-FRAC
+DESIRED-BUFFER-FRAC
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1180
+335
+1206
+the desired buffer as a fraction of expected sales. 
 11
 0.0
 1
@@ -1413,6 +1676,116 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="framework-duration">
       <value value="24"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="vary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <exitCondition>stop?</exitCondition>
+    <metric>unemployment-rate</metric>
+    <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>mean-firm-demand-not-satisfied</metric>
+    <metric>total-sales</metric>
+    <metric>cg-production</metric>
+    <metric>consumer-demand</metric>
+    <metric>mean-wage-rate</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
+    <metric>mean-current-profit-all-firms</metric>
+    <metric>mean-lifetime-profit-all-firms</metric>
+    <metric>turnover-rate</metric>
+    <metric>bankrupt-firms</metric>
+    <metric>mean-age</metric>
+    <metric>mean-inventories</metric>
+    <metric>pringle-index-value</metric>
+    <metric>coats-index-value</metric>
+    <metric>ussher-index-value</metric>
+    <metric>potvin-index-value</metric>
+    <metric>gini-coefficient</metric>
+    <enumeratedValueSet variable="setup-structure">
+      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-prod-capacity-per-capita">
+      <value value="0.1"/>
+      <value value="0.5"/>
+      <value value="1"/>
+      <value value="1.5"/>
+      <value value="2"/>
+      <value value="2.5"/>
+      <value value="3"/>
+      <value value="4"/>
+      <value value="5"/>
+      <value value="6"/>
+      <value value="8"/>
+      <value value="10"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MIN-WAGE-RATE">
+      <value value="0.8"/>
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
+      <value value="0.25"/>
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BUFFER-LABOR-FRACTION">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="primary-good-prod-function">
+      <value value="&quot;linear&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SEARCH-N">
+      <value value="5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="alpha">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="fix-n-framework-agreements?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="framework-duration">
+      <value value="24"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MAX-PRICE-CHANGE">
+      <value value="0.05"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RES-WAGE-CHANGE">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="s">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SEARCH-BETTER-JOB-PROB">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MAX-WAGE-CHANGE">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="mean-new-agreements-per-month">
+      <value value="2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-memory-constant">
+      <value value="0.8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="min-wage-80%-of-tech-param?">
+      <value value="false"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
