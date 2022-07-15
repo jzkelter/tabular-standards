@@ -37,8 +37,7 @@ globals [
   PRIMARY-INVENTORY-VALUE-HISTORY  ; defined as the rolling average of the total inventory of the last two years of the primary good firms
   BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
   UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
-  MEAN-PRICES                      ; stores a list of historical data for the mean price every year  
-  MIN-WAGE-RATE                    ; max amount wages are increased or decreased by if firm decides to change wage
+  MEAN-PRICES                      ; stores a list of historical data for the mean price every year    
   FIRM-STRUCTURE                   ; global data holding how many firms are initialized  
   MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
   MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by  
@@ -173,8 +172,7 @@ end
 ;procedure to initialize all global constants
 to set-constants
   set SEED new-seed
-  random-seed SEED
-  set MIN-WAGE-RATE minimum-wage
+  random-seed SEED  
                
   set MONTHS-TO-LOWER-WAGE 1                         
   set PROB-REPLACE-FIRM-PRICE 0.25         
@@ -265,77 +263,7 @@ to initialize-framework-agreements
   ]
 end
 
-to setup-crash
-  ca
-  
-  set-constants
-  set STARTUP-LIQUIDITY 7  
-  set pringle-index-value 1
-  set coats-index-value 1            
-  set ussher-index-value 1              
-  set potvin-index-value 1
-  
-  ;; setup agents
-  create-households n-households [
-    set shape "circle"     
-    set size 0.5
-  ]
-  
-  distribute-unequal-liquidity
-  setup-firms
-  
-  initialize-framework-agreements
-  ;position-agents
-  
-  ask households[
-    set-household-xcor
-    create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
-      init-consumer-link
-    ]
-    ifelse random-float 1 > 0.98[
-      if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
-      set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
-    ][
-      set reservation-wage MIN-WAGE-RATE
-    ]
-    HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
-  ]
-  
-  ask firms [    
-    set liquidity FIRM.raise-funds
-    set lifetime-profits liquidity * -1
-    set months-without-vacancies 0
-    set demand FIRM.max-labor-production   ; demand initialized to be the intial output of the firm
-    set desired-n-workers n-workers   ; workers initially want the number of workers they have
-    FIRM.set-input-demands   
-    set previous-sales demand
-    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
-    
-    ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
-;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
-;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
-;    ]
-    set average-previous-sales demand
-  ]    
-  
-  set-colors
-  ask one-of firms [ask my-links [show-link]]
-  
-  LAND.setup-patches
-  
-  
-  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
-  set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list 0)
-  set MEAN-PRICES (list mean [price] of firms)
-      
-  position-agents  
-  
-  set STARTUP-LIQUIDITY 100
-  
-  reset-ticks
-  tick
-end
+
 
 to distribute-unequal-liquidity
   

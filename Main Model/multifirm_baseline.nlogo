@@ -20,12 +20,12 @@ __includes[
 @#$#@#$#@
 GRAPHICS-WINDOW
 225
-55
-658
+60
+653
 489
 -1
 -1
-38.64
+38.2
 1
 10
 1
@@ -47,9 +47,9 @@ months
 
 BUTTON
 0
-595
+440
 66
-628
+473
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -64,9 +64,9 @@ NIL
 
 BUTTON
 124
-595
+440
 205
-628
+473
 go-once
 go\n
 NIL
@@ -81,9 +81,9 @@ NIL
 
 BUTTON
 67
-595
+440
 122
-628
+473
 NIL
 go
 T
@@ -98,9 +98,9 @@ NIL
 
 SLIDER
 0
-100
+110
 125
-133
+143
 n-households
 n-households
 10
@@ -112,10 +112,10 @@ NIL
 HORIZONTAL
 
 PLOT
-235
-495
-435
-643
+665
+170
+940
+318
 Unemployment rate
 NIL
 unemployment
@@ -124,17 +124,17 @@ unemployment
 0.0
 0.5
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
-"mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
+"current" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
+"mean " 1.0 0 -7500403 true "" "plot mean UNEMPLOYMENT-RATES"
 
 PLOT
-667
+665
 10
-990
-180
+988
+170
 Wage Rate Stats 
 NIL
 NIL
@@ -144,20 +144,22 @@ NIL
 5.0
 true
 true
-"set-plot-y-range 0 precision (mean [tech-parameter] of firms * 1.1) 1" ""
+"set-plot-y-range (MIN-WAGE-RATE * 1.1) (MIN-WAGE-RATE * 2)" ""
 PENS
 "mean cg-wage" 1.0 0 -10899396 true "" "plot mean-cg-wage-rate"
 "mean pg-wage" 1.0 0 -6459832 true "" "plot mean-pg-wage-rate"
 "mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
 "mean wage" 1.0 0 -2674135 true "" "plot mean [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot pg-labor-value\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
+"max firm wage" 1.0 0 -7500403 true "" "plot max [wage-rate] of firms"
+"min firm wage" 1.0 0 -8630108 true "" "plot min [wage-rate] of firms"
+"labor value" 1.0 0 -955883 true "" "plot pg-labor-value"
 
 PLOT
-870
-645
-1070
-795
+1300
+370
+1500
+490
 Worker Per Firm Distribution
 NIL
 NIL
@@ -171,44 +173,10 @@ false
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
-BUTTON
-998
-117
-1092
-150
-hide-links
-ask links [hide-link]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-998
-10
-1160
-43
-show random firm's links
-ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-870
+190
 495
-1070
+405
 645
 Household Liquidity Distribution
 NIL
@@ -224,10 +192,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-1075
-187
-1349
-337
+665
+320
+950
+470
 Mean Price
 NIL
 NIL
@@ -242,45 +210,11 @@ PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
-BUTTON
-1055
-150
-1128
-183
-bmonth-f
-firms-plan-month\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1209
-150
-1304
-183
-go-month
-go-month\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-870
-185
-1070
-335
+1300
+130
+1500
+250
 Monthly Firm Turnover
 NIL
 NIL
@@ -295,10 +229,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
-1355
-340
-1640
-490
+990
+320
+1290
+470
 Mean Demand Not Satisfied
 NIL
 NIL
@@ -314,10 +248,10 @@ PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
 
 PLOT
-665
-185
-865
-335
+990
+165
+1275
+315
 Inventory
 NIL
 NIL
@@ -326,68 +260,17 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
-"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-
-BUTTON
-998
-150
-1053
-183
-dsetup
-\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1305
-150
-1449
-183
-go-end-of-month
-go-end-of-month\ntick\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1130
-150
-1207
-183
-bmonth-h
-go-beginning-of-month-households\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 
 SLIDER
-0
-135
-170
-168
+340
+940
+510
+973
 transactions-per-month
 transactions-per-month
 1
@@ -399,10 +282,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1076
-494
-1350
-644
+665
+475
+960
+625
 Output and Demand
 NIL
 NIL
@@ -419,10 +302,10 @@ PENS
 "demand" 1.0 0 -13345367 true "" "plot consumer-demand"
 
 PLOT
-1076
-341
-1350
-491
+410
+495
+655
+645
 Total Liquidity
 NIL
 NIL
@@ -439,56 +322,22 @@ PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot sum [liquidity] of CONSUMER-GOOD-FIRMS"
 "total" 1.0 0 -7500403 true "" "plot sum [liquidity] of (turtle-set households firms)"
 
-BUTTON
-998
-46
-1159
-79
-show largest firm's links
-ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-998
-82
-1158
-115
-show smallest firm's links
-ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 MONITOR
-905
-205
-1048
-250
-Firms Added This Month
+1415
+150
+1490
+195
+This Month
 count firms with [color = yellow]
 4
 1
 11
 
 PLOT
-870
-340
-1069
-490
+1300
+10
+1499
+130
 Total Bankrupt Firms
 NIL
 NIL
@@ -513,33 +362,33 @@ setup-structure
 1
 
 MONITOR
-1201
+225
 10
-1348
+295
 55
-# Primary Good Firms
+# pg-firms
 count PRIMARY-GOOD-FIRMS
 17
 1
 11
 
 MONITOR
-1201
-57
-1347
-102
-# Intermediate Good Firms
+300
+10
+370
+55
+# ig-firms
 count INTERMEDIATE-GOOD-FIRMS
 17
 1
 11
 
 MONITOR
-1200
-105
-1346
-150
-# Consumer Good Firms
+375
+10
+445
+55
+# cg-firms
 count CONSUMER-GOOD-FIRMS
 17
 1
@@ -547,9 +396,9 @@ count CONSUMER-GOOD-FIRMS
 
 SLIDER
 125
-100
+110
 217
-133
+143
 n-firms
 n-firms
 10
@@ -562,9 +411,9 @@ HORIZONTAL
 
 SLIDER
 0
-190
 170
-223
+170
+203
 framework-duration
 framework-duration
 1
@@ -577,20 +426,20 @@ HORIZONTAL
 
 CHOOSER
 0
-55
+60
 132
-100
+105
 index-in-use
 index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
 0
 
 PLOT
-445
-495
-650
-645
-Profitability
+1300
+250
+1500
+370
+lifetime  profits
 NIL
 NIL
 0.0
@@ -598,17 +447,17 @@ NIL
 -100.0
 -100.0
 true
-true
+false
 "" ""
 PENS
-"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
+"Bankrupt " 1.0 0 -2674135 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
 "In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
 
 SLIDER
 0
-220
+200
 215
-253
+233
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -620,10 +469,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1355
-495
-1555
-645
+1525
+165
+1725
+315
 Framework Agreements per Firm
 NIL
 NIL
@@ -638,10 +487,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
 
 PLOT
-665
-340
-865
-490
+990
+10
+1275
+160
 average-previous-sales
 NIL
 NIL
@@ -650,17 +499,17 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
-"primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
 
 PLOT
-1355
-185
-1555
-335
+1525
+10
+1725
+160
 Mean Framework Price
 NIL
 NIL
@@ -674,41 +523,11 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
-TEXTBOX
-230
-10
-515
-31
-Economic Petri Dish\n
-16
-0.0
-1
-
-TEXTBOX
-230
-35
-380
-53
-https://ccl.northwestern.edu/
-11
-0.0
-1
-
-TEXTBOX
-525
-35
-675
-53
-https://xalgorithms.org/
-11
-0.0
-1
-
 SLIDER
 0
-310
+1025
 205
-343
+1058
 firm-memory-constant
 firm-memory-constant
 0
@@ -721,20 +540,20 @@ HORIZONTAL
 
 SWITCH
 0
-255
+235
 215
-288
+268
 fix-n-framework-agreements?
 fix-n-framework-agreements?
-1
+0
 1
 -1000
 
 SLIDER
 0
-340
+1065
 172
-373
+1098
 layoff-probability
 layoff-probability
 0
@@ -745,28 +564,11 @@ layoff-probability
 NIL
 HORIZONTAL
 
-BUTTON
-1350
-105
-1457
-138
-NIL
-setup-crash
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 SLIDER
 0
-400
+1125
 172
-433
+1158
 firm-competency
 firm-competency
 -1
@@ -779,9 +581,9 @@ HORIZONTAL
 
 SLIDER
 0
-435
+1160
 205
-468
+1193
 max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
@@ -794,9 +596,9 @@ HORIZONTAL
 
 SLIDER
 0
-550
+1275
 105
-583
+1308
 alpha
 alpha
 .1
@@ -809,9 +611,9 @@ HORIZONTAL
 
 SLIDER
 0
-515
+1240
 105
-548
+1273
 s
 s
 .01
@@ -824,9 +626,9 @@ HORIZONTAL
 
 CHOOSER
 0
-470
+1195
 207
-515
+1240
 primary-good-prod-function
 primary-good-prod-function
 "linear" "asymptotic" "Cobb-Douglas"
@@ -834,9 +636,9 @@ primary-good-prod-function
 
 TEXTBOX
 115
-515
+1240
 210
-545
+1270
 only relevant for asymptotic prod
 11
 0.0
@@ -844,9 +646,9 @@ only relevant for asymptotic prod
 
 TEXTBOX
 115
-550
+1275
 205
-580
+1305
 only relevant for Cobb-Douglas
 11
 0.0
@@ -854,9 +656,9 @@ only relevant for Cobb-Douglas
 
 TEXTBOX
 0
-175
+155
 150
-193
+173
 framework settings
 11
 105.0
@@ -864,9 +666,9 @@ framework settings
 
 TEXTBOX
 0
-295
+810
 150
-313
+828
 general firm settings
 11
 105.0
@@ -874,18 +676,18 @@ general firm settings
 
 TEXTBOX
 0
-385
+1110
 150
-403
+1128
 primary good firm settings
 11
 105.0
 1
 
 PLOT
-665
+0
 495
-865
+185
 645
 gini-coefficient
 NIL
@@ -902,13 +704,13 @@ PENS
 
 SLIDER
 0
-665
+300
 172
-698
-minimum-wage
-minimum-wage
+333
+MIN-WAGE-RATE
+MIN-WAGE-RATE
 .1
-3
+10
 2.5
 .1
 1
@@ -917,24 +719,24 @@ HORIZONTAL
 
 SLIDER
 0
-705
-230
-738
+400
+225
+433
 DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.5
+0.25
 .05
 1
 NIL
 HORIZONTAL
 
 SWITCH
-180
-665
-405
-698
+0
+335
+220
+368
 min-wage-80%-of-tech-param?
 min-wage-80%-of-tech-param?
 1
@@ -942,10 +744,10 @@ min-wage-80%-of-tech-param?
 -1000
 
 TEXTBOX
-415
-665
-565
-691
+0
+370
+215
+396
 Overrides minimum-wage slider if true
 11
 0.0
@@ -953,9 +755,9 @@ Overrides minimum-wage slider if true
 
 PLOT
 665
-650
-865
-800
+630
+945
+780
 Indices
 NIL
 NIL
@@ -984,30 +786,30 @@ Constants that I don't really touch, but want to be able to adjust easily if nee
 
 INPUTBOX
 0
-785
+830
 140
-845
+890
 MAX-WAGE-CHANGE
-0.0
+0.2
 1
 0
 Number
 
 TEXTBOX
 140
-790
+835
 270
-846
+891
 max amount a firm can increase/decrease their wage (default=0.2)
 11
 0.0
 1
 
 PLOT
-1075
-650
-1340
-800
+990
+475
+1270
+625
 mean desired vs actual workers
 NIL
 NIL
@@ -1022,47 +824,11 @@ PENS
 "desired" 1.0 0 -2674135 true "" "plot mean [desired-n-workers] of firms"
 "actual" 1.0 0 -13345367 true "" "plot mean [n-workers] of firms"
 
-PLOT
-420
-805
-620
-955
-layoff from lack of  money
-NIL
-NIL
-0.0
-10.0
-0.0
-550.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot sum [layoff-from-lack-of-money] of firms"
-
-PLOT
-630
-805
-830
-955
-households that got a job
-NIL
-NIL
-0.0
-10.0
-0.0
-550.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot count households with [got-job?]"
-
 INPUTBOX
 0
-850
+895
 140
-910
+955
 MAX-PRICE-CHANGE
 0.05
 1
@@ -1071,9 +837,9 @@ Number
 
 TEXTBOX
 145
-855
+900
 270
-911
+956
 max amount a firm can increase/decrease prices (default=.05)\n
 11
 0.0
@@ -1081,9 +847,9 @@ max amount a firm can increase/decrease prices (default=.05)\n
 
 INPUTBOX
 0
-915
+960
 160
-975
+1020
 BUFFER-LABOR-FRACTION
 0.3
 1
@@ -1092,10 +858,79 @@ Number
 
 TEXTBOX
 165
-925
+970
 315
-966
+1011
 the fraction of labor costs firms keep as a buffer before distributing profits
+11
+0.0
+1
+
+PLOT
+1300
+490
+1500
+620
+desired worker change
+NIL
+NIL
+-10.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [desired-n-workers - n-workers] of firms"
+"pen-1" 1.0 0 -7500403 true "" "plotxy 0.5 0 plotxy 0.5 30"
+
+TEXTBOX
+0
+790
+150
+808
+Firm Constants
+12
+0.0
+1
+
+TEXTBOX
+335
+790
+485
+808
+Household constants
+11
+0.0
+1
+
+TEXTBOX
+0
+285
+150
+303
+Firm settings
+11
+105.0
+1
+
+TEXTBOX
+5
+385
+155
+403
+Household settings
+11
+105.0
+1
+
+TEXTBOX
+345
+915
+495
+933
+General constants
 11
 0.0
 1

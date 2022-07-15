@@ -4,8 +4,7 @@ breed [households household]
 households-own [
   reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
   demanded-consumption            ; the amount of goods that are demanded by each household
-  liquidity                       ; i.e. money currently available
-  got-job?
+  liquidity                       ; i.e. money currently available  
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
@@ -47,11 +46,9 @@ to HOUSEHOLD.guarantee-consumer-links
 end
 
 ;household procedure, searches for employment if unemployed or better paying employment if employed
-to HOUSEHOLD.search-for-employement
-  set got-job? false  
+to HOUSEHOLD.search-for-employement  
   ifelse HOUSEHOLD.unemployed? [
-    HOUSEHOLD.search-job
-    if not HOUSEHOLD.unemployed? [set got-job? true]
+    HOUSEHOLD.search-job    
   ] [
     HOUSEHOLD.search-better-paid-job
   ]
@@ -147,6 +144,10 @@ to HOUSEHOLD.adjust-reservation-wage
   (ifelse
     HOUSEHOLD.unemployed? [
       set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
+      
+      if reservation-wage < (.9 * MIN-WAGE-RATE) [ ; reservation-wage shouldn't actually go below MIN-WAGE-RATE, but I want to let it a little so I can see it on the graph
+        set reservation-wage .9 * MIN-WAGE-RATE
+      ]
     ]
     [wage-rate] of HOUSEHOLD.my-employer > reservation-wage [
       set reservation-wage [wage-rate] of HOUSEHOLD.my-employer

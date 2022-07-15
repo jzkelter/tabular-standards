@@ -30,8 +30,7 @@ firms-own [
   
   firm-value                       ; estimate of the value of the firm
   firm-age                         ; the age of a firm in ticks
-  current-profits                  ; current profit of a firm
-  layoff-from-lack-of-money
+  current-profits                  ; current profit of a firm  
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
@@ -298,10 +297,8 @@ to FIRM.lay-off-workers
     ]
   ]
   
-  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off
-  set layoff-from-lack-of-money 0
-  while [liquidity < (wage-rate * n-workers) and n-workers > 0] [      
-    set layoff-from-lack-of-money layoff-from-lack-of-money + 1
+  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off  
+  while [liquidity < (wage-rate * n-workers) and n-workers > 0] [          
     ask one-of my-employment-links [die]             
   ]
 end
