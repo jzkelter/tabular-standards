@@ -5,6 +5,7 @@ households-own [
   reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
   demanded-consumption            ; the amount of goods that are demanded by each household
   liquidity                       ; i.e. money currently available
+  got-job?
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
@@ -46,9 +47,11 @@ to HOUSEHOLD.guarantee-consumer-links
 end
 
 ;household procedure, searches for employment if unemployed or better paying employment if employed
-to HOUSEHOLD.search-for-employement  
-  ifelse HOUSEHOLD.unhousehold-employed? [
+to HOUSEHOLD.search-for-employement
+  set got-job? false  
+  ifelse HOUSEHOLD.unemployed? [
     HOUSEHOLD.search-job
+    if not HOUSEHOLD.unemployed? [set got-job? true]
   ] [
     HOUSEHOLD.search-better-paid-job
   ]
@@ -57,7 +60,7 @@ end
 ;household proceudre, searches for a potential employer under the condition that this household is unemployed, a more rigorous search than "search better paid job"
 to HOUSEHOLD.search-job  
   let firms-tried 0
-  while [HOUSEHOLD.unhousehold-employed? and firms-tried < 5] [ ; 5 is  β in Lengnick
+  while [HOUSEHOLD.unemployed? and firms-tried < 5] [ ; 5 is  β in Lengnick
     HOUSEHOLD.check-random-firm-for-job reservation-wage
     set firms-tried firms-tried + 1
   ]
@@ -78,7 +81,7 @@ end
 ;household procedure, checks a random firm for job availability and takes the position based on logic defined in the job search procedures
 to HOUSEHOLD.check-random-firm-for-job [min-wage]  ; household procedure
   let the-firm nobody
-  ifelse HOUSEHOLD.unhousehold-employed?
+  ifelse HOUSEHOLD.unemployed?
   [set the-firm one-of firms]
   [set the-firm [one-of other firms] of HOUSEHOLD.my-employer]
 
@@ -142,7 +145,7 @@ end
 ;household procedure, adjusts the reservation wage of a household, or the minimum wage the household is willing to accept
 to HOUSEHOLD.adjust-reservation-wage
   (ifelse
-    HOUSEHOLD.unhousehold-employed? [
+    HOUSEHOLD.unemployed? [
       set reservation-wage reservation-wage * .9  ; Lengnick says at the end of 2.4, this happens
     ]
     [wage-rate] of HOUSEHOLD.my-employer > reservation-wage [
@@ -158,7 +161,7 @@ to-report HOUSEHOLD.my-employer
 end
 
 ;household procedure, reports true if the household is unemployed
-to-report HOUSEHOLD.unhousehold-employed?  ; household procedure
+to-report HOUSEHOLD.unemployed?  ; household procedure
   report count my-employment-links = 0
 end
 

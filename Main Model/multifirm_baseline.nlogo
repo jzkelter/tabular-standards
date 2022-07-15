@@ -248,7 +248,7 @@ BUTTON
 1128
 183
 bmonth-f
-go-beginning-of-month-firms\n
+firms-plan-month\n
 NIL
 1
 T
@@ -423,7 +423,7 @@ PLOT
 341
 1350
 491
-Mean Liquidity
+Total Liquidity
 NIL
 NIL
 0.0
@@ -434,10 +434,10 @@ true
 true
 "" ""
 PENS
-"primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
-"household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of (turtle-set households firms)"
-"consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -6459832 true "" "plot sum [liquidity] of PRIMARY-GOOD-FIRMS"
+"household" 1.0 0 -13345367 true "" "plot sum [liquidity] of households"
+"cg-firms" 1.0 0 -5509967 true "" "plot sum [liquidity] of CONSUMER-GOOD-FIRMS"
+"total" 1.0 0 -7500403 true "" "plot sum [liquidity] of (turtle-set households firms)"
 
 BUTTON
 998
@@ -613,7 +613,7 @@ mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
 10
-2.1
+2.0
 0.1
 1
 NIL
@@ -786,7 +786,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-1.6
+10.0
 .1
 1
 NIL
@@ -971,6 +971,134 @@ PENS
 "coats" 1.0 0 -7500403 true "" "plot coats-index-value"
 "ussher" 1.0 0 -2674135 true "" "plot ussher-index-value"
 "potvin" 1.0 0 -955883 true "" "plot potvin-index-value"
+
+TEXTBOX
+0
+755
+560
+775
+Constants that I don't really touch, but want to be able to adjust easily if needed
+14
+0.0
+1
+
+INPUTBOX
+0
+785
+140
+845
+MAX-WAGE-CHANGE
+0.0
+1
+0
+Number
+
+TEXTBOX
+140
+790
+270
+846
+max amount a firm can increase/decrease their wage (default=0.2)
+11
+0.0
+1
+
+PLOT
+1075
+650
+1340
+800
+mean desired vs actual workers
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"desired" 1.0 0 -2674135 true "" "plot mean [desired-n-workers] of firms"
+"actual" 1.0 0 -13345367 true "" "plot mean [n-workers] of firms"
+
+PLOT
+420
+805
+620
+955
+layoff from lack of  money
+NIL
+NIL
+0.0
+10.0
+0.0
+550.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot sum [layoff-from-lack-of-money] of firms"
+
+PLOT
+630
+805
+830
+955
+households that got a job
+NIL
+NIL
+0.0
+10.0
+0.0
+550.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count households with [got-job?]"
+
+INPUTBOX
+0
+850
+140
+910
+MAX-PRICE-CHANGE
+0.05
+1
+0
+Number
+
+TEXTBOX
+145
+855
+270
+911
+max amount a firm can increase/decrease prices (default=.05)\n
+11
+0.0
+1
+
+INPUTBOX
+0
+915
+160
+975
+BUFFER-LABOR-FRACTION
+0.3
+1
+0
+Number
+
+TEXTBOX
+165
+925
+315
+966
+the fraction of labor costs firms keep as a buffer before distributing profits
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1377,16 +1505,10 @@ NetLogo 6.2.2
     <metric>cg-production</metric>
     <metric>consumer-demand</metric>
     <metric>mean-wage-rate</metric>
-    <metric>mean-cg-wage-rate</metric>
-    <metric>mean-pg-wage-rate</metric>
     <metric>mean-cg-price</metric>
     <metric>mean-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>mean-current-profit-cg-firms</metric>
-    <metric>mean-lifetime-profit-cg-firms</metric>
-    <metric>mean-current-profit-pg-firms</metric>
-    <metric>mean-lifetime-profit-pg-firms</metric>
     <metric>turnover-rate</metric>
     <metric>bankrupt-firms</metric>
     <metric>mean-age</metric>
@@ -1397,8 +1519,7 @@ NetLogo 6.2.2
     <metric>potvin-index-value</metric>
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Two-Layer-.25PG-to-1CG.json&quot;"/>
-      <value value="&quot;Two-Layer-1PG-1CG.json&quot;"/>
+      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1409,23 +1530,24 @@ NetLogo 6.2.2
       <value value="2.25"/>
       <value value="2.5"/>
       <value value="2.75"/>
-      <value value="2.85"/>
       <value value="3"/>
       <value value="4"/>
       <value value="5"/>
       <value value="6"/>
+      <value value="7"/>
       <value value="8"/>
       <value value="10"/>
+      <value value="12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="1000"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="60"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="minimum-wage">
       <value value="0.8"/>
       <value value="2.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.5"/>

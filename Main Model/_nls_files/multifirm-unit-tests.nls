@@ -54,7 +54,7 @@ end
 
 to-report test-adjust-wage-rate
   report [->
-    set MAX-WAGE-GROWTH 0.1
+    set MAX-WAGE-CHANGE 0.1
     set MONTHS-TO-LOWER-WAGE 2
     create-households 3
     create-firms 1 [
@@ -113,7 +113,7 @@ to-report test-pay-wages
       set wage-rate 1
       set liquidity 4
       
-      FIRM.pay-wages-or-go-bankrupt
+      FIRM.pay-wages
       assert all? households [liquidity = 1] "households should have wage-rate liquidity after getting paid (22)"
       assert (liquidity = 1) "firm should have $1 left (23)"
                   

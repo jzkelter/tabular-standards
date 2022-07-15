@@ -37,14 +37,11 @@ globals [
   PRIMARY-INVENTORY-VALUE-HISTORY  ; defined as the rolling average of the total inventory of the last two years of the primary good firms
   BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
   UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
-  MEAN-PRICES                      ; stores a list of historical data for the mean price every year
-  
+  MEAN-PRICES                      ; stores a list of historical data for the mean price every year  
   MIN-WAGE-RATE                    ; max amount wages are increased or decreased by if firm decides to change wage
-  FIRM-STRUCTURE                   ; global data holding how many firms are initialized
-  MAX-WAGE-GROWTH                  ; defined as the max amount a firm can increase or decrease their wage if they decide to change their wage
+  FIRM-STRUCTURE                   ; global data holding how many firms are initialized  
   MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
-  MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by
-  BUFFER-LABOR-FRACTION            ; the fraction of labor costs to keep as a buffer  
+  MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by  
   PROB-REPLACE-FIRM-PRICE          ; the probability of switching trading firms to a new firm with a better price
   PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
   N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
@@ -178,11 +175,8 @@ to set-constants
   set SEED new-seed
   random-seed SEED
   set MIN-WAGE-RATE minimum-wage
-  set MAX-WAGE-GROWTH 0.02                
-  set MONTHS-TO-LOWER-WAGE 12          
-  set MAX-PRICE-GROWTH 0.05                 
-  set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.5  
+               
+  set MONTHS-TO-LOWER-WAGE 1                         
   set PROB-REPLACE-FIRM-PRICE 0.25         
   set PROB-REPLACE-FIRM-QUANT 0.5          
   set N-TRADING-LINKS 7                    

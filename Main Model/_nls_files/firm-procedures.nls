@@ -31,14 +31,15 @@ firms-own [
   firm-value                       ; estimate of the value of the firm
   firm-age                         ; the age of a firm in ticks
   current-profits                  ; current profit of a firm
+  layoff-from-lack-of-money
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
 to FIRM.adjust-wage-rate  
   (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not wanted-to-fire-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
-    set wage-rate (1 + random-float MAX-WAGE-GROWTH) * wage-rate
+    set wage-rate (1 + random-float MAX-WAGE-CHANGE) * wage-rate
   ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or wanted-to-fire-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
-    set wage-rate max (list ((1 - random-float MAX-WAGE-GROWTH) * wage-rate) MIN-WAGE-RATE)
+    set wage-rate max (list ((1 - random-float MAX-WAGE-CHANGE) * wage-rate) MIN-WAGE-RATE)
   ])
 end
 
@@ -182,7 +183,7 @@ to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivit
     and (liquidity-limiter < 1                                    ; 2) (can't produce enough to fulfill expected demand at the current price
          or limited-by-land-productivity?)                        ;     OR a primary good firm is limited by the land in how much they can produce)
     and price < (mean [price] of other FIRM.firms-with-my-type) [ ; 3) price is below competition's average 
-      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
+      set price price * (1 + random-float MAX-PRICE-CHANGE)     ; Then: raise price
     ] 
     
     inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
@@ -190,7 +191,7 @@ to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivit
     and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
                                                                      ; Then: lower price to increase sales (without going below marginal cost of production)
       let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-CHANGE)))  
     ]
   ) 
 end
@@ -280,20 +281,28 @@ to-report FIRM.num-inputs
   report length table:keys input-data
 end
 
-;firm procedure, estimates the price of a given input good for a firm
+;firm procedure, estimates the price of a givensinput good for a firm
 to-report FIRM.estimate-price [input-i]
   report mean [FIRM.framework-price] of my-framework-agreements with [FIRM.input-firm-type = input-i]
 end
 
-;firm procedure, fires all workers that firm does not want
+;firm procedure, fires workers that firm does not want or can't afford
 to FIRM.lay-off-workers    
   
   let max-layoffs (n-workers - desired-n-workers)
-  set wanted-to-fire-worker? max-layoffs > 0  
-  repeat max-layoffs[
+  set wanted-to-fire-worker? max-layoffs > 0      
+    
+  repeat max-layoffs [  
     if ((random-float 1) < layoff-probability)[
       ask one-of my-employment-links [die]       
     ]
+  ]
+  
+  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off
+  set layoff-from-lack-of-money 0
+  while [liquidity < (wage-rate * n-workers) and n-workers > 0] [      
+    set layoff-from-lack-of-money layoff-from-lack-of-money + 1
+    ask one-of my-employment-links [die]             
   ]
 end
 
@@ -517,22 +526,20 @@ to FIRM.produce-goods
 end
 
 ;firm procedure, pays wages to workers
-to FIRM.pay-wages-or-go-bankrupt
+to FIRM.pay-wages
   
   ifelse wage-rate * n-workers > liquidity [ 
     let remaining-money-per-worker liquidity / n-workers
     ask employment-link-neighbors [set liquidity liquidity + remaining-money-per-worker]      
-    set liquidity 0              
+    set liquidity 0   
+    print (word ticks ": " who " ran out of money. Remaining per worker: " remaining-money-per-worker)
+    
     
   ] [      
     set liquidity precision (liquidity - wage-rate * n-workers) 10
     if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
     ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
-  ]
-  
-  if n-workers = 0 and liquidity < wage-rate [  ; no workers and not enough money to pay one
-    FIRM.replace-firm      
-  ]
+  ]  
   
 end
 

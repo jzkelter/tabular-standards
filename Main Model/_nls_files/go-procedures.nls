@@ -1,10 +1,21 @@
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go    
+  
   go-beginning-of-month-observer  
-  go-beginning-of-month-firms  
+  
+  firms-plan-month
+  
   go-beginning-of-month-households  
+  
+  ask firms [    
+    FIRM.pay-wages
+    FIRM.distribute-profits
+  ]
+  ask households [HOUSEHOLD.set-consumption]
+  
   go-month  
+  
   go-end-of-month
   tick
 end
@@ -21,16 +32,18 @@ to go-beginning-of-month-observer
 end
 
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
-to go-beginning-of-month-firms
+to firms-plan-month
   
   ask firms [    
-    FIRM.calculate-average-sales
-    FIRM.search-for-framework-agreements
-    ;search-delivery-capable-supplier and vendor used to be here
+    if liquidity < wage-rate [
+      FIRM.replace-firm
+    ]
     
+    FIRM.calculate-average-sales
+    FIRM.search-for-framework-agreements        
     FIRM.adjust-wage-rate
     FIRM.adjust-output-and-price
-    FIRM.lay-off-workers
+    FIRM.lay-off-workers    
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month     
     set month-production 0  ; reset how much was produced this month
@@ -45,10 +58,11 @@ to go-beginning-of-month-households
     HOUSEHOLD.guarantee-consumer-links
     if random-float 1 < PROB-REPLACE-FIRM-PRICE  [HOUSEHOLD.search-cheaper-vendor]
     if random-float 1 < PROB-REPLACE-FIRM-QUANT [HOUSEHOLD.search-delivery-capable-vendor]  
-    HOUSEHOLD.search-for-employement
-    HOUSEHOLD.set-consumption
+    HOUSEHOLD.search-for-employement    
   ]
 end
+
+
 
 ;runs the daily production cycle for one month
 to go-month
@@ -73,11 +87,7 @@ to go-end-of-month
           
   
   ask firms [
-    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
-    
-    FIRM.pay-wages-or-go-bankrupt       
-    
-    FIRM.distribute-profits
+    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]                           
     
     ifelse desired-n-workers <= n-workers [
       set months-without-vacancies months-without-vacancies + 1
