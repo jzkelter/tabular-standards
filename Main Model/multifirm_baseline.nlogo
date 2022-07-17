@@ -404,7 +404,7 @@ n-firms
 10
 100
 30.0
-10
+5
 1
 NIL
 HORIZONTAL
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-0.1
+10.0
 .1
 1
 NIL
@@ -1214,6 +1214,21 @@ NIL
 NIL
 NIL
 1
+
+SLIDER
+0
+1215
+215
+1248
+INITIAL-CONSUMER-LINKS
+INITIAL-CONSUMER-LINKS
+0
+20
+20.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

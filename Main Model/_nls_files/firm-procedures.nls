@@ -360,6 +360,9 @@ to FIRM.add-firm
     ]
     set firm-age 0
     set current-profits 0
+    
+    create-consumer-links-with n-of INITIAL-CONSUMER-LINKS households  ;; without any initial customers, it will go bankrupt immediately
+    
   ]
 end
 
