@@ -87,6 +87,7 @@ to setup
     
     set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
+    set largest-firm-visited one-of firms
   ]
 
   ask firms [    

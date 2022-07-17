@@ -5,6 +5,7 @@ households-own [
   reservation-wage                ; minimal claim on labor income, although households will work for less under certain conditions
   demanded-consumption            ; the amount of goods that are demanded by each household
   liquidity                       ; i.e. money currently available  
+  largest-firm-visited
 ]
 
 ;household procedure, searches for a cheaper consumer good vendor
@@ -114,12 +115,20 @@ end
 ;household procedure, purchases consumption goods by purchasing the maximum amount possible from trading partners until either demand is satisfied or no partners remain
 to HOUSEHOLD.buy-consumption-goods  ; household procedure
   let remaining-demand demanded-consumption
+      
   let firms-to-try consumer-link-neighbors
-
+  
+  set largest-firm-visited one-of firms-to-try
+  
   while [remaining-demand >= (0.01 * demanded-consumption) and any? firms-to-try] [  ; try to get within 1% of demand
 
     ; figure out the transaction
-    let the-firm one-of firms-to-try
+    let the-firm nobody
+    ifelse pick-cheapest-firm? [
+      set the-firm min-one-of firms-to-try [price]
+    ] [
+      set the-firm one-of firms-to-try ; min-one-of firms-to-try [price]
+    ]
     
     if liquidity < 0 [error "negative liquidity"] 
     
@@ -136,6 +145,10 @@ to HOUSEHOLD.buy-consumption-goods  ; household procedure
       ask consumer-link-with the-firm [set demand-not-satisfied remaining-demand]
     ]
     ask the-firm [ set firms-to-try other firms-to-try]  ;  this firm from the available set of firms to try
+    
+    if [month-production] of the-firm > [month-production] of largest-firm-visited [
+      set largest-firm-visited the-firm
+    ]
   ]
 end
 
