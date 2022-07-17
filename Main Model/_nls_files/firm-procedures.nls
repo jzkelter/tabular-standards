@@ -296,11 +296,14 @@ to FIRM.lay-off-workers
       ask one-of my-employment-links [die]       
     ]
   ]
-  
-  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off  
-  while [liquidity < (wage-rate * n-workers) and n-workers > 0] [          
-    ask one-of my-employment-links [die]             
+     
+  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off  (this only happens if layoff-probability < 1)
+  while [liquidity < (wage-rate * n-workers)] [ ; and n-workers > 0] [          
+    ask one-of my-employment-links [die]  
+    set desired-n-workers n-workers           
   ]
+  
+  
 end
 
 
@@ -524,20 +527,9 @@ end
 
 ;firm procedure, pays wages to workers
 to FIRM.pay-wages
-  
-  ifelse wage-rate * n-workers > liquidity [ 
-    let remaining-money-per-worker liquidity / n-workers
-    ask employment-link-neighbors [set liquidity liquidity + remaining-money-per-worker]      
-    set liquidity 0   
-    print (word ticks ": " who " ran out of money. Remaining per worker: " remaining-money-per-worker)
-    
-    
-  ] [      
-    set liquidity precision (liquidity - wage-rate * n-workers) 10
-    if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
-    ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]
-  ]  
-  
+  set liquidity precision (liquidity - wage-rate * n-workers) 10
+  if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
+  ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]   
 end
 
 ;firm procedure, distrubtes all profits allocated by firms to households

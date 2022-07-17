@@ -34,10 +34,13 @@ end
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
 to firms-plan-month
   
-  ask firms [    
+  ask firms [ ; need to do this first so that new firms also plan month
     if liquidity < wage-rate [
       FIRM.replace-firm
     ]
+  ]
+  
+  ask firms [
     
     FIRM.calculate-average-sales
     FIRM.search-for-framework-agreements        

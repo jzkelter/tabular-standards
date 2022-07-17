@@ -148,7 +148,7 @@ true
 PENS
 "mean cg-wage" 1.0 0 -10899396 true "" "plot mean-cg-wage-rate"
 "mean pg-wage" 1.0 0 -6459832 true "" "plot mean-pg-wage-rate"
-"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
+"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households "
 "mean wage" 1.0 0 -2674135 true "" "plot mean [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
 "max firm wage" 1.0 0 -7500403 true "" "plot max [wage-rate] of firms"
@@ -359,7 +359,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-1
+0
 
 MONITOR
 225
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-3.0
+20.0
 .1
 1
 NIL
@@ -711,7 +711,7 @@ MIN-WAGE-RATE
 MIN-WAGE-RATE
 .1
 10
-2.5
+5.0
 .1
 1
 NIL
@@ -726,7 +726,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.25
+0.5
 .05
 1
 NIL
@@ -1198,6 +1198,23 @@ the desired buffer as a fraction of expected sales.
 0.0
 1
 
+BUTTON
+445
+10
+540
+43
+inspect overpaying firm
+inspect min-one-of firms [liquidity - (wage-rate * desired-n-workers)]
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -1592,92 +1609,6 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="vary-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <exitCondition>stop?</exitCondition>
-    <metric>unemployment-rate</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>mean-firm-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>cg-production</metric>
-    <metric>consumer-demand</metric>
-    <metric>mean-wage-rate</metric>
-    <metric>mean-cg-price</metric>
-    <metric>mean-pg-price</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>pringle-index-value</metric>
-    <metric>coats-index-value</metric>
-    <metric>ussher-index-value</metric>
-    <metric>potvin-index-value</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.25"/>
-      <value value="2.5"/>
-      <value value="2.75"/>
-      <value value="3"/>
-      <value value="4"/>
-      <value value="5"/>
-      <value value="6"/>
-      <value value="7"/>
-      <value value="8"/>
-      <value value="10"/>
-      <value value="12"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="1000"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="60"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="minimum-wage">
-      <value value="0.8"/>
-      <value value="2.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
   <experiment name="vary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
@@ -1703,7 +1634,7 @@ NetLogo 6.2.2
     <metric>potvin-index-value</metric>
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
+      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
@@ -1713,11 +1644,17 @@ NetLogo 6.2.2
       <value value="2"/>
       <value value="2.5"/>
       <value value="3"/>
+      <value value="3.5"/>
       <value value="4"/>
       <value value="5"/>
       <value value="6"/>
       <value value="8"/>
       <value value="10"/>
+      <value value="12"/>
+      <value value="14"/>
+      <value value="16"/>
+      <value value="18"/>
+      <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MIN-WAGE-RATE">
       <value value="0.8"/>
@@ -1727,35 +1664,26 @@ NetLogo 6.2.2
       <value value="0.25"/>
       <value value="0.5"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MONTHS-TO-LOWER-WAGE">
+      <value value="1"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
       <value value="500"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-firms">
       <value value="30"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="BUFFER-LABOR-FRACTION">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="primary-good-prod-function">
-      <value value="&quot;linear&quot;"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="SEARCH-N">
       <value value="5"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="fix-n-framework-agreements?">
       <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PROB-REPLACE-FIRM-PRICE">
+      <value value="0.25"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="framework-duration">
       <value value="24"/>
@@ -1763,20 +1691,11 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="MAX-PRICE-CHANGE">
       <value value="0.05"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="RES-WAGE-CHANGE">
-      <value value="0.9"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="s">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
+    <enumeratedValueSet variable="index-in-use">
+      <value value="&quot;no index&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="SEARCH-BETTER-JOB-PROB">
       <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MAX-WAGE-CHANGE">
-      <value value="0.2"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>
@@ -1786,6 +1705,48 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="min-wage-80%-of-tech-param?">
       <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="STARTUP-LIQUIDITY">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="primary-good-prod-function">
+      <value value="&quot;linear&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="alpha">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DESIRED-BUFFER-FRAC">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RES-WAGE-CHANGE">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N-FRAMEWORK-AGREEMENTS">
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="s">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BUFFER-LABOR-FRACTION">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MAX-WAGE-CHANGE">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PROB-REPLACE-FIRM-QUANT">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BACKGROUND-IMPROVEMENT">
+      <value value="&quot;10&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N-TRADING-LINKS">
+      <value value="10"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

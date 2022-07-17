@@ -76,13 +76,13 @@ to HOUSEHOLD.search-better-paid-job-logic [search-even-if-satisfied?]
 end
 
 ;household procedure, checks a random firm for job availability and takes the position based on logic defined in the job search procedures
-to HOUSEHOLD.check-random-firm-for-job [min-wage]  ; household procedure
+to HOUSEHOLD.check-random-firm-for-job [my-min-wage]  ; household procedure
   let the-firm nobody
   ifelse HOUSEHOLD.unemployed?
   [set the-firm one-of firms]
   [set the-firm [one-of other firms] of HOUSEHOLD.my-employer]
 
-  if [desired-n-workers > n-workers] of the-firm and [wage-rate] of the-firm >= min-wage [
+  if [desired-n-workers > n-workers] of the-firm and [wage-rate] of the-firm >= my-min-wage [
 
     if HOUSEHOLD.employed? [HOUSEHOLD.quit-job]
 
