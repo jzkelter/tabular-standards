@@ -359,7 +359,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-0
+3
 
 MONITOR
 225
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-20.0
+0.1
 .1
 1
 NIL
@@ -711,7 +711,7 @@ MIN-WAGE-RATE
 MIN-WAGE-RATE
 .1
 10
-5.0
+2.5
 .1
 1
 NIL
@@ -726,7 +726,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.5
+0.25
 .05
 1
 NIL
@@ -1637,19 +1637,6 @@ NetLogo 6.2.2
       <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.5"/>
-      <value value="3"/>
-      <value value="3.5"/>
-      <value value="4"/>
-      <value value="5"/>
-      <value value="6"/>
-      <value value="8"/>
-      <value value="10"/>
       <value value="12"/>
       <value value="14"/>
       <value value="16"/>
@@ -1657,12 +1644,10 @@ NetLogo 6.2.2
       <value value="20"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MIN-WAGE-RATE">
-      <value value="0.8"/>
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.25"/>
-      <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>

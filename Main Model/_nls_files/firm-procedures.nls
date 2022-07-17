@@ -343,7 +343,7 @@ to FIRM.add-firm
     set lifetime-profits liquidity * -1
     set desired-n-workers max (list 1 (floor (mean [average-previous-sales] of FIRM.firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
-    set months-without-vacancies 0
+    set months-without-vacancies 1
     ;FIRM.set-input-demands
     foreach table:keys input-data [i ->
       FIRM.set-stock i 0
