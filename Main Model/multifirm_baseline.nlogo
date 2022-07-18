@@ -359,7 +359,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-3
+0
 
 MONITOR
 225
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-5.1
+12.0
 .1
 1
 NIL
@@ -1255,7 +1255,7 @@ SWITCH
 1158
 delli-gatti-consumer-search?
 delli-gatti-consumer-search?
-1
+0
 1
 -1000
 
@@ -1266,7 +1266,7 @@ SWITCH
 1198
 pick-cheapest-firm?
 pick-cheapest-firm?
-1
+0
 1
 -1000
 
@@ -1714,6 +1714,14 @@ NetLogo 6.2.2
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.25"/>
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pick-cheapest-firm?">
+      <value value="true"/>
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="delli-gatti-consumer-search?">
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>

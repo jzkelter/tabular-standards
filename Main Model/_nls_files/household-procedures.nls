@@ -31,6 +31,31 @@ to HOUSEHOLD.search-delivery-capable-vendor
   ]
 end
 
+
+;; household procedure: set the household's consuemr links. Can use dell Gatti et al's logic or Lengnick's
+to HOUSEHOLD.set-consumer-links
+  ifelse delli-gatti-consumer-search? [
+    
+    ;; Delli Gatti Logic
+    ask my-consumer-links [die]  ; get rid of current consumer links
+    
+    ifelse largest-firm-visited = nobody [  ; if the largest firm visited last tick is dead, just pick random firms
+      create-consumer-links-with n-of N-TRADING-LINKS CONSUMER-GOOD-FIRMS [hide-link]
+      
+    ] [  ; otherwise, pick largest-firm-visited + other random firms
+      create-consumer-links-with (turtle-set largest-firm-visited [n-of (N-TRADING-LINKS - 1) other CONSUMER-GOOD-FIRMS] of largest-firm-visited) [
+        hide-link
+      ]
+    ]              
+    
+  ] [  ; Lengnick Logic
+    HOUSEHOLD.guarantee-consumer-links
+    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [HOUSEHOLD.search-cheaper-vendor]
+    if random-float 1 < PROB-REPLACE-FIRM-QUANT [HOUSEHOLD.search-delivery-capable-vendor]        
+  ]     
+end
+
+
 ;household procedure, makes sure every household has exactly N-TRADING-LINKS consumer-links. Ideally, I wouldn't even need this in the end, since consumer links should stay constant
 to HOUSEHOLD.guarantee-consumer-links
   let curr-trading-links count my-consumer-links

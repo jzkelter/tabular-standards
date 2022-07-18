@@ -58,20 +58,7 @@ end
 to go-beginning-of-month-households
   ask households [
     if liquidity < 0 [error "negative liquidity beginning of month"] 
-    
-    ifelse delli-gatti-consumer-search? [
-      ask my-consumer-links [die]
-      create-consumer-links-with (turtle-set largest-firm-visited n-of (N-TRADING-LINKS - 1) CONSUMER-GOOD-FIRMS) [
-        hide-link
-      ]
-      
-    ] [        
-      HOUSEHOLD.guarantee-consumer-links
-      if random-float 1 < PROB-REPLACE-FIRM-PRICE  [HOUSEHOLD.search-cheaper-vendor]
-      if random-float 1 < PROB-REPLACE-FIRM-QUANT [HOUSEHOLD.search-delivery-capable-vendor]        
-    ] 
-    
-    
+    HOUSEHOLD.set-consumer-links                   
     HOUSEHOLD.search-for-employement    
   ]
 end
