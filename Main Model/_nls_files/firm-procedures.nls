@@ -117,7 +117,7 @@ to-report FIRM.primary-good-firm-calc-ideal-n-workers [prod-to-meet-demand]
 end
 
 ;firm procedure, reports the maximum production possible based on labor (and land if applicable)
-to-report FIRM.max-labor-production  
+to-report FIRM.max-labor-and-land-production  
   ifelse primary-good-firm?  [
     report FIRM.primary-good-firm-max-production        
   ][
@@ -579,13 +579,15 @@ to-report FIRM.decide-reserve
 end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
-to-report FIRM.production-potential 
+to-report FIRM.production-potential   
+  
   (ifelse table:length input-data = 0 [
-    report FIRM.max-labor-production
+    report FIRM.max-labor-and-land-production  
   ][    
     let input-potential min map [i -> ((FIRM.marginal-productivity i) * (FIRM.current-stock i))] table:keys input-data
-    report (min (list input-potential (FIRM.max-labor-production)))
+    report (min (list input-potential (FIRM.max-labor-and-land-production)))
   ])
+  
 end
 
 ;firm procedure, takes in a production amount and adjusts input stocks accordingly

@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-1000.0
+500.0
 10
 1
 NIL
@@ -114,7 +114,7 @@ HORIZONTAL
 PLOT
 665
 170
-940
+945
 318
 Unemployment rate
 NIL
@@ -403,7 +403,7 @@ n-firms
 n-firms
 10
 100
-60.0
+30.0
 5
 1
 NIL
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-1.0
+4.5
 .1
 1
 NIL
@@ -726,7 +726,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.5
+0.7
 .05
 1
 NIL
@@ -1255,7 +1255,7 @@ SWITCH
 1158
 delli-gatti-consumer-search?
 delli-gatti-consumer-search?
-0
+1
 1
 -1000
 
@@ -1266,7 +1266,7 @@ SWITCH
 1198
 pick-cheapest-firm?
 pick-cheapest-firm?
-0
+1
 1
 -1000
 

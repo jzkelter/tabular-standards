@@ -94,7 +94,7 @@ to setup
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand FIRM.max-labor-production    ; demand initialized to be the amount the firm can produce with its starting amount of labor
+    set demand FIRM.max-labor-and-land-production    ; demand initialized to be the amount the firm can produce with its starting amount of labor
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
     FIRM.set-input-demands   
     set previous-sales demand
