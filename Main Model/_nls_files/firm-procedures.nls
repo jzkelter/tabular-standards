@@ -50,6 +50,14 @@ to FIRM.adjust-output-and-price
   let ideal-production table:get ideal-production-data "amount"
   let ideal-buffer table:get ideal-production-data "buffer"
   
+  ;; If the firm produces primary goods, they may be limited by land
+  let limited-by-land-productivity? false
+  if primary-good-firm? and FIRM.productive-capacity-of-land < ideal-production [
+    set ideal-production FIRM.productive-capacity-of-land
+    set limited-by-land-productivity? true
+  ]  
+  
+  
   ; Figure out how much producing ideal-production will cost  
   let ideal-n-workers FIRM.calc-ideal-n-workers ideal-production
   let cost-data FIRM.calculate-production-costs ideal-n-workers ideal-production ideal-buffer
@@ -61,15 +69,8 @@ to FIRM.adjust-output-and-price
   if total-price-of-production > liquidity [
     set liquidity-limiter liquidity / total-price-of-production
   ]
-  
-  ;; If the firm produces primary goods, they may be limited by land
-  let limited-by-land-productivity? false
-  if primary-good-firm? and FIRM.productive-capacity-of-land < ideal-production [
-    set ideal-production FIRM.productive-capacity-of-land
-    set limited-by-land-productivity? true
-  ]  
-  
-  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
+    
+  ; Now decide how much labor and inputs we need to produce as much of ideal-production as we can afford  
   set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
   
@@ -185,7 +186,7 @@ to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivit
       set price price * (1 + random-float MAX-PRICE-CHANGE)     ; Then: raise price
     ] 
     
-    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
+    inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE            ; if inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE , we had excess supply last period 
     and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
     and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
                                                                      ; Then: lower price to increase sales (without going below marginal cost of production)

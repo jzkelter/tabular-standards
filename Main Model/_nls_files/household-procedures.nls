@@ -149,6 +149,7 @@ to HOUSEHOLD.buy-consumption-goods  ; household procedure
 
     ; figure out the transaction
     let the-firm nobody
+    
     ifelse pick-cheapest-firm? [
       set the-firm min-one-of firms-to-try [price]
     ] [

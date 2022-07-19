@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-500.0
+1000.0
 10
 1
 NIL
@@ -359,7 +359,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-0
+3
 
 MONITOR
 225
@@ -403,7 +403,7 @@ n-firms
 n-firms
 10
 100
-30.0
+60.0
 5
 1
 NIL
@@ -411,9 +411,9 @@ HORIZONTAL
 
 SLIDER
 0
-1410
+1465
 170
-1443
+1498
 framework-duration
 framework-duration
 1
@@ -455,9 +455,9 @@ PENS
 
 SLIDER
 0
-1440
+1495
 215
-1473
+1528
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -540,9 +540,9 @@ HORIZONTAL
 
 SWITCH
 0
-1475
+1530
 215
-1508
+1563
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-12.0
+1.0
 .1
 1
 NIL
@@ -596,9 +596,9 @@ HORIZONTAL
 
 SLIDER
 0
-1355
+1410
 105
-1388
+1443
 alpha
 alpha
 .1
@@ -611,9 +611,9 @@ HORIZONTAL
 
 SLIDER
 0
-1320
+1375
 105
-1353
+1408
 s
 s
 .01
@@ -626,9 +626,9 @@ HORIZONTAL
 
 CHOOSER
 0
-1275
+1330
 207
-1320
+1375
 primary-good-prod-function
 primary-good-prod-function
 "linear" "asymptotic" "Cobb-Douglas"
@@ -636,9 +636,9 @@ primary-good-prod-function
 
 TEXTBOX
 115
-1320
+1375
 210
-1350
+1405
 only relevant for asymptotic prod
 11
 0.0
@@ -646,9 +646,9 @@ only relevant for asymptotic prod
 
 TEXTBOX
 115
-1355
+1410
 205
-1385
+1440
 only relevant for Cobb-Douglas
 11
 0.0
@@ -656,9 +656,9 @@ only relevant for Cobb-Douglas
 
 TEXTBOX
 0
-1395
+1450
 150
-1413
+1468
 framework settings
 11
 105.0
@@ -676,9 +676,9 @@ general firm settings
 
 TEXTBOX
 0
-1255
+1310
 150
-1273
+1328
 primary good firm settings
 11
 105.0
@@ -1005,7 +1005,7 @@ MONTHS-TO-LOWER-WAGE
 MONTHS-TO-LOWER-WAGE
 1
 24
-1.0
+12.0
 1
 1
 NIL
@@ -1080,7 +1080,7 @@ N-TRADING-LINKS
 N-TRADING-LINKS
 1
 10
-10.0
+7.0
 1
 1
 NIL
@@ -1176,7 +1176,7 @@ the background improvement on each land's productive capacity per tick
 SLIDER
 0
 1175
-192
+180
 1208
 DESIRED-BUFFER-FRAC
 DESIRED-BUFFER-FRAC
@@ -1218,7 +1218,7 @@ NIL
 SLIDER
 0
 1215
-215
+180
 1248
 INITIAL-CONSUMER-LINKS
 INITIAL-CONSUMER-LINKS
@@ -1269,6 +1269,41 @@ pick-cheapest-firm?
 0
 1
 -1000
+
+SLIDER
+0
+1255
+180
+1288
+BUFFER%-TO-LOWER-PRICE
+BUFFER%-TO-LOWER-PRICE
+1
+1.5
+1.2
+.01
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1220
+335
+1255
+# of consumer links new firms are given
+11
+0.0
+1
+
+TEXTBOX
+185
+1255
+345
+1280
+Buffer fraction excess before a firm will lower prices
+11
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1692,14 +1727,10 @@ NetLogo 6.2.2
       <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
       <value value="0.5"/>
       <value value="1"/>
-      <value value="1.5"/>
       <value value="2"/>
-      <value value="2.25"/>
       <value value="2.5"/>
-      <value value="2.75"/>
       <value value="3"/>
       <value value="3.5"/>
       <value value="4"/>
@@ -1713,168 +1744,35 @@ NetLogo 6.2.2
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
-      <value value="0.25"/>
       <value value="0.5"/>
+      <value value="0.7"/>
+      <value value="0.9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="pick-cheapest-firm?">
       <value value="true"/>
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="delli-gatti-consumer-search?">
+      <value value="true"/>
       <value value="false"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MONTHS-TO-LOWER-WAGE">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="SEARCH-N">
-      <value value="5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PROB-REPLACE-FIRM-PRICE">
-      <value value="0.25"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MAX-PRICE-CHANGE">
-      <value value="0.05"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="SEARCH-BETTER-JOB-PROB">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="min-wage-80%-of-tech-param?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="STARTUP-LIQUIDITY">
-      <value value="100"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="primary-good-prod-function">
-      <value value="&quot;linear&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="alpha">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="DESIRED-BUFFER-FRAC">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="RES-WAGE-CHANGE">
-      <value value="0.9"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="N-FRAMEWORK-AGREEMENTS">
+    <enumeratedValueSet variable="N-TRADING-LINKS">
       <value value="7"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="s">
-      <value value="0.1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="BUFFER-LABOR-FRACTION">
-      <value value="0.3"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MAX-WAGE-CHANGE">
-      <value value="0.2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="PROB-REPLACE-FIRM-QUANT">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="BACKGROUND-IMPROVEMENT">
-      <value value="&quot;10&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="N-TRADING-LINKS">
-      <value value="10"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="delli-gatti-search" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>mean-firm-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>cg-production</metric>
-    <metric>consumer-demand</metric>
-    <metric>mean-wage-rate</metric>
-    <metric>mean-cg-price</metric>
-    <metric>mean-pg-price</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>pringle-index-value</metric>
-    <metric>coats-index-value</metric>
-    <metric>ussher-index-value</metric>
-    <metric>potvin-index-value</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
-      <value value="0.5"/>
-      <value value="1"/>
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="2.25"/>
-      <value value="2.5"/>
-      <value value="2.75"/>
-      <value value="3"/>
-      <value value="3.5"/>
-      <value value="4"/>
-      <value value="5"/>
-      <value value="6"/>
-      <value value="8"/>
-      <value value="10"/>
+    <enumeratedValueSet variable="MONTHS-TO-LOWER-WAGE">
       <value value="12"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="delli-gatti-consumer-search?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="N-TRADING-LINKS">
-      <value value="2"/>
-      <value value="10"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MIN-WAGE-RATE">
-      <value value="2.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
-      <value value="0.25"/>
-      <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="layoff-probability">
       <value value="0.5"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="SEARCH-N">
-      <value value="5"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
       <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SEARCH-N">
+      <value value="5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="fix-n-framework-agreements?">
       <value value="false"/>
@@ -1912,16 +1810,7 @@ NetLogo 6.2.2
     <enumeratedValueSet variable="alpha">
       <value value="1"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="INITIAL-CONSUMER-LINKS">
-      <value value="20"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="MONTHS-TO-LOWER-WAGE">
       <value value="1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DESIRED-BUFFER-FRAC">
