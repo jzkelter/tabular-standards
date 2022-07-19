@@ -43,14 +43,6 @@ to LAND.setup-patches
   ]
 end
 
-;;NOTE, I have yet to actually implement this, but if we end up using this, every time production is calculated, it would be multiplied by this constant
-;firm procedure, reports the calculated productivity multiplier for max production
-to-report LAND.calculate-productivity-multiplier
-  if index-in-use != "potvin" [
-    report 1
-  ]
-  report 1 ;;temp, we need to discuss
-end
 
 ;observer procedure, updates the soil health of the patches 
 to LAND.update-productive-capacity

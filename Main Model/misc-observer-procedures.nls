@@ -41,12 +41,12 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-pringle
-  set pringle-index-value sum [firm-value] of firms         ;fixed firm implementation fixes index to be equal to firm number
+  set pringle-index-value sum [firm-value] of firms         ;;this could be reasonably changed to average to account for variable firm numbers
 end
 
 ;observer procedure, recalculates the current index
-to recalculate-index-coats
-  set coats-index-value sum [price] of firms 
+to recalculate-index-coats  
+  set coats-index-value sum [price] of firms        ;;this could reasonably be changed to average to account for variable firm numbers
 end
 
 ;observer procedure, recalculates the current index
@@ -57,7 +57,7 @@ end
 
 ;observer procedure, recalculates the current index
 to recalculate-index-potvin
-  set potvin-index-value 1
+  set potvin-index-value mean [productive-capacity] of lands
   ;implementation TBD
 end
 
