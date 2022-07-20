@@ -178,18 +178,20 @@ end
 
 to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivity?]
   ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
-  (ifelse                                                         ; IF all three conditions are true:
-    inventory < ideal-buffer                                      ; 1) inventory < ideal-buffer, there was excess demand last period compared to expectation
-    and (liquidity-limiter < 1                                    ; 2) (can't produce enough to fulfill expected demand at the current price
-         or limited-by-land-productivity?)                        ;     OR a primary good firm is limited by the land in how much they can produce)
-    and price < (mean [price] of other FIRM.firms-with-my-type) [ ; 3) price is below competition's average 
-      set price price * (1 + random-float MAX-PRICE-CHANGE)     ; Then: raise price
+  
+  let mean-price-my-firm-type table:get MEAN-PRICES firm-type  
+  (ifelse                                                   ; IF all three conditions are true:
+    inventory < ideal-buffer                                ;     1) inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and (liquidity-limiter < 1                              ;     2) (can't produce enough to fulfill expected demand at the current price
+         or limited-by-land-productivity?)                  ;         OR a primary good firm is limited by the land in how much they can produce)
+    and price < mean-price-my-firm-type [                   ;     3) price is below competition's average 
+      set price price * (1 + random-float MAX-PRICE-CHANGE) ; Then: raise price
     ] 
     
-    inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE            ; if inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE , we had excess supply last period 
-    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
-    and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
-                                                                     ; Then: lower price to increase sales (without going below marginal cost of production)
+    inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE         ; if inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE , we had excess supply last period 
+    and liquidity-limiter = 1                                 ;     and we have enough money to produce expected demand (is this needed?)
+    and price > mean-price-my-firm-type [                     ;     and price is higher than average
+                                                              ; Then: lower price to increase sales (without going below marginal cost of production)
       let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
       set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-CHANGE)))  
     ]
@@ -736,4 +738,9 @@ end
 to-report FIRM.choose-index
   let indices (list "no index"  "pringle" "coats" "ussher" "potvin")
   report position index-in-use indices ; right now we always use the same index determined by the index-in-use chooser
+end
+
+to FIRM.set-color
+  let firm-colors (list black brown green red orange blue gray yellow pink)  
+  set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types  
 end

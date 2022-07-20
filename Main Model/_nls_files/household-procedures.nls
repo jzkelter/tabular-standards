@@ -25,7 +25,7 @@ end
 ;household procedure, searches for a vendor to replace a current vendor that was unable to satisfy demand
 to HOUSEHOLD.search-delivery-capable-vendor
   let link-failed-to-satisfy rnd:weighted-one-of my-consumer-links [demand-not-satisfied]
-  if count my-consumer-links < N-TRADING-LINKS or [demand-not-satisfied] of link-failed-to-satisfy > 0 [
+  if [demand-not-satisfied] of link-failed-to-satisfy > 0 [
     create-consumer-link-with HOUSEHOLD.pick-random-consumer-firm [init-consumer-link]
     ask link-failed-to-satisfy [die]
   ]
@@ -219,4 +219,12 @@ end
 ;household procedure, picks a random consumer good firm that is not a current trading partner of this household, weighted by # of employees
 to-report HOUSEHOLD.pick-random-consumer-firm 
   report rnd:weighted-one-of firms with [not member? myself consumer-link-neighbors and consumer-good-firm?] [count my-employment-links]
+end
+
+to HOUSEHOLD.set-color  
+  ifelse HOUSEHOLD.employed? [
+    set color blue
+  ] [
+    set color red
+  ]  
 end

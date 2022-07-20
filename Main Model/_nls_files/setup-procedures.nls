@@ -35,9 +35,9 @@ globals [
   TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
   NEW-BANKRUPT-FIRMS               ; the number of bankrupt firms added in the current period
   PRIMARY-INVENTORY-VALUE-HISTORY  ; defined as the rolling average of the total inventory of the last two years of the primary good firms
-  BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
-  UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
-  MEAN-PRICES                      ; stores a list of historical data for the mean price every year    
+  BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt  
+  ROLLING-UNEMPLOYMENT-RATE        ; stores a rollinig average of unemployment rate
+  MEAN-PRICES                      ; stores a table of mean price for each firm type for the last period
   FIRM-STRUCTURE                   ; global data holding how many firms are initialized                
   ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage                               
              
@@ -59,6 +59,7 @@ to setup
   set coats-index-value 1            
   set ussher-index-value 1              
   set potvin-index-value 1
+  set MEAN-PRICES table:make
   
   ;; setup agents
   create-households n-households [
@@ -106,16 +107,19 @@ to setup
 ;    ]
     set average-previous-sales demand
     set firm-value 0
+    FIRM.set-color
   ]    
-  
-  set-colors
+    
   ask one-of firms [ask my-links [show-link]]
   
   
   set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
   set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list 0)
-  set MEAN-PRICES (list mean [price] of firms)
+  set ROLLING-UNEMPLOYMENT-RATE 0
+  
+  
+  
+  
       
   position-agents  
   
@@ -175,6 +179,7 @@ to setup-firms
   foreach FIRM-STRUCTURE [ f ->     ; we need to first find out how many firms to create
     set firm-ratio-sum firm-ratio-sum + table:get f "Firm count"  ; final sum should be 
   ]
+  
   foreach FIRM-STRUCTURE [ f ->
     let group table:get f "Firm type"
     let firm-ratio table:get f "Firm count"
@@ -201,6 +206,10 @@ to setup-firms
       set current-profits 0
                   
     ]
+    
+    let ftype table:get f "Firm type"
+    table:put MEAN-PRICES ftype (mean [price] of firms with [firm-type = ftype ])
+     
   ]
 
   set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]

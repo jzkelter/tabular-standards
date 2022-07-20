@@ -26,8 +26,7 @@ to go-beginning-of-month-observer
   recalculate-index-pringle 
   recalculate-index-coats
   recalculate-index-ussher
-  recalculate-index-potvin
-  set-colors
+  recalculate-index-potvin  
   set NEW-BANKRUPT-FIRMS 0
 end
 
@@ -50,6 +49,7 @@ to firms-plan-month
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month     
     set month-production 0  ; reset how much was produced this month
+    FIRM.set-color
     
   ]
 end
@@ -59,8 +59,10 @@ to go-beginning-of-month-households
   ask households [
     if liquidity < 0 [error "negative liquidity beginning of month"] 
     HOUSEHOLD.set-consumer-links                   
-    HOUSEHOLD.search-for-employement    
+    HOUSEHOLD.search-for-employement   
+    HOUSEHOLD.set-color  
   ]
+    
 end
 
 
@@ -82,10 +84,7 @@ end
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
   if (sum [liquidity] of firms) + (sum [liquidity] of households) < 0.9999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
-  if (sum [liquidity] of firms) + (sum [liquidity] of households) > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
-  
-  let mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
-          
+  if (sum [liquidity] of firms) + (sum [liquidity] of households) > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]              
   
   ask firms [
     if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]                           
@@ -99,38 +98,16 @@ to go-end-of-month
     set firm-age (firm-age + 1)
   ]
   
-  set mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
   
   ask households [ 
     HOUSEHOLD.adjust-reservation-wage
   ]
 
+  set ROLLING-UNEMPLOYMENT-RATE (.9 * ROLLING-UNEMPLOYMENT-RATE) + (.1 * (1 - (count employment-links / count households)))
   set-firm-xcor
-  set-household-xcor
-
-  set UNEMPLOYMENT-RATES (lput (1 - count employment-links / n-households) UNEMPLOYMENT-RATES)
-  set MEAN-PRICES (lput mean [price] of firms MEAN-PRICES)
+  set-household-xcor  
   
   set month month + 1
   
 end
-
-to-report go-crashed?
-  let n length UNEMPLOYMENT-RATES
-  set n (n - 1)
-  let c 0
-  while [c < 50 and n >= 0][
-    let curr-rate item n UNEMPLOYMENT-RATES
-    if curr-rate < 0.8[
-      report false
-    ]
-    set c c + 1
-    set n n - 1
-  ]
-  report true
-end
-
-
-
-
 

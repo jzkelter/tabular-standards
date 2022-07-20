@@ -359,7 +359,7 @@ CHOOSER
 setup-structure
 setup-structure
 "Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
-3
+1
 
 MONITOR
 225
@@ -418,7 +418,7 @@ framework-duration
 framework-duration
 1
 60
-24.0
+12.0
 1
 1
 NIL
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-4.5
+1.3
 .1
 1
 NIL
@@ -726,7 +726,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.7
+0.9
 .05
 1
 NIL
@@ -1266,7 +1266,7 @@ SWITCH
 1198
 pick-cheapest-firm?
 pick-cheapest-firm?
-1
+0
 1
 -1000
 
@@ -1724,28 +1724,29 @@ NetLogo 6.2.2
     <metric>potvin-index-value</metric>
     <metric>gini-coefficient</metric>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-TC=3.json&quot;"/>
+      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.5"/>
+      <value value="0.1"/>
+      <value value="0.2"/>
+      <value value="0.4"/>
+      <value value="0.6"/>
+      <value value="0.8"/>
+      <value value="0.9"/>
       <value value="1"/>
+      <value value="1.025"/>
+      <value value="1.05"/>
+      <value value="1.075"/>
+      <value value="1.1"/>
+      <value value="1.2"/>
+      <value value="1.5"/>
       <value value="2"/>
-      <value value="2.5"/>
-      <value value="3"/>
-      <value value="3.5"/>
-      <value value="4"/>
-      <value value="5"/>
-      <value value="6"/>
-      <value value="8"/>
-      <value value="10"/>
-      <value value="12"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MIN-WAGE-RATE">
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
-      <value value="0.5"/>
-      <value value="0.7"/>
+      <value value="0.3"/>
       <value value="0.9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="pick-cheapest-firm?">
@@ -1753,7 +1754,6 @@ NetLogo 6.2.2
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="delli-gatti-consumer-search?">
-      <value value="true"/>
       <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="N-TRADING-LINKS">
