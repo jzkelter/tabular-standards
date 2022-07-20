@@ -192,7 +192,7 @@ to setup-firms
       
       set shape "building store"
       set tech-parameter firm-tech-parameter 
-      set price 10 / tech-parameter  + random-normal 1 1
+      set price 5 / tech-parameter  + random-normal 1 1
       set firm-type group
       set input-data make-input-data-table table:get f "Input data"
       set wage-rate MIN-WAGE-RATE

@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-2.0
+2.4
 .1
 1
 NIL
@@ -1730,23 +1730,16 @@ NetLogo 6.2.2
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.1"/>
       <value value="0.2"/>
-      <value value="0.3"/>
       <value value="0.4"/>
-      <value value="0.5"/>
       <value value="0.6"/>
-      <value value="0.7"/>
       <value value="0.8"/>
-      <value value="0.9"/>
       <value value="1"/>
-      <value value="1.025"/>
-      <value value="1.05"/>
-      <value value="1.075"/>
       <value value="1.1"/>
       <value value="1.2"/>
       <value value="1.5"/>
       <value value="2"/>
+      <value value="3"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MIN-WAGE-RATE">
       <value value="2.5"/>
