@@ -102,7 +102,9 @@ to go-end-of-month
     HOUSEHOLD.adjust-reservation-wage
   ]
 
+  calc-mean-prices
   set ROLLING-UNEMPLOYMENT-RATE (.9 * ROLLING-UNEMPLOYMENT-RATE) + (.1 * (1 - (count employment-links / count households)))
+  
   set-firm-xcor
   set-household-xcor  
   
@@ -110,3 +112,8 @@ to go-end-of-month
   
 end
 
+to calc-mean-prices
+  foreach table:keys MEAN-PRICES [ftype ->
+    table:put MEAN-PRICES ftype mean [price] of firms with [firm-type = ftype]
+  ]
+end

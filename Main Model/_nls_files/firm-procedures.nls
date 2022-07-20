@@ -184,13 +184,15 @@ to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivit
     inventory < ideal-buffer                                ;     1) inventory < ideal-buffer, there was excess demand last period compared to expectation
     and (liquidity-limiter < 1                              ;     2) (can't produce enough to fulfill expected demand at the current price
          or limited-by-land-productivity?)                  ;         OR a primary good firm is limited by the land in how much they can produce)
-    and price < mean-price-my-firm-type [                   ;     3) price is below competition's average 
+    and price < mean-price-my-firm-type                    ;     3) price is below competition's average 
+    [                   
       set price price * (1 + random-float MAX-PRICE-CHANGE) ; Then: raise price
     ] 
     
     inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE         ; if inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE , we had excess supply last period 
     and liquidity-limiter = 1                                 ;     and we have enough money to produce expected demand (is this needed?)
-    and price > mean-price-my-firm-type [                     ;     and price is higher than average
+    and price > mean-price-my-firm-type                      ;     and price is higher than average
+    [                     
                                                               ; Then: lower price to increase sales (without going below marginal cost of production)
       let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
       set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-CHANGE)))  

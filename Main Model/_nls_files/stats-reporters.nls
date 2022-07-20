@@ -81,20 +81,20 @@ to-report gini-coefficient [agent-set]
   report ((2 * (sum map [i -> (i + 1) * item i sorted-liquidities] (range n-agents))) / (n-agents * total-liquidity)) - ((n-agents + 1) / n-agents)  
 end
 
-to-report gini-coefficient-households  
+to-report gini-households  
   report gini-coefficient households
 end
 
-to-report gini-coefficient-firms
+to-report gini-firms
   report gini-coefficient firms
 end
 
 
-to-report pg-sales-gini-coefficient
-  report firm-sales-gini-coefficient PRIMARY-GOOD-FIRMS
+to-report gini-pg-sales
+  report gini-firm-sales PRIMARY-GOOD-FIRMS
 end
 
-to-report firm-sales-gini-coefficient [firm-set]
+to-report gini-firm-sales [firm-set]
   let n-agents count firm-set
   let total-prev-sales sum [previous-sales] of firm-set  
   let sorted-sales map [a -> [previous-sales] of a] sort-on [previous-sales] firm-set

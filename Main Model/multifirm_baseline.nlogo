@@ -128,7 +128,7 @@ true
 "" ""
 PENS
 "current" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
-"mean " 1.0 0 -7500403 true "" "plot mean UNEMPLOYMENT-RATES"
+"mean " 1.0 0 -2674135 true "" "plot ROLLING-UNEMPLOYMENT-RATE"
 
 PLOT
 665
@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-1.6
+2.0
 .1
 1
 NIL
@@ -700,8 +700,8 @@ true
 false
 "" ""
 PENS
-"households" 1.0 0 -13345367 true "" "plot gini-coefficient-households"
-"firms" 1.0 0 -6459832 true "" "plot gini-coefficient-firms"
+"households" 1.0 0 -13345367 true "" "plot gini-households"
+"firms" 1.0 0 -6459832 true "" "plot gini-firms"
 
 SLIDER
 0
@@ -727,7 +727,7 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.9
+0.4
 .05
 1
 NIL
@@ -831,7 +831,7 @@ INPUTBOX
 140
 955
 MAX-PRICE-CHANGE
-0.05
+0.2
 1
 0
 Number
@@ -1267,7 +1267,7 @@ SWITCH
 1198
 pick-cheapest-firm?
 pick-cheapest-firm?
-1
+0
 1
 -1000
 
@@ -1723,9 +1723,9 @@ NetLogo 6.2.2
     <metric>coats-index-value</metric>
     <metric>ussher-index-value</metric>
     <metric>potvin-index-value</metric>
-    <metric>gini-coefficient-firms</metric>
-    <metric>pg-sales-gini-coefficient</metric>
-    <metric>gini-coefficient-households</metric>
+    <metric>gini-firms</metric>
+    <metric>gini-pg-sales</metric>
+    <metric>gini-households</metric>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
