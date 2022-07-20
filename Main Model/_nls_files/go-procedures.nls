@@ -34,6 +34,7 @@ end
 to firms-plan-month
   
   ask firms [ ; need to do this first so that new firms also plan month
+    FIRM.set-color
     if liquidity < wage-rate [
       FIRM.replace-firm
     ]
@@ -48,9 +49,7 @@ to firms-plan-month
     FIRM.lay-off-workers    
     set demand 0  ; reset demand for the month
     set previous-sales 0 ; reset how many goods were sold from the previous month     
-    set month-production 0  ; reset how much was produced this month
-    FIRM.set-color
-    
+    set month-production 0  ; reset how much was produced this month        
   ]
 end
 
@@ -95,7 +94,7 @@ to go-end-of-month
       set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire, i.e. had a vacancy
     ]
     
-    set firm-age (firm-age + 1)
+    set firm-age (firm-age + 1)    
   ]
   
   

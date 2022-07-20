@@ -170,17 +170,17 @@ to-report test-gini-coefficient
       set liquidity 1.5
     ]
     
-    assert gini-coefficient = 0 "gini-coefficient != 0 with perfect equality"
+    assert gini-coefficient-households = 0 "gini-coefficient != 0 with perfect equality"
     
     ask household 0 [set liquidity 0]
     ask household 1 [set liquidity 0]
     ask household 2 [set liquidity 5]    
-    assert precision (gini-coefficient - (2 / 3)) 5 = 0 "gini-coefficient with perfect inequality not correct"
+    assert precision (gini-coefficient-households - (2 / 3)) 5 = 0 "gini-coefficient with perfect inequality not correct"
     
     ask household 0 [set liquidity 1]
     ask household 1 [set liquidity 2]
     ask household 2 [set liquidity 4]    
-    assert precision (gini-coefficient - .286) 3 = 0 "gini-coefficient with some inequality not correct"
+    assert precision (gini-coefficient-households - .286) 3 = 0 "gini-coefficient with some inequality not correct"
   ]
 end
 

@@ -588,7 +588,7 @@ max-prod-capacity-per-capita
 max-prod-capacity-per-capita
 0.1
 10
-1.3
+1.6
 .1
 1
 NIL
@@ -689,7 +689,7 @@ PLOT
 495
 185
 645
-gini-coefficient
+gini-coefficients
 NIL
 NIL
 0.0
@@ -700,7 +700,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot gini-coefficient"
+"households" 1.0 0 -13345367 true "" "plot gini-coefficient-households"
+"firms" 1.0 0 -6459832 true "" "plot gini-coefficient-firms"
 
 SLIDER
 0
@@ -1266,7 +1267,7 @@ SWITCH
 1198
 pick-cheapest-firm?
 pick-cheapest-firm?
-0
+1
 1
 -1000
 
@@ -1702,7 +1703,7 @@ NetLogo 6.2.2
   <experiment name="vary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <exitCondition>stop?</exitCondition>
+    <timeLimit steps="1000"/>
     <metric>unemployment-rate</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
     <metric>mean-firm-demand-not-satisfied</metric>
@@ -1722,15 +1723,20 @@ NetLogo 6.2.2
     <metric>coats-index-value</metric>
     <metric>ussher-index-value</metric>
     <metric>potvin-index-value</metric>
-    <metric>gini-coefficient</metric>
+    <metric>gini-coefficient-firms</metric>
+    <metric>pg-sales-gini-coefficient</metric>
+    <metric>gini-coefficient-households</metric>
     <enumeratedValueSet variable="setup-structure">
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
       <value value="0.1"/>
       <value value="0.2"/>
+      <value value="0.3"/>
       <value value="0.4"/>
+      <value value="0.5"/>
       <value value="0.6"/>
+      <value value="0.7"/>
       <value value="0.8"/>
       <value value="0.9"/>
       <value value="1"/>
