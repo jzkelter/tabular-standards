@@ -9,6 +9,7 @@ to unit-tests
     (list "Average sales tests" test-average-sales)
     (list "Wage rate tests" test-adjust-wage-rate)
     (list "gini-coefficient tests" test-gini-coefficient)
+    (list "asymptotic land production tests" test-asymptotic-land-production)
   )
 end
 
@@ -53,7 +54,7 @@ end
 
 to-report test-adjust-wage-rate
   report [->
-    set MAX-WAGE-GROWTH 0.1
+    set MAX-WAGE-CHANGE 0.1
     set MONTHS-TO-LOWER-WAGE 2
     create-households 3
     create-firms 1 [
@@ -61,13 +62,13 @@ to-report test-adjust-wage-rate
       set months-without-vacancies 0
       ask households [create-employment-link-with myself]
       set desired-n-workers 5 
-      set fired-worker? false
+      set wanted-to-fire-worker?  false
       
       FIRM.adjust-wage-rate
       assert (wage-rate > 1) "wage should increase"
       
       set wage-rate 1
-      set fired-worker? true
+      set wanted-to-fire-worker? true
       FIRM.adjust-wage-rate
       assert (wage-rate < 1) "wage should decrease when we fired a worker last time period"
       
@@ -78,7 +79,7 @@ to-report test-adjust-wage-rate
       
       set wage-rate 1
       set months-without-vacancies 1
-      set fired-worker? false
+      set wanted-to-fire-worker? false
       FIRM.adjust-wage-rate
       assert (wage-rate = 1) "wage should not change"
       
@@ -169,20 +170,42 @@ to-report test-gini-coefficient
       set liquidity 1.5
     ]
     
-    assert gini-coefficient = 0 "gini-coefficient != 0 with perfect equality"
+    assert gini-households = 0 "gini-coefficient != 0 with perfect equality"
     
     ask household 0 [set liquidity 0]
     ask household 1 [set liquidity 0]
     ask household 2 [set liquidity 5]    
-    assert precision (gini-coefficient - (2 / 3)) 5 = 0 "gini-coefficient with perfect inequality not correct"
+    assert precision (gini-households - (2 / 3)) 5 = 0 "gini-coefficient with perfect inequality not correct"
     
     ask household 0 [set liquidity 1]
     ask household 1 [set liquidity 2]
     ask household 2 [set liquidity 4]    
-    assert precision (gini-coefficient - .286) 3 = 0 "gini-coefficient with some inequality not correct"
+    assert precision (gini-households - .286) 3 = 0 "gini-coefficient with some inequality not correct"
   ]
 end
 
+to-report test-asymptotic-land-production
+  report [-> 
+    set s 0.1  ; override what is on interface
+    create-firms 1 [
+      set  primary-good-firm? true
+      set price 0.9
+      set wage-rate 2.5
+    ]    
+    LAND.setup-patches 
+    ask lands [set productive-capacity 60]  ; override what is on the interface
+    
+    let prod-to-meet-demand 10
+    let n-desired-workers [FIRM.calc-ideal-workers-asymptotic-land-prod prod-to-meet-demand] of firm 0
+    assert n-desired-workers = 21 "1. asymptotic land production output is wrong"
+    
+    
+  ]
+end
+
+
+
+;; ;; TESTS for laands
 
 to test-productive-capacity-change
   let inputs csv:from-file "land_tests.csv"
@@ -194,6 +217,7 @@ to test-productive-capacity-change
     run-land-test workers 20 0.25 1 10 expected-change
   ]
 end
+
 
 to run-land-test [n-workers opt change-fraction beta start-productive-capacity expected-change]
   ca
@@ -231,4 +255,7 @@ to run-land-test [n-workers opt change-fraction beta start-productive-capacity e
     assert (difference < 0.01) "Actual change different from expected"
   ]
 end
+
+
+
 

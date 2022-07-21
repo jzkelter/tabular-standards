@@ -35,25 +35,12 @@ globals [
   TOTAL-BANKRUPT-FIRMS             ; defined as the total number of firms bankrupt in the model
   NEW-BANKRUPT-FIRMS               ; the number of bankrupt firms added in the current period
   PRIMARY-INVENTORY-VALUE-HISTORY  ; defined as the rolling average of the total inventory of the last two years of the primary good firms
-  BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt
-  UNEMPLOYMENT-RATES               ; stores a list of historical data for unemployment rates
-  MEAN-PRICES                      ; stores a list of historical data for the mean price every year
-  
-  MIN-WAGE-RATE                    ; max amount wages are increased or decreased by if firm decides to change wage
-  FIRM-STRUCTURE                   ; global data holding how many firms are initialized
-  MAX-WAGE-GROWTH                  ; defined as the max amount a firm can increase or decrease their wage if they decide to change their wage
-  MONTHS-TO-LOWER-WAGE             ; after this many months of having all positions filled, a firm will decrease wages
-  MAX-PRICE-GROWTH                 ; defined as the max amount a firm increases/decreases prices by
-  BUFFER-LABOR-FRACTION            ; the fraction of labor costs to keep as a buffer
-  DIMINISHING-UTILITY-CONSTANT     ; the decay rate of how much wealth is used on consumption by households, used in consumption function
-  PROB-REPLACE-FIRM-PRICE          ; the probability of switching trading firms to a new firm with a better price
-  PROB-REPLACE-FIRM-QUANT          ; the probability of switching trading firms based on lack of quantity
-  N-TRADING-LINKS                  ; number of firms contacted by consumers trying to buy consumer goods
-  N-FRAMEWORK-AGREEMENTS           ; number of firms contacted by non-primary firms trying to buy input goods
-  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage
-  STARTUP-LIQUIDITY                ; agents are initialized to a constant liquidity
-  BACKGROUND-IMPROVEMENT           ; the background improvement on each patch after each tick 
-  DESIRED-BUFFER-PERCENT           ; represents the desired buffer as a percent of expected sales. 
+  BANKRUPT-FIRM-PROFITS            ; list of lifetime-profits. A "profit" is added to the list if the firm goes bankrupt  
+  ROLLING-UNEMPLOYMENT-RATE        ; stores a rollinig average of unemployment rate
+  MEAN-PRICES                      ; stores a table of mean price for each firm type for the last period
+  FIRM-STRUCTURE                   ; global data holding how many firms are initialized                
+  ; AUTONOMOUS-CONSUMPTION           ; represents amount in goods of autonomous consumption among households, regardless of wage                               
+             
   SEED                             ; the random seed for the current run
   
   month                            ; the current tick
@@ -67,12 +54,12 @@ globals [
 ;general setup procedure, calls all other sub-setup procedures in some capacity to generate an initial state for the model
 to setup
   ca
-  
-  set-constants  
+  set-constants
   set pringle-index-value 1
   set coats-index-value 1            
   set ussher-index-value 1              
   set potvin-index-value 1
+  set MEAN-PRICES table:make
   
   ;; setup agents
   create-households n-households [
@@ -90,61 +77,64 @@ to setup
       
   ask households[
     set-household-xcor
+    
     create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
       init-consumer-link
     ]
-    if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
+    
+    if count my-employment-links = 0 [ ; households that didn't get employed when firms were created get employed
+      create-employment-link-with one-of firms [init-employment-link]
+    ]  
+    
     set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
     HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
+    set largest-firm-visited one-of firms
   ]
 
   ask firms [    
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set months-without-vacancies 0
-    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
+    set demand FIRM.max-labor-and-land-production    ; demand initialized to be the amount the firm can produce with its starting amount of labor
     set desired-n-workers n-workers   ; workers initially want the number of workers they have
     FIRM.set-input-demands   
-    set previous-sales FIRM.max-production
-    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
+    set previous-sales demand
+    set inventory (DESIRED-BUFFER-FRAC * previous-sales)        ;firms start with the ideal buffer amount times their market share
     
     ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
 ;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
 ;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
 ;    ]
-    set average-previous-sales FIRM.max-production
+    set average-previous-sales demand
     set firm-value 0
+    FIRM.set-color
   ]    
-  
-  set-colors
+    
   ask one-of firms [ask my-links [show-link]]
   
   
   set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
   set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list 0)
-  set MEAN-PRICES (list mean [price] of firms)
+  set ROLLING-UNEMPLOYMENT-RATE 0
+  
+  
+  
+  
       
   position-agents  
+  
+  if min-wage-80%-of-tech-param? [
+    set MIN-WAGE-RATE 0.8 * mean [tech-parameter] of firms
+  ]
   
   reset-ticks
   tick
 end
 
-;to setup-lands 
-;  create-lands count PRIMARY-GOOD-FIRMS 
-;  let min-land-who min [who] of lands
-;  let x-per-land world-width / count lands
-;  ask lands [
-;    setxy (who - min-land-who) * x-per-land max-pycor
-;    set shape "square"
-;    set color green
-;  ]
-;end
+
 
 to position-agents  
   ; land-plots get top row
-  
   
   ; household get 1 / 3 of the world        
   let household-size  10 / patch-size
@@ -166,31 +156,20 @@ to position-agents
   ]
 end
 
+
 ;procedure to initialize all global constants
 to set-constants
   set SEED new-seed
-  random-seed SEED
-  set MIN-WAGE-RATE 2.5
-  set MAX-WAGE-GROWTH 0.019                
-  set MONTHS-TO-LOWER-WAGE 1              
-  set MAX-PRICE-GROWTH 0.05                 
-  set BUFFER-LABOR-FRACTION 3               
-  set DIMINISHING-UTILITY-CONSTANT 0.25  
-  set PROB-REPLACE-FIRM-PRICE 0.25         
-  set PROB-REPLACE-FIRM-QUANT 0.5          
-  set N-TRADING-LINKS 7                    
-  set N-FRAMEWORK-AGREEMENTS 7             
+  random-seed SEED  
+                 
+   
   ; set AUTONOMOUS-CONSUMPTION 0         
-  set STARTUP-LIQUIDITY 100                
-  set BACKGROUND-IMPROVEMENT 10
-  set DESIRED-BUFFER-PERCENT 0.5
+      
   set TOTAL-BANKRUPT-FIRMS 0
   set NEW-BANKRUPT-FIRMS 0
   
-
   let filepath word "_firm_structures/" setup-structure
   set FIRM-STRUCTURE table:get (table:from-json-file filepath) "Firms"
-  
   
 end
 
@@ -200,6 +179,7 @@ to setup-firms
   foreach FIRM-STRUCTURE [ f ->     ; we need to first find out how many firms to create
     set firm-ratio-sum firm-ratio-sum + table:get f "Firm count"  ; final sum should be 
   ]
+  
   foreach FIRM-STRUCTURE [ f ->
     let group table:get f "Firm type"
     let firm-ratio table:get f "Firm count"
@@ -212,20 +192,24 @@ to setup-firms
       
       set shape "building store"
       set tech-parameter firm-tech-parameter 
-      set price 1 * small-random-change
+      set price 5 / tech-parameter  + random-normal 1 1
       set firm-type group
       set input-data make-input-data-table table:get f "Input data"
-      set wage-rate tech-parameter
+      set wage-rate MIN-WAGE-RATE
       set consumer-good-firm? is-consumer?
       set intermediate-good-firm? is-intermediate?
       set primary-good-firm? is-primary?
-      set fired-worker? false
-      
+      set wanted-to-fire-worker? false
+            
       create-employment-link-with one-of households with [count my-employment-links = 0] [init-employment-link]
       set firm-age 0
       set current-profits 0
                   
     ]
+    
+    let ftype table:get f "Firm type"
+    table:put MEAN-PRICES ftype (mean [price] of firms with [firm-type = ftype ])
+     
   ]
 
   set CONSUMER-GOOD-FIRMS firms with [consumer-good-firm?]
@@ -264,77 +248,7 @@ to initialize-framework-agreements
   ]
 end
 
-to setup-crash
-  ca
-  
-  set-constants
-  set STARTUP-LIQUIDITY 7  
-  set pringle-index-value 1
-  set coats-index-value 1            
-  set ussher-index-value 1              
-  set potvin-index-value 1
-  
-  ;; setup agents
-  create-households n-households [
-    set shape "circle"     
-    set size 0.5
-  ]
-  
-  distribute-unequal-liquidity
-  setup-firms
-  
-  initialize-framework-agreements
-  ;position-agents
-  
-  ask households[
-    set-household-xcor
-    create-consumer-links-with up-to-n-of N-TRADING-LINKS firms with [consumer-good-firm?] [
-      init-consumer-link
-    ]
-    ifelse random-float 1 > 0.98[
-      if count my-employment-links = 0 [create-employment-link-with one-of firms [init-employment-link]]  ; households that didn't get employed when firms were created get employed
-      set reservation-wage [wage-rate] of HOUSEHOLD.my-employer
-    ][
-      set reservation-wage MIN-WAGE-RATE
-    ]
-    HOUSEHOLD.set-consumption             ; this has to be set after households have trading connections to calculate mean price
-  ]
-  
-  ask firms [    
-    set liquidity FIRM.raise-funds
-    set lifetime-profits liquidity * -1
-    set months-without-vacancies 0
-    set demand FIRM.max-production   ; demand initialized to be the intial output of the firm
-    set desired-n-workers n-workers   ; workers initially want the number of workers they have
-    FIRM.set-input-demands   
-    set previous-sales FIRM.max-production
-    set inventory (DESIRED-BUFFER-PERCENT * previous-sales)        ;firms start with the ideal buffer amount times their market share
-    
-    ;; There is no need to start with initial stock I don't think. Firms buy at the beginning of the tick
-;    foreach table:keys input-data [ i ->  ; firms start with stock equal to their des
-;      set-stock i (DESIRED-BUFFER-PERCENT * previous-sales)  ; / (marginal-productivity i))
-;    ]
-    set average-previous-sales FIRM.max-production
-  ]    
-  
-  set-colors
-  ask one-of firms [ask my-links [show-link]]
-  
-  LAND.setup-patches
-  
-  
-  set PRIMARY-INVENTORY-VALUE-HISTORY (list (sum [inventory] of firms))
-  set BANKRUPT-FIRM-PROFITS (list)
-  set UNEMPLOYMENT-RATES (list 0)
-  set MEAN-PRICES (list mean [price] of firms)
-      
-  position-agents  
-  
-  set STARTUP-LIQUIDITY 100
-  
-  reset-ticks
-  tick
-end
+
 
 to distribute-unequal-liquidity
   

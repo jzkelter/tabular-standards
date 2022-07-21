@@ -1,10 +1,21 @@
 ;;***************GO****************************
 ;general go procedure, runs the beginning of the month, then the month, then the end of the month
 to go    
+  
   go-beginning-of-month-observer  
-  go-beginning-of-month-firms  
+  
+  firms-plan-month
+  
   go-beginning-of-month-households  
+  
+  ask firms [    
+    FIRM.pay-wages
+    FIRM.distribute-profits
+  ]
+  ask households [HOUSEHOLD.set-consumption]
+  
   go-month  
+  
   go-end-of-month
   tick
 end
@@ -15,29 +26,30 @@ to go-beginning-of-month-observer
   recalculate-index-pringle 
   recalculate-index-coats
   recalculate-index-ussher
-  recalculate-index-potvin
-  set-colors
+  recalculate-index-potvin  
   set NEW-BANKRUPT-FIRMS 0
 end
 
 ;general beginning of the month procedure for firms, see firm-procedures.nls for descriptions on each of these procedures
-to go-beginning-of-month-firms
+to firms-plan-month
   
-  ask firms [    
-    FIRM.pay-wages  ; pay workers for last month's work
-    
-    if liquidity <= wage-rate [  
+  ask firms [ ; need to do this first so that new firms also plan month
+    FIRM.set-color
+    if liquidity < wage-rate [
       FIRM.replace-firm
     ]
-    FIRM.calculate-average-sales
-    FIRM.search-for-framework-agreements
-    ;search-delivery-capable-supplier and vendor used to be here
+  ]
+  
+  ask firms [
     
+    FIRM.calculate-average-sales
+    FIRM.search-for-framework-agreements        
     FIRM.adjust-wage-rate
     FIRM.adjust-output-and-price
-    FIRM.lay-off-workers
+    FIRM.lay-off-workers    
     set demand 0  ; reset demand for the month
-    set previous-sales 0 ; reset how many goods were sold from the previous month          
+    set previous-sales 0 ; reset how many goods were sold from the previous month     
+    set month-production 0  ; reset how much was produced this month        
   ]
 end
 
@@ -45,13 +57,14 @@ end
 to go-beginning-of-month-households
   ask households [
     if liquidity < 0 [error "negative liquidity beginning of month"] 
-    HOUSEHOLD.guarantee-consumer-links
-    if random-float 1 < PROB-REPLACE-FIRM-PRICE  [HOUSEHOLD.search-cheaper-vendor]
-    if random-float 1 < PROB-REPLACE-FIRM-QUANT [HOUSEHOLD.search-delivery-capable-vendor]  
-    HOUSEHOLD.search-for-employement
-    HOUSEHOLD.set-consumption
+    HOUSEHOLD.set-consumer-links                   
+    HOUSEHOLD.search-for-employement   
+    HOUSEHOLD.set-color  
   ]
+    
 end
+
+
 
 ;runs the daily production cycle for one month
 to go-month
@@ -70,53 +83,37 @@ end
 ;general proccedure for the end of the month, see firm and household files for descriptions of each of thes procedures
 to go-end-of-month
   if (sum [liquidity] of firms) + (sum [liquidity] of households) < 0.9999 * STARTUP-LIQUIDITY * n-households [error "liquidity is leaking"]
-  if (sum [liquidity] of firms) + (sum [liquidity] of households) > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]
-  
-  let mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
+  if (sum [liquidity] of firms) + (sum [liquidity] of households) > 1.0001 * STARTUP-LIQUIDITY * n-households [error "liquidity is increasing"]              
   
   ask firms [
-    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]
-    FIRM.distribute-profits
-    (ifelse desired-n-workers <= n-workers [
+    if wage-rate < MIN-WAGE-RATE [error "firm has wage lower than policy minimum wage"]                           
+    
+    ifelse desired-n-workers <= n-workers [
       set months-without-vacancies months-without-vacancies + 1
     ] [
       set months-without-vacancies 0    ;if desired-n-workers > n-workers, then we failed to hire, i.e. had a vacancy
-    ])
-    set firm-age (firm-age + 1)
+    ]
+    
+    set firm-age (firm-age + 1)    
   ]
   
-  set mean-liquidity mean [liquidity] of CONSUMER-GOOD-FIRMS
   
   ask households [ 
     HOUSEHOLD.adjust-reservation-wage
   ]
 
+  calc-mean-prices
+  set ROLLING-UNEMPLOYMENT-RATE (.9 * ROLLING-UNEMPLOYMENT-RATE) + (.1 * (1 - (count employment-links / count households)))
+  
   set-firm-xcor
-  set-household-xcor
-
-  set UNEMPLOYMENT-RATES (lput (1 - count employment-links / n-households) UNEMPLOYMENT-RATES)
-  set MEAN-PRICES (lput mean [price] of firms MEAN-PRICES)
+  set-household-xcor  
   
   set month month + 1
   
 end
 
-to-report go-crashed?
-  let n length UNEMPLOYMENT-RATES
-  set n (n - 1)
-  let c 0
-  while [c < 50 and n >= 0][
-    let curr-rate item n UNEMPLOYMENT-RATES
-    if curr-rate < 0.8[
-      report false
-    ]
-    set c c + 1
-    set n n - 1
+to calc-mean-prices
+  foreach table:keys MEAN-PRICES [ftype ->
+    table:put MEAN-PRICES ftype mean [price] of firms with [firm-type = ftype]
   ]
-  report true
 end
-
-
-
-
-

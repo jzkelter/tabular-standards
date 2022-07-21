@@ -12,20 +12,20 @@ __includes[
   "_nls_files/setup-procedures.nls"
   "_nls_files/misc-observer-procedures.nls"
   "_nls_files/land-procedures.nls"
-  "_nls_files/experimental-reporters.nls"
+  "_nls_files/stats-reporters.nls"
 ]
 
 
 ;"lengnick-tests.nls" Jake/Jacob previously used this but I am removing it because I do not use it anymore
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-55
-643
+225
+60
+653
 489
 -1
 -1
-38.64
+38.2
 1
 10
 1
@@ -47,9 +47,9 @@ months
 
 BUTTON
 0
-590
+440
 66
-623
+473
 setup
 stop-inspecting-dead-agents\nsetup
 NIL
@@ -64,9 +64,9 @@ NIL
 
 BUTTON
 124
-590
+440
 205
-623
+473
 go-once
 go\n
 NIL
@@ -81,9 +81,9 @@ NIL
 
 BUTTON
 67
-590
+440
 122
-623
+473
 NIL
 go
 T
@@ -98,9 +98,9 @@ NIL
 
 SLIDER
 0
-100
-172
-133
+110
+125
+143
 n-households
 n-households
 10
@@ -112,10 +112,10 @@ NIL
 HORIZONTAL
 
 PLOT
-220
-495
-420
-643
+665
+170
+945
+318
 Unemployment rate
 NIL
 unemployment
@@ -124,17 +124,17 @@ unemployment
 0.0
 0.5
 true
-false
+true
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
-"mean unemployment" 1.0 0 -1184463 true "" "plot mean UNEMPLOYMENT-RATES"
+"current" 1.0 0 -16777216 true "" "plot 1 - (count employment-links / count households)"
+"mean " 1.0 0 -2674135 true "" "plot ROLLING-UNEMPLOYMENT-RATE"
 
 PLOT
-652
+665
 10
-975
-180
+988
+170
 Wage Rate Stats 
 NIL
 NIL
@@ -144,21 +144,22 @@ NIL
 5.0
 true
 true
-"set-plot-y-range (MIN-WAGE-RATE * 0.9) precision (mean [tech-parameter] of firms * 1.1) 1" ""
+"set-plot-y-range (MIN-WAGE-RATE * 1.1) (MIN-WAGE-RATE * 2)" ""
 PENS
-"mean firm wage" 1.0 0 -16777216 true "" "plot mean [wage-rate] of firms"
-"min wage" 1.0 0 -7500403 true "" "plot min [wage-rate] of firms"
-"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households"
-"max wage" 1.0 0 -14439633 true "" "plot max [wage-rate] of firms"
-"med firm wage" 1.0 0 -2674135 true "" "plot median [wage-rate] of firms"
+"mean cg-wage" 1.0 0 -10899396 true "" "plot mean-cg-wage-rate"
+"mean pg-wage" 1.0 0 -6459832 true "" "plot mean-pg-wage-rate"
+"mean res-wage" 1.0 0 -13345367 true "" "plot mean [reservation-wage] of households "
+"mean wage" 1.0 0 -2674135 true "" "plot mean [wage-rate] of firms"
 "MIN-WAGE-RATE" 1.0 0 -2064490 true "" "plot MIN-WAGE-RATE"
-"Labor Value" 1.0 0 -955883 true "" "plot mean [tech-parameter * price] of PRIMARY-GOOD-FIRMS\n; we only use primary good firms here because they are fully value add\n; that way we don't need to subract the cost of inputs to find value of labor\n; However, depending on the setup, there isn't a competitive market and labor value across industries will be different"
+"max firm wage" 1.0 0 -7500403 true "" "plot max [wage-rate] of firms"
+"min firm wage" 1.0 0 -8630108 true "" "plot min [wage-rate] of firms"
+"labor value" 1.0 0 -955883 true "" "plot pg-labor-value"
 
 PLOT
-855
-495
-1055
-645
+1300
+370
+1500
+490
 Worker Per Firm Distribution
 NIL
 NIL
@@ -172,44 +173,10 @@ false
 PENS
 "default" 1.0 1 -16777216 true "" "histogram [n-workers] of firms"
 
-BUTTON
-983
-117
-1077
-150
-hide-links
-ask links [hide-link]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-983
-10
-1145
-43
-show random firm's links
-ask links [hide-link]\nask one-of firms [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-650
+190
 495
-850
+405
 645
 Household Liquidity Distribution
 NIL
@@ -225,10 +192,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [liquidity] of households"
 
 PLOT
-1060
-187
-1334
-337
+665
+320
+950
+470
 Mean Price
 NIL
 NIL
@@ -243,45 +210,11 @@ PENS
 "cg-firms" 1.0 0 -5509967 true "" "plot mean [price] of CONSUMER-GOOD-FIRMS"
 "pg-firms" 1.0 0 -5207188 true "" "plot mean [price] of PRIMARY-GOOD-FIRMS"
 
-BUTTON
-1040
-150
-1113
-183
-bmonth-f
-go-beginning-of-month-firms\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1194
-150
-1289
-183
-go-month
-go-month\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
 PLOT
-855
-185
-1055
-335
+1300
+130
+1500
+250
 Monthly Firm Turnover
 NIL
 NIL
@@ -296,10 +229,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot (count firms with [color = yellow] / n-firms)"
 
 PLOT
-1340
-340
-1540
-490
+990
+320
+1290
+470
 Mean Demand Not Satisfied
 NIL
 NIL
@@ -308,17 +241,17 @@ NIL
 0.0
 0.1
 true
-false
+true
 "" ""
 PENS
-"Consumers" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
-"Consumer firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
+"households" 1.0 0 -13345367 true "" "plot mean [demand-not-satisfied] of consumer-links"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [demand-not-satisfied] of framework-agreements"
 
 PLOT
-650
-185
-850
-335
+990
+165
+1275
+315
 Inventory
 NIL
 NIL
@@ -327,69 +260,17 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"consumer firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
-"primary firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
-"consumer firm stock " 1.0 0 -14333415 true "" "plot mean [FIRM.current-stock 2] of CONSUMER-GOOD-FIRMS"
-
-BUTTON
-983
-150
-1038
-183
-dsetup
-\nrandom-seed 1\nsetup\nstop-inspecting-dead-agents\ninspect firm 1050\nupdate-plots
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1290
-150
-1434
-183
-go-end-of-month
-go-end-of-month\ntick\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-1115
-150
-1192
-183
-bmonth-h
-go-beginning-of-month-households\n
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [inventory] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -6459832 true "" "plot mean [inventory] of PRIMARY-GOOD-FIRMS "
 
 SLIDER
-0
-167
-170
-200
+670
+815
+840
+848
 transactions-per-month
 transactions-per-month
 1
@@ -401,10 +282,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1061
-494
-1335
-644
+665
+475
+960
+625
 Output and Demand
 NIL
 NIL
@@ -416,16 +297,16 @@ true
 true
 "" ""
 PENS
-"demand" 1.0 0 -13791810 true "" "plot sum [demanded-consumption * transactions-per-month] of households "
-"cg-output" 1.0 0 -5509967 true "" "plot sum [FIRM.max-production] of CONSUMER-GOOD-FIRMS"
-"pg-output" 1.0 0 -6459832 true "" "plot sum [4 * FIRM.max-production] of PRIMARY-GOOD-FIRMS"
+"cg-output" 1.0 0 -5509967 true "" "plot cg-production"
+"pg-output" 1.0 0 -6459832 true "" "plot pg-production ;; to line up, need to multiply by the marginal productivity of one unit of pg for one unit of cg\n"
+"demand" 1.0 0 -13345367 true "" "plot consumer-demand"
 
 PLOT
-1061
-341
-1335
-491
-Mean Liquidity
+410
+495
+655
+645
+Total Liquidity
 NIL
 NIL
 0.0
@@ -436,61 +317,27 @@ true
 true
 "" ""
 PENS
-"primary-firm" 1.0 0 -6459832 true "" "plot mean [liquidity] of PRIMARY-GOOD-FIRMS"
-"household" 1.0 0 -13345367 true "" "plot mean [liquidity] of households"
-"mean-liquidity" 1.0 0 -955883 true "" "plot mean [liquidity] of (turtle-set households firms)"
-"consumer-firm" 1.0 0 -5509967 true "" "plot mean [liquidity] of CONSUMER-GOOD-FIRMS"
-
-BUTTON
-983
-46
-1144
-79
-show largest firm's links
-ask links [hide-link]\nask firms with-max [liquidity] [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-983
-82
-1143
-115
-show smallest firm's links
-ask links [hide-link]\nask firms with-min [liquidity] [ask my-links [show-link]]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
+"pg-firms" 1.0 0 -6459832 true "" "plot sum [liquidity] of PRIMARY-GOOD-FIRMS"
+"household" 1.0 0 -13345367 true "" "plot sum [liquidity] of households"
+"cg-firms" 1.0 0 -5509967 true "" "plot sum [liquidity] of CONSUMER-GOOD-FIRMS"
+"total" 1.0 0 -7500403 true "" "plot sum [liquidity] of (turtle-set households firms)"
 
 MONITOR
-890
-205
-1033
-250
-Firms Added This Month
+1415
+150
+1490
+195
+This Month
 count firms with [color = yellow]
 4
 1
 11
 
 PLOT
-855
-340
-1054
-490
+1300
+10
+1499
+130
 Total Bankrupt Firms
 NIL
 NIL
@@ -507,71 +354,71 @@ PENS
 CHOOSER
 0
 10
-210
+220
 55
 setup-structure
 setup-structure
-"Single-CG-Firm.json" "Single-PG&CG-Firm.json" "Two-Layer-PG-CG.json" "three-layer" "diamond" "looped-diamond"
+"Single-CG-Firm-TC=3.json" "Single-PG&CG-TC=1.json" "Single-PG&CG-TC=2.json" "Single-PG&CG-TC=3.json" "Two-Layer-.25PG-to-1CG.json" "Two-Layer-.5PG-to-1CG.json" "Two-Layer-1PG-to-1CG.json"
 1
 
 MONITOR
-1186
+225
 10
-1333
+295
 55
-# Primary Good Firms
+# pg-firms
 count PRIMARY-GOOD-FIRMS
 17
 1
 11
 
 MONITOR
-1186
-57
-1332
-102
-# Intermediate Good Firms
+300
+10
+370
+55
+# ig-firms
 count INTERMEDIATE-GOOD-FIRMS
 17
 1
 11
 
 MONITOR
-1185
-105
-1331
-150
-# Consumer Good Firms
+375
+10
+445
+55
+# cg-firms
 count CONSUMER-GOOD-FIRMS
 17
 1
 11
 
 SLIDER
-0
-132
-172
-165
+125
+110
+217
+143
 n-firms
 n-firms
 10
-500
+100
 30.0
-10
+5
 1
 NIL
 HORIZONTAL
 
 SLIDER
 0
-202
+1465
 170
-235
+1498
 framework-duration
 framework-duration
 1
 60
-24.0
+12.0
 1
 1
 NIL
@@ -579,20 +426,20 @@ HORIZONTAL
 
 CHOOSER
 0
-55
+60
 132
-100
+105
 index-in-use
 index-in-use
 "no index" "coats" "pringle" "ussher" "potvin"
 0
 
 PLOT
-430
-495
-635
-645
-Profitability
+1300
+250
+1500
+370
+lifetime  profits
 NIL
 NIL
 0.0
@@ -600,17 +447,17 @@ NIL
 -100.0
 -100.0
 true
-true
+false
 "" ""
 PENS
-"Bankrupt " 1.0 0 -1184463 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
+"Bankrupt " 1.0 0 -2674135 true "" "if BANKRUPT-FIRM-PROFITS != [] [plotxy ticks mean BANKRUPT-FIRM-PROFITS]"
 "In Business" 1.0 0 -16777216 true "" "plot mean [lifetime-profits] of firms"
 
 SLIDER
 0
-235
-205
-268
+1495
+215
+1528
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -622,10 +469,10 @@ NIL
 HORIZONTAL
 
 PLOT
-1340
-495
-1540
-645
+1525
+165
+1725
+315
 Framework Agreements per Firm
 NIL
 NIL
@@ -640,10 +487,10 @@ PENS
 "default" 1.0 1 -16777216 true "" "histogram [count my-in-framework-agreements] of CONSUMER-GOOD-FIRMS"
 
 PLOT
-650
-340
-850
-490
+990
+10
+1275
+160
 average-previous-sales
 NIL
 NIL
@@ -652,17 +499,17 @@ NIL
 0.0
 10.0
 true
-false
+true
 "" ""
 PENS
-"consumer-good" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
-"primary-good" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
+"cg-firms" 1.0 0 -5509967 true "" "plot mean [average-previous-sales] of CONSUMER-GOOD-FIRMS"
+"pg-firms" 1.0 0 -6459832 true "" "plot mean [average-previous-sales] of PRIMARY-GOOD-FIRMS"
 
 PLOT
-1340
-185
-1540
-335
+1525
+10
+1725
+160
 Mean Framework Price
 NIL
 NIL
@@ -676,41 +523,11 @@ false
 PENS
 "default" 1.0 0 -16777216 true "" "plot mean [FIRM.framework-price] of framework-agreements"
 
-TEXTBOX
-210
-10
-495
-31
-Economic Petri Dish\n
-16
-0.0
-1
-
-TEXTBOX
-210
-35
-360
-53
-https://ccl.northwestern.edu/
-11
-0.0
-1
-
-TEXTBOX
-510
-35
-660
-53
-https://xalgorithms.org/
-11
-0.0
-1
-
 SLIDER
 0
-272
-205
-305
+1025
+175
+1058
 firm-memory-constant
 firm-memory-constant
 0
@@ -723,9 +540,9 @@ HORIZONTAL
 
 SWITCH
 0
-345
+1530
 215
-378
+1563
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -734,26 +551,661 @@ fix-n-framework-agreements?
 
 SLIDER
 0
-305
+1065
 172
-338
+1098
 layoff-probability
 layoff-probability
 0
 1
-1.0
+0.5
 0.01
 1
 NIL
 HORIZONTAL
 
-BUTTON
-1335
-105
-1442
-138
+SLIDER
+0
+180
+215
+213
+firm-competency
+firm-competency
+-1
+1
+0.0
+0.1
+1
 NIL
-setup-crash
+HORIZONTAL
+
+SLIDER
+0
+210
+215
+243
+max-prod-capacity-per-capita
+max-prod-capacity-per-capita
+0.1
+10
+2.4
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+1410
+105
+1443
+alpha
+alpha
+.1
+1
+1.0
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+1375
+105
+1408
+s
+s
+.01
+.3
+0.1
+.01
+1
+NIL
+HORIZONTAL
+
+CHOOSER
+0
+1330
+207
+1375
+primary-good-prod-function
+primary-good-prod-function
+"linear" "asymptotic" "Cobb-Douglas"
+0
+
+TEXTBOX
+115
+1375
+210
+1405
+only relevant for asymptotic prod
+11
+0.0
+1
+
+TEXTBOX
+115
+1410
+205
+1440
+only relevant for Cobb-Douglas
+11
+0.0
+1
+
+TEXTBOX
+0
+1450
+150
+1468
+framework settings
+11
+105.0
+1
+
+TEXTBOX
+0
+810
+150
+828
+general firm settings
+11
+105.0
+1
+
+TEXTBOX
+0
+1310
+150
+1328
+primary good firm settings
+11
+105.0
+1
+
+PLOT
+0
+495
+185
+645
+gini-coefficients
+NIL
+NIL
+0.0
+10.0
+0.0
+1.0
+true
+false
+"" ""
+PENS
+"households" 1.0 0 -13345367 true "" "plot gini-households"
+"firms" 1.0 0 -6459832 true "" "plot gini-firms"
+
+SLIDER
+0
+265
+172
+298
+MIN-WAGE-RATE
+MIN-WAGE-RATE
+.1
+10
+2.5
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+380
+225
+413
+DIMINISHING-UTILITY-CONSTANT
+DIMINISHING-UTILITY-CONSTANT
+.1
+1
+0.4
+.05
+1
+NIL
+HORIZONTAL
+
+SWITCH
+0
+300
+220
+333
+min-wage-80%-of-tech-param?
+min-wage-80%-of-tech-param?
+1
+1
+-1000
+
+TEXTBOX
+0
+335
+215
+361
+Overrides minimum-wage slider if true
+11
+0.0
+1
+
+PLOT
+665
+630
+945
+780
+Indices
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"pringle " 1.0 0 -16777216 true "" "plot pringle-index-value"
+"coats" 1.0 0 -7500403 true "" "plot coats-index-value"
+"ussher" 1.0 0 -2674135 true "" "plot ussher-index-value"
+"potvin" 1.0 0 -955883 true "" "plot potvin-index-value"
+
+TEXTBOX
+0
+755
+560
+775
+Constants that I don't really touch, but want to be able to adjust easily if needed
+14
+0.0
+1
+
+INPUTBOX
+0
+830
+140
+890
+MAX-WAGE-CHANGE
+0.2
+1
+0
+Number
+
+TEXTBOX
+140
+835
+270
+891
+max amount a firm can increase/decrease their wage (default=0.2)
+11
+0.0
+1
+
+PLOT
+990
+475
+1270
+625
+mean desired vs actual workers
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+true
+"" ""
+PENS
+"desired" 1.0 0 -2674135 true "" "plot mean [desired-n-workers] of firms"
+"actual" 1.0 0 -13345367 true "" "plot mean [n-workers] of firms"
+
+INPUTBOX
+0
+895
+140
+955
+MAX-PRICE-CHANGE
+0.2
+1
+0
+Number
+
+TEXTBOX
+145
+900
+270
+956
+max amount a firm can increase/decrease prices (default=.05)\n
+11
+0.0
+1
+
+INPUTBOX
+0
+960
+160
+1020
+BUFFER-LABOR-FRACTION
+0.3
+1
+0
+Number
+
+TEXTBOX
+165
+970
+315
+1011
+the fraction of labor costs firms keep as a buffer before distributing profits
+11
+0.0
+1
+
+PLOT
+1300
+490
+1500
+620
+desired worker change
+NIL
+NIL
+-10.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 1 -16777216 true "" "histogram [desired-n-workers - n-workers] of firms"
+"pen-1" 1.0 0 -7500403 true "" "plotxy 0.5 0 plotxy 0.5 30"
+
+TEXTBOX
+0
+790
+150
+808
+Firm Constants
+12
+0.0
+1
+
+TEXTBOX
+365
+790
+515
+808
+Household constants
+13
+0.0
+1
+
+TEXTBOX
+0
+250
+150
+268
+Firm settings
+11
+105.0
+1
+
+TEXTBOX
+5
+365
+155
+383
+Household settings
+11
+105.0
+1
+
+TEXTBOX
+675
+790
+825
+808
+General constants
+11
+0.0
+1
+
+TEXTBOX
+0
+160
+150
+178
+pg-firm / land settings
+11
+105.0
+1
+
+SLIDER
+365
+810
+542
+843
+RES-WAGE-CHANGE
+RES-WAGE-CHANGE
+.1
+1
+0.9
+.1
+1
+NIL
+HORIZONTAL
+
+INPUTBOX
+365
+845
+475
+905
+SEARCH-N
+5.0
+1
+0
+Number
+
+TEXTBOX
+480
+855
+605
+911
+Number of firms to try when unemployed (β in Lengnick = 5)
+11
+0.0
+1
+
+SLIDER
+365
+910
+580
+943
+SEARCH-BETTER-JOB-PROB
+SEARCH-BETTER-JOB-PROB
+0
+1
+0.1
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+1105
+180
+1138
+MONTHS-TO-LOWER-WAGE
+MONTHS-TO-LOWER-WAGE
+1
+24
+12.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1100
+335
+1141
+after this many months of having all positions filled, a firm will decrease wages  
+11
+0.0
+1
+
+SLIDER
+365
+945
+580
+978
+PROB-REPLACE-FIRM-PRICE
+PROB-REPLACE-FIRM-PRICE
+0
+1
+0.25
+.05
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+950
+810
+980
+probability of switching trading firms to a new firm with a better price
+11
+0.0
+1
+
+SLIDER
+365
+980
+580
+1013
+PROB-REPLACE-FIRM-QUANT
+PROB-REPLACE-FIRM-QUANT
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+985
+805
+1026
+probability of switching trading firms based on lack of quantity
+11
+0.0
+1
+
+SLIDER
+365
+1015
+580
+1048
+N-TRADING-LINKS
+N-TRADING-LINKS
+1
+10
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+585
+1015
+810
+1056
+number of firms contacted by consumers trying to buy consumer goods
+11
+0.0
+1
+
+SLIDER
+0
+1140
+180
+1173
+N-FRAMEWORK-AGREEMENTS
+N-FRAMEWORK-AGREEMENTS
+1
+10
+7.0
+1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1145
+345
+1186
+number of firms contacted by non-pg-firms to buy inputs
+11
+0.0
+1
+
+INPUTBOX
+365
+1055
+512
+1115
+STARTUP-LIQUIDITY
+100.0
+1
+0
+Number
+
+TEXTBOX
+545
+1065
+695
+1091
+Households start with this much liquidity
+11
+0.0
+1
+
+TEXTBOX
+360
+1270
+510
+1288
+Land Constants
+13
+0.0
+1
+
+INPUTBOX
+355
+1290
+530
+1350
+BACKGROUND-IMPROVEMENT
+10
+1
+0
+String
+
+TEXTBOX
+540
+1305
+750
+1345
+the background improvement on each land's productive capacity per tick 
+11
+0.0
+1
+
+SLIDER
+0
+1175
+180
+1208
+DESIRED-BUFFER-FRAC
+DESIRED-BUFFER-FRAC
+0
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+TEXTBOX
+185
+1180
+335
+1206
+the desired buffer as a fraction of expected sales. 
+11
+0.0
+1
+
+BUTTON
+445
+10
+540
+43
+inspect overpaying firm
+inspect min-one-of firms [liquidity - (wage-rate * desired-n-workers)]
 NIL
 1
 T
@@ -766,85 +1218,93 @@ NIL
 
 SLIDER
 0
-380
-172
-413
-firm-competency
-firm-competency
--1
+1215
+180
+1248
+INITIAL-CONSUMER-LINKS
+INITIAL-CONSUMER-LINKS
+0
+20
+20.0
 1
+1
+NIL
+HORIZONTAL
+
+PLOT
+1520
+370
+1720
+490
+customers per firm 
+NIL
+NIL
 0.0
-0.1
-1
-NIL
-HORIZONTAL
+400.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 10.0 1 -16777216 true "" "histogram [count my-consumer-links] of consumer-good-firms"
 
 SWITCH
-0
-415
-117
-448
-use-land?
-use-land?
+365
+1125
+602
+1158
+delli-gatti-consumer-search?
+delli-gatti-consumer-search?
+1
+1
+-1000
+
+SWITCH
+365
+1165
+547
+1198
+pick-cheapest-firm?
+pick-cheapest-firm?
 0
 1
 -1000
 
 SLIDER
 0
-520
-205
-553
-max-prod-capacity-per-capita
-max-prod-capacity-per-capita
-.1
-30
-30.0
-.1
+1255
+180
+1288
+BUFFER%-TO-LOWER-PRICE
+BUFFER%-TO-LOWER-PRICE
+1
+1.5
+1.2
+.01
 1
 NIL
 HORIZONTAL
 
-SLIDER
-0
-555
+TEXTBOX
 185
-588
-primary-labor-elasticity
-primary-labor-elasticity
-.1
+1220
+335
+1255
+# of consumer links new firms are given
+11
+0.0
 1
-1.0
-.1
-1
-NIL
-HORIZONTAL
 
-SWITCH
-0
-450
-197
-483
-asymptotic-land-prod?
-asymptotic-land-prod?
-0
+TEXTBOX
+185
+1255
+345
+1280
+Buffer fraction excess before a firm will lower prices
+11
+0.0
 1
--1000
-
-SLIDER
-0
-485
-172
-518
-s
-s
-.1
-.3
-0.1
-.1
-1
-NIL
-HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1240,380 +1700,144 @@ NetLogo 6.2.2
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="economy-crash-experiment" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="vary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
     <setup>setup</setup>
     <go>go</go>
-    <timeLimit steps="2000"/>
-    <exitCondition>crashed?</exitCondition>
-    <metric>crashed?</metric>
-    <metric>ticks</metric>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0"/>
-      <value value="0.1"/>
-      <value value="0.2"/>
-      <value value="0.3"/>
-      <value value="0.4"/>
-      <value value="0.5"/>
-      <value value="0.6"/>
-      <value value="0.7"/>
-      <value value="0.8"/>
-      <value value="0.9"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0"/>
-      <value value="0.1"/>
-      <value value="0.2"/>
-      <value value="0.3"/>
-      <value value="0.4"/>
-      <value value="0.5"/>
-      <value value="0.6"/>
-      <value value="0.7"/>
-      <value value="0.8"/>
-      <value value="0.9"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Varying-productivity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
+    <timeLimit steps="1000"/>
     <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
     <metric>mean-consumer-demand-not-satisfied</metric>
+    <metric>mean-firm-demand-not-satisfied</metric>
     <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-productive-capacity">
-      <value value="10"/>
-      <value value="20"/>
-      <value value="30"/>
-      <value value="40"/>
-      <value value="50"/>
-      <value value="60"/>
-      <value value="70"/>
-      <value value="80"/>
-      <value value="90"/>
-      <value value="100"/>
-      <value value="110"/>
-      <value value="120"/>
-      <value value="130"/>
-      <value value="140"/>
-      <value value="150"/>
-      <value value="160"/>
-      <value value="170"/>
-      <value value="180"/>
-      <value value="190"/>
-      <value value="200"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="Varying-primary-labor-elasticity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="max-productive-capacity">
-      <value value="50"/>
-      <value value="100"/>
-      <value value="200"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="primary-labor-elasticity" first="0.1" step="0.1" last="1"/>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;two-layer&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
+    <metric>cg-production</metric>
+    <metric>consumer-demand</metric>
+    <metric>mean-wage-rate</metric>
+    <metric>mean-cg-price</metric>
+    <metric>mean-pg-price</metric>
     <metric>mean-current-profit-all-firms</metric>
     <metric>mean-lifetime-profit-all-firms</metric>
     <metric>turnover-rate</metric>
     <metric>bankrupt-firms</metric>
     <metric>mean-age</metric>
     <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="max-prod-capacity-per-capita" first="1" step="0.2" last="5"/>
-    <enumeratedValueSet variable="primary-labor-elasticity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
+    <metric>pringle-index-value</metric>
+    <metric>coats-index-value</metric>
+    <metric>ussher-index-value</metric>
+    <metric>potvin-index-value</metric>
+    <metric>gini-firms</metric>
+    <metric>gini-pg-sales</metric>
+    <metric>gini-households</metric>
     <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
-    </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm-primary-labor-elasticity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="false"/>
+      <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
+      <value value="0.2"/>
+      <value value="0.4"/>
+      <value value="0.6"/>
+      <value value="0.8"/>
       <value value="1"/>
+      <value value="1.1"/>
+      <value value="1.2"/>
+      <value value="1.5"/>
       <value value="2"/>
       <value value="3"/>
-      <value value="4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MIN-WAGE-RATE">
+      <value value="2.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
+      <value value="0.3"/>
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pick-cheapest-firm?">
+      <value value="true"/>
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="delli-gatti-consumer-search?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N-TRADING-LINKS">
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MONTHS-TO-LOWER-WAGE">
+      <value value="12"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="layoff-probability">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-households">
+      <value value="500"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="n-firms">
+      <value value="30"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SEARCH-N">
       <value value="5"/>
     </enumeratedValueSet>
-    <steppedValueSet variable="primary-labor-elasticity" first="0.1" step="0.1" last="1"/>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="index-in-use">
-      <value value="&quot;no index&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="mean-new-agreements-per-month">
-      <value value="2"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="fix-n-framework-agreements?">
       <value value="false"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-memory-constant">
-      <value value="0.8"/>
+    <enumeratedValueSet variable="PROB-REPLACE-FIRM-PRICE">
+      <value value="0.25"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="framework-duration">
       <value value="24"/>
     </enumeratedValueSet>
-  </experiment>
-  <experiment name="single-firm-asymptotic-primary-prod-capacity" repetitions="1" runMetricsEveryStep="true">
-    <setup>setup</setup>
-    <go>go</go>
-    <timeLimit steps="3000"/>
-    <metric>unemployment-rate</metric>
-    <metric>mean-price-all-firms</metric>
-    <metric>mean-consumer-demand-not-satisfied</metric>
-    <metric>total-sales</metric>
-    <metric>mean-current-profit-all-firms</metric>
-    <metric>mean-lifetime-profit-all-firms</metric>
-    <metric>turnover-rate</metric>
-    <metric>bankrupt-firms</metric>
-    <metric>mean-age</metric>
-    <metric>mean-inventories</metric>
-    <metric>household-wealth-concentration</metric>
-    <metric>household-wealth-variance</metric>
-    <metric>household-wealth-range</metric>
-    <metric>gini-coefficient</metric>
-    <enumeratedValueSet variable="use-land?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="asymptotic-land-prod?">
-      <value value="true"/>
-    </enumeratedValueSet>
-    <steppedValueSet variable="max-prod-capacity-per-capita" first="1" step="1" last="20"/>
-    <enumeratedValueSet variable="primary-labor-elasticity">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="layoff-probability">
-      <value value="0.5"/>
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
+    <enumeratedValueSet variable="MAX-PRICE-CHANGE">
+      <value value="0.05"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="firm-competency">
-      <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="transactions-per-month">
-      <value value="1"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="n-households">
-      <value value="500"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="setup-structure">
-      <value value="&quot;Single-PG&amp;CG-Firm.json&quot;"/>
+    <enumeratedValueSet variable="SEARCH-BETTER-JOB-PROB">
+      <value value="0.1"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="mean-new-agreements-per-month">
       <value value="2"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="fix-n-framework-agreements?">
-      <value value="false"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="firm-memory-constant">
       <value value="0.8"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="framework-duration">
-      <value value="24"/>
+    <enumeratedValueSet variable="min-wage-80%-of-tech-param?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="STARTUP-LIQUIDITY">
+      <value value="100"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="primary-good-prod-function">
+      <value value="&quot;linear&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="alpha">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="transactions-per-month">
+      <value value="1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="DESIRED-BUFFER-FRAC">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="RES-WAGE-CHANGE">
+      <value value="0.9"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="N-FRAMEWORK-AGREEMENTS">
+      <value value="7"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="s">
+      <value value="0.1"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BUFFER-LABOR-FRACTION">
+      <value value="0.3"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="firm-competency">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="MAX-WAGE-CHANGE">
+      <value value="0.2"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="PROB-REPLACE-FIRM-QUANT">
+      <value value="0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="BACKGROUND-IMPROVEMENT">
+      <value value="&quot;10&quot;"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

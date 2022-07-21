@@ -34,8 +34,7 @@ to LAND.setup-patches
     set MAXIMUM-RENEWAL-FRACTION 0.1 ;Arbitrary
     set patch-pointer 0
     set-land-color
-  ] 
-  show count lands
+  ]   
   
   ask PRIMARY-GOOD-FIRMS [
     

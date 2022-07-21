@@ -5,12 +5,13 @@ firms-own [
   firm-type                        ; # a label for the firm
   input-data                       ; the firm types and productivity that firms need to buy from
   inventory                        ; # amount of goods stored and ready to be sold
+  month-production                 ; stores the amount the firm produced this month
   price                            
   wage-rate                        
   liquidity                        ; i.e. money currently available
   
   months-without-vacancies         ; consecutive months that firms have filled every position they desired
-  fired-worker?                    ; flag triggered if during firm-pay-wages a firm had to fire a worker. This is used when determining wage.
+  wanted-to-fire-worker?          ; flag triggered if firm wanted to layoff a worker, even if they didn't succeed. This is during adjust wage.
   
   desired-n-workers                ; represents the desired number of workers for the month
   previous-sales                   ; previous time period's sales
@@ -29,23 +30,33 @@ firms-own [
   
   firm-value                       ; estimate of the value of the firm
   firm-age                         ; the age of a firm in ticks
-  current-profits                  ; current profit of a firm
+  current-profits                  ; current profit of a firm  
 ]
 
 ;firm procedure, adjusts wage rate based on previous hiring trendsd, see paper for more details
 to FIRM.adjust-wage-rate  
-  (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not fired-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
-    set wage-rate (1 + random-float MAX-WAGE-GROWTH) * wage-rate
-  ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or fired-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
-    set wage-rate max (list ((1 - random-float MAX-WAGE-GROWTH) * wage-rate) MIN-WAGE-RATE)
+  (ifelse months-without-vacancies = 0 and desired-n-workers > n-workers and not wanted-to-fire-worker? [  ; firm had an open position last month, failed to fill, and wasn't forced to fire a worker: raise wage
+    set wage-rate (1 + random-float MAX-WAGE-CHANGE) * wage-rate
+  ] months-without-vacancies >= MONTHS-TO-LOWER-WAGE or wanted-to-fire-worker? [ ; If all hires in past MONTHS-TO-LOWER-WAGE succeeded, lower wage
+    set wage-rate max (list ((1 - random-float MAX-WAGE-CHANGE) * wage-rate) MIN-WAGE-RATE)
   ])
 end
 
 ;firm procedure: adjust output and price based on expected demand and ability to produce
 to FIRM.adjust-output-and-price  
+  
+  ;; get ideal production
   let ideal-production-data FIRM.calculate-ideal-production
   let ideal-production table:get ideal-production-data "amount"
   let ideal-buffer table:get ideal-production-data "buffer"
+  
+  ;; If the firm produces primary goods, they may be limited by land
+  let limited-by-land-productivity? false
+  if primary-good-firm? and FIRM.productive-capacity-of-land < ideal-production [
+    set ideal-production FIRM.productive-capacity-of-land
+    set limited-by-land-productivity? true
+  ]  
+  
   
   ; Figure out how much producing ideal-production will cost  
   let ideal-n-workers FIRM.calc-ideal-n-workers ideal-production
@@ -53,13 +64,13 @@ to FIRM.adjust-output-and-price
   let total-price-of-production table:get cost-data "total-price"
   let ideal-input-goods table:get cost-data "input-amounts"
   
-  ; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
+  ;; now we need to find the actual amount that we can afford to produce given our liquidity...represent this as a multiplier of the ideal-input-amount
   let liquidity-limiter 1
   if total-price-of-production > liquidity [
     set liquidity-limiter liquidity / total-price-of-production
   ]
-  
-  ; Now decidw how much labor and inputs we need to produce as much of ideal-production as we can afford  
+    
+  ; Now decide how much labor and inputs we need to produce as much of ideal-production as we can afford  
   set desired-n-workers floor (ideal-n-workers * liquidity-limiter)  ; we choose to round DOWN desired-n-workers if liquidity is a limiting factor
   if desired-n-workers < 0 [error "Unable to fire a worker that does not exist"]
   
@@ -69,85 +80,143 @@ to FIRM.adjust-output-and-price
     set index-i index-i + 1 
   ]
   
-  FIRM.adjust-price ideal-buffer liquidity-limiter  
-  ;  (ifelse expected-future-sales > FIRM.max-production [ 
-  ;    ;excess demand
-  ;    if price < (mean [price] of other FIRM.firms-with-my-type) [ 
-  ;      set price price * (1 + random-float MAX-PRICE-GROWTH)         ; excess demand, but price is lower than average, increase price
-  ;    ]
-  ;  ] [
-  ;    ;excess supply
-  ;    if price > (mean [price] of other FIRM.firms-with-my-type) [
-  ;      let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-  ;      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))        ; excess supply, but price is higher than average, lower price
-  ;    ]
-  ;  ])
+  FIRM.adjust-price ideal-buffer liquidity-limiter limited-by-land-productivity?
   
 end
 
 
-to-report FIRM.calc-ideal-n-workers [ideal-production] ;; firm procedure
+to-report FIRM.calc-ideal-n-workers [prod-to-meet-demand] ;; firm procedure
+  
+  ;; Since a firm might already have inventories, the production-to-meet-demand is not the same as expected-demand. 
+  ;; It also isn't automatically "ideal" since with non-linear production functions, "ideal" maximizes profit, not meeting demand
+  
   ifelse primary-good-firm? [
-    ;; output = tech-parameter * (n-workers ^ primary-labor-elasticity)    
-
-    ifelse use-land? and asymptotic-land-prod? [    
-      ;; land production is asympototic
-      ;; output = M * (1 - exp(-s * n-workers))
-      ;; M = productive capacity of the land 
-      ;; s is an arbitrary constant in this assumed function. It was picked so othe slope of the production function would be about 3 at thet beginning to match the linear cas
-      let M FIRM.get-productive-capacity      
-      ; In the case of decreasing returns to labor from the land, the firm needs to calculate most profitable amount oto produce, not the maximum
-      ;; So, we set up a profit equation: profit = output * price - cost = M * price * (1 - exp(-s * n-workers)) - wage-rate * n-workers
-      ;; Take the derivate of profit with respect to workers and solve for workers to fine most profitable number of workers. 
-      ;; n-workers = - ln( wage-rate / (M * price * s)) / s
-      let ideal-n-workers round(-(ln( wage-rate / (M * s * price)) / s))
-      report max (list ideal-n-workers 0)
-        
-      ] [  
-      report (ideal-production / tech-parameter) ^ (1 / primary-labor-elasticity)              
-    ] 
+    report FIRM.primary-good-firm-calc-ideal-n-workers prod-to-meet-demand
     
-
-    ] [ 
-    report (ideal-production / tech-parameter)
+    ] [ ;; non-primary good firms or primary good firms when not using land
+    report (prod-to-meet-demand / tech-parameter)
   ]
 end
 
-to FIRM.adjust-price [ideal-buffer liquidity-limiter]
+
+to-report FIRM.primary-good-firm-calc-ideal-n-workers [prod-to-meet-demand]
+  
+  (ifelse
+    primary-good-prod-function = "linear" [  ; 
+      report prod-to-meet-demand / tech-parameter
+    ]
+    primary-good-prod-function = "asymptotic" [
+      report FIRM.calc-ideal-workers-asymptotic-land-prod prod-to-meet-demand        
+    ]
+    primary-good-prod-function = "Cobb-Douglas" [
+      report (prod-to-meet-demand / tech-parameter) ^ (1 / alpha)                    
+    ]
+
+  )
+
+end
+
+;firm procedure, reports the maximum production possible based on labor (and land if applicable)
+to-report FIRM.max-labor-and-land-production  
+  ifelse primary-good-firm?  [
+    report FIRM.primary-good-firm-max-production        
+  ][
+    report (n-workers * tech-parameter)
+  ]
+end
+
+to-report FIRM.primary-good-firm-max-production  ;; primary good firm procedure  
+   (ifelse    
+    primary-good-prod-function = "linear" [
+      ; minimum of max productive capacity of the land or the most that the workers can produce
+      report min list FIRM.productive-capacity-of-land (n-workers * tech-parameter)
+    ]
+    
+    primary-good-prod-function = "asymptotic" [
+      ; output = M * (1 - exp(-s * n-workers))                 
+      report FIRM.productive-capacity-of-land * (1 - exp(-(s * n-workers))) 
+    ]
+        
+    primary-good-prod-function = "Cobb-Douglas" [
+      report min list FIRM.productive-capacity-of-land (tech-parameter * (n-workers ^ alpha))
+    ]
+  )
+  
+end
+
+
+
+to-report  FIRM.calc-ideal-workers-asymptotic-land-prod [prod-to-meet-demand]  
+  ;; production is asympototic to maximum with number of workers:  output = M * (1 - exp(-s * n-workers))
+  ;; M = productive capacity of the land 
+  ;; s is an arbitrary constant in this assumed function. It was picked so othe slope of the production function would be about 3 at thet beginning to match the linear cas
+  
+  let M FIRM.productive-capacity-of-land                        
+  
+  ;; In the case of decreasing returns to labor from the land, the firm needs to calculate most profitable amount to produce, assuming full sales
+  ;;     if expected-demand < most profitable production -> get number of workers for expected-demand
+  ;;     if expected-demand > most profitable production  -> get number of workers for most profitable production
+  
+  ;; Calculate most profitable number of workers
+  ;; We set up a profit equation: profit = price * output  - cost = price * M * (1 - exp(-s * n-workers)) - wage-rate * n-workers
+  ;; Take the derivate of profit with respect to workers and solve for workers to find most profitable number of workers. 
+  ;; n-workers = - ln( wage-rate / (M * price * s)) / s
+  let ideal-workers-full-sales (-(ln( wage-rate / (M * s * price)) / s))
+  
+  ;; workers to produce expected demand
+  let workers-for-expected-demand ifelse-value (prod-to-meet-demand / M) < 1 [(-(ln(1 - (prod-to-meet-demand / M)) / s))] [0]
+  
+  ; ideal number of workers is the minimum of the two options
+  ;let ideal-n-workers round min (list ideal-workers-full-sales workers-for-expected-demand)  
+   let ideal-n-workers round ideal-workers-full-sales
+  ; let ideal-n-workers round workers-for-expected-demand
+  
+  ;let ideal-n-workers round workers-for-expected-demand
+  report max (list ideal-n-workers 0)  ; to prevent negative number of workers
+  
+end
+
+to FIRM.adjust-price [ideal-buffer liquidity-limiter limited-by-land-productivity?]
   ; after figuring out ideal-production and whether we can reach it, we decide whether to adjust price
-  (ifelse 
-    inventory < ideal-buffer                                    ; if inventory < ideal-buffer, there was excess demand last period compared to expectation
-    and liquidity-limiter < 1                                   ;     and can't produce enough to fulfill expected demand at the current price
-    and price < (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is below competition's average 
-      set price price * (1 + random-float MAX-PRICE-GROWTH)     ; Then: raise price
+  
+  let mean-price-my-firm-type table:get MEAN-PRICES firm-type  
+  (ifelse                                                   ; IF all three conditions are true:
+    inventory < ideal-buffer                                ;     1) inventory < ideal-buffer, there was excess demand last period compared to expectation
+    and (liquidity-limiter < 1                              ;     2) (can't produce enough to fulfill expected demand at the current price
+         or limited-by-land-productivity?)                  ;         OR a primary good firm is limited by the land in how much they can produce)
+    and price < mean-price-my-firm-type                    ;     3) price is below competition's average 
+    [                   
+      set price price * (1 + random-float MAX-PRICE-CHANGE) ; Then: raise price
     ] 
     
-    inventory > ideal-buffer * 1.2                              ; if inventory > ideal-buffer * 1.2, we had excess supply last period 
-    and liquidity-limiter = 1                                   ;     and we have enough money to produce expected demand (is this needed?)
-    and price > (mean [price] of other FIRM.firms-with-my-type) [    ;     and price is higher than average
-                                                                     ; Then: lower price to increase sales (without going below marginal cost of production)
+    inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE         ; if inventory > ideal-buffer * BUFFER%-TO-LOWER-PRICE , we had excess supply last period 
+    and liquidity-limiter = 1                                 ;     and we have enough money to produce expected demand (is this needed?)
+    and price > mean-price-my-firm-type                      ;     and price is higher than average
+    [                     
+                                                              ; Then: lower price to increase sales (without going below marginal cost of production)
       let marginal-cost FIRM.estimate-marginal-cost-of-input-goods + (wage-rate / tech-parameter)
-      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-GROWTH)))  
+      set price max (list marginal-cost (price * (1 - random-float MAX-PRICE-CHANGE)))  
     ]
   ) 
 end
 
-to-report FIRM.calculate-ideal-production
+to-report land-limited?
+  
+end
+
+to-report FIRM.calculate-ideal-production  ;; calculate ideal production regardless of limitations (just based on expected sales and current inventory)
   let expected-future-sales average-previous-sales  ; expect the future to be like the average of the past
   
   ; we begin by setting ideal-production to the expected-future-sales, rounded up to a whole worker's worth of production
   let ideal-production expected-future-sales    ; we will chnage this later to find the true production amount given inventory
-  let ideal-buffer DESIRED-BUFFER-PERCENT * expected-future-sales
+  let ideal-buffer DESIRED-BUFFER-FRAC * expected-future-sales
   
   ; adjust ideal-production based on current inventory
   set ideal-production ideal-production + (ideal-buffer - inventory)  ; if current iventory = ideal-buffer, no change. If current inventory is high -> produce less. If low -> produce more. 
   
-  set ideal-production max (list 0 ideal-production) ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer
-  
-  if use-land? and primary-good-firm? [
-    set ideal-production (min (list ideal-production FIRM.get-productive-capacity))  ; can't 
-  ]
-  
+  ; make sure we don't produce negative amount in case current inventory is more than ideal-production + ideal-buffer
+  set ideal-production max (list 0 ideal-production) 
+    
   ; now fix ideal-production to be evenly divisible by the tech-parameter. Round up to over produce and have a bit more buffer rather than underproduce
   set ideal-production (ceiling (ideal-production / tech-parameter)) * tech-parameter ; maybe change this to round instead of ceiling?
   let production-data table:make
@@ -158,7 +227,7 @@ to-report FIRM.calculate-ideal-production
   report production-data
 end
 
-to-report FIRM.get-productive-capacity
+to-report FIRM.productive-capacity-of-land
   report [productive-capacity] of firm-location
 end
 
@@ -216,29 +285,30 @@ to-report FIRM.num-inputs
   report length table:keys input-data
 end
 
-;firm procedure, estimates the price of a given input good for a firm
+;firm procedure, estimates the price of a givensinput good for a firm
 to-report FIRM.estimate-price [input-i]
   report mean [FIRM.framework-price] of my-framework-agreements with [FIRM.input-firm-type = input-i]
 end
 
-;firm procedure, fires all workers that firm does not want
-to FIRM.lay-off-workers
-  ;************** old code ****************
-;  if desired-n-workers < n-workers and n-workers > 0 [  
-;    ifelse only-fire-1-per-month? [
-;      ask one-of my-employment-links [die]    
-;    ] [
-;      ask up-to-n-of (n-workers - desired-n-workers) my-employment-links [die]    
-;    ]        
-;  ]
-  ;************* new code *************
+;firm procedure, fires workers that firm does not want or can't afford
+to FIRM.lay-off-workers    
   
   let max-layoffs (n-workers - desired-n-workers)
-  repeat max-layoffs[
+  set wanted-to-fire-worker? max-layoffs > 0      
+    
+  repeat max-layoffs [  
     if ((random-float 1) < layoff-probability)[
-      ask one-of my-employment-links [die]    
+      ask one-of my-employment-links [die]       
     ]
   ]
+     
+  ; if after laying people off the normal way I'm not going to be able to pay the wage bill, I can lay more off  (this only happens if layoff-probability < 1)
+  while [liquidity < (wage-rate * n-workers)] [ ; and n-workers > 0] [          
+    ask one-of my-employment-links [die]  
+    set desired-n-workers n-workers           
+  ]
+  
+  
 end
 
 
@@ -246,7 +316,7 @@ end
 to FIRM.replace-firm
   FIRM.add-lifetime-profits    
   
-  ;; give any liquidity back to investors
+  ;; give any liquidity back to investors (there was a time when we had a firm go bankrupt even if liquidity wasn't 0)
   let firm-liquidity liquidity  
   let total-equity sum [equity] of my-equity-links
   ask my-equity-links [
@@ -272,13 +342,13 @@ to FIRM.add-firm
   set TOTAL-BANKRUPT-FIRMS TOTAL-BANKRUPT-FIRMS + 1
   hatch 1 [
     set color yellow                    ; set color to yellow for one month to visually indicate which firms are going bankrupt
-    set price mean [price] of FIRM.firms-with-my-type
-    set wage-rate mean [wage-rate] of FIRM.firms-with-my-type
+    set price mean [price] of FIRM.firms-with-my-type    
+    set wage-rate max (list (mean [wage-rate] of FIRM.firms-with-my-type) MIN-WAGE-RATE)
     set liquidity FIRM.raise-funds
     set lifetime-profits liquidity * -1
     set desired-n-workers max (list 1 (floor (mean [average-previous-sales] of FIRM.firms-with-my-type / tech-parameter)))
     set demand desired-n-workers * tech-parameter
-    set months-without-vacancies 0
+    set months-without-vacancies 1
     ;FIRM.set-input-demands
     foreach table:keys input-data [i ->
       FIRM.set-stock i 0
@@ -295,6 +365,9 @@ to FIRM.add-firm
     ]
     set firm-age 0
     set current-profits 0
+    
+    create-consumer-links-with n-of INITIAL-CONSUMER-LINKS households  ;; without any initial customers, it will go bankrupt immediately
+    
   ]
 end
 
@@ -455,31 +528,24 @@ end
 ;firm procedure, adjusts inventory by a calculated production amount and adjusts input stocks accordingly by calling FIRM.use-inputs
 to FIRM.produce-goods  
   let production-amount FIRM.production-potential
-  set inventory inventory + production-amount
+  set month-production month-production + production-amount
   FIRM.use-inputs production-amount
+  set inventory inventory + production-amount  
 end
 
 ;firm procedure, pays wages to workers
 to FIRM.pay-wages
-  set fired-worker? false
-  if n-workers > 0 [
-    while [wage-rate * n-workers > liquidity] [ 
-      ask one-of my-employment-links [die]                   ; no change to desired-n-workers
-      set fired-worker? true
-    ]
-    set liquidity precision (liquidity - wage-rate * n-workers) 10
-    if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]
-    let temp-wr wage-rate
-    ask employment-link-neighbors [set liquidity liquidity + temp-wr]
-  ]
+  set liquidity precision (liquidity - wage-rate * n-workers) 10
+  if liquidity < 0 [error "firms aren't allowed to go into debt after paying wages"]        
+  ask employment-link-neighbors [set liquidity liquidity + [wage-rate] of myself]   
 end
 
 ;firm procedure, distrubtes all profits allocated by firms to households
 to FIRM.distribute-profits 
   if liquidity < 0 [error "liquidity should not be negative"]  
   let buffer FIRM.decide-reserve
-  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders
-    let profits-to-allocate liquidity - buffer
+  if liquidity > buffer [  ; if there is enough profits, allocate them to share holders    
+    let profits-to-allocate liquidity - buffer    
     set current-profits profits-to-allocate
     set firm-value firm-value * 0.5 + profits-to-allocate * 0.5
     set liquidity buffer
@@ -517,13 +583,15 @@ to-report FIRM.decide-reserve
 end
 
 ;firm procedure, reports the daily production potential of a firm based on the amount of inputs it has in stock
-to-report FIRM.production-potential 
-  (ifelse table:length input-data = 0[
-    report FIRM.max-production
+to-report FIRM.production-potential   
+  
+  (ifelse table:length input-data = 0 [
+    report FIRM.max-labor-and-land-production  
   ][    
     let input-potential min map [i -> ((FIRM.marginal-productivity i) * (FIRM.current-stock i))] table:keys input-data
-    report (min (list input-potential (FIRM.max-production)))
+    report (min (list input-potential (FIRM.max-labor-and-land-production)))
   ])
+  
 end
 
 ;firm procedure, takes in a production amount and adjusts input stocks accordingly
@@ -638,14 +706,6 @@ to-report FIRM.input-firm-type
    report [firm-type] of end1
 end
 
-;firm procedure, reports the maximum production possible
-to-report FIRM.max-production
-  ifelse use-land? and primary-good-firm? [
-    report (min (list FIRM.get-productive-capacity (n-workers * tech-parameter)))
-  ][
-    report (n-workers * tech-parameter)
-  ]
-end
 
 ;firm procedure, reports an agentset of firms with the same firm-type as the caller
 to-report FIRM.firms-with-my-type  
@@ -680,4 +740,9 @@ end
 to-report FIRM.choose-index
   let indices (list "no index"  "pringle" "coats" "ussher" "potvin")
   report position index-in-use indices ; right now we always use the same index determined by the index-in-use chooser
+end
+
+to FIRM.set-color
+  let firm-colors (list black brown green red orange blue gray yellow pink)  
+  set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types  
 end

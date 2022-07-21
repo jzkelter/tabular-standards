@@ -61,19 +61,6 @@ to recalculate-index-potvin
   ;implementation TBD
 end
 
-to set-colors
-  let firm-colors (list black brown green red orange blue gray yellow pink)
-  ask firms [
-    set color (item (firm-type mod 8) firm-colors) + 1.5   ; mod 8 prevents an error for being thrown if we ever decide to run with more than 8 firm types
-  ]
-  ask households [
-    ifelse HOUSEHOLD.employed? [
-      set color blue
-    ] [
-      set color red
-    ]
-  ]
-end
 
 ;observer procedure, recalculates rolling average of the sum of past two years inventory
 to update-rolling-mean-inventory
