@@ -25,7 +25,7 @@ to LAND.setup-patches
     set shape "square"
     set color green
     
-    set optimal-productive-capacity max-prod-capacity-per-capita * count households / n  ; we measure maximum productive capacity per-capita so that it is the same measure regardless of the number of firms/households. Then split between lands. 
+    set optimal-productive-capacity land-area-per-capita  * count households / n  ; we measure maximum productive capacity per-capita so that it is the same measure regardless of the number of firms/households. Then split between lands. 
     set productive-capacity optimal-productive-capacity ; for now, initialize productive-capacity to the maximum
     
     ; set productive-capacity max (list 0 (random-normal (optimal-productive-capacity / 2) (optimal-productive-capacity / 10)))

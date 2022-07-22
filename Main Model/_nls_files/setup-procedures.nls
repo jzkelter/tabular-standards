@@ -118,14 +118,8 @@ to setup
   set ROLLING-UNEMPLOYMENT-RATE 0
   
   
-  
-  
-      
-  position-agents  
-  
-  if min-wage-80%-of-tech-param? [
-    set MIN-WAGE-RATE 0.8 * mean [tech-parameter] of firms
-  ]
+          
+  position-agents     
   
   reset-ticks
   tick

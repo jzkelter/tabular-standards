@@ -105,7 +105,7 @@ n-households
 n-households
 10
 1000
-500.0
+1000.0
 10
 1
 NIL
@@ -403,7 +403,7 @@ n-firms
 n-firms
 10
 100
-30.0
+60.0
 5
 1
 NIL
@@ -418,7 +418,7 @@ framework-duration
 framework-duration
 1
 60
-12.0
+24.0
 1
 1
 NIL
@@ -566,9 +566,9 @@ HORIZONTAL
 
 SLIDER
 0
-180
+165
 215
-213
+198
 firm-competency
 firm-competency
 -1
@@ -581,14 +581,14 @@ HORIZONTAL
 
 SLIDER
 0
-210
+200
 215
-243
-max-prod-capacity-per-capita
-max-prod-capacity-per-capita
+233
+land-area-per-capita
+land-area-per-capita
 0.1
 10
-2.4
+10.0
 .1
 1
 NIL
@@ -705,9 +705,9 @@ PENS
 
 SLIDER
 0
-265
+320
 172
-298
+353
 MIN-WAGE-RATE
 MIN-WAGE-RATE
 .1
@@ -727,32 +727,11 @@ DIMINISHING-UTILITY-CONSTANT
 DIMINISHING-UTILITY-CONSTANT
 .1
 1
-0.4
+0.6
 .05
 1
 NIL
 HORIZONTAL
-
-SWITCH
-0
-300
-220
-333
-min-wage-80%-of-tech-param?
-min-wage-80%-of-tech-param?
-1
-1
--1000
-
-TEXTBOX
-0
-335
-215
-361
-Overrides minimum-wage slider if true
-11
-0.0
-1
 
 PLOT
 665
@@ -908,9 +887,9 @@ Household constants
 
 TEXTBOX
 0
-250
+305
 150
-268
+323
 Firm settings
 11
 105.0
@@ -938,9 +917,9 @@ General constants
 
 TEXTBOX
 0
-160
+145
 150
-178
+163
 pg-firm / land settings
 11
 105.0
@@ -1197,23 +1176,6 @@ TEXTBOX
 the desired buffer as a fraction of expected sales. 
 11
 0.0
-1
-
-BUTTON
-445
-10
-540
-43
-inspect overpaying firm
-inspect min-one-of firms [liquidity - (wage-rate * desired-n-workers)]
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
 1
 
 SLIDER
@@ -1730,22 +1692,15 @@ NetLogo 6.2.2
       <value value="&quot;Single-PG&amp;CG-TC=1.json&quot;"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-prod-capacity-per-capita">
-      <value value="0.2"/>
-      <value value="0.4"/>
-      <value value="0.6"/>
-      <value value="0.8"/>
-      <value value="1"/>
-      <value value="1.1"/>
-      <value value="1.2"/>
-      <value value="1.5"/>
-      <value value="2"/>
-      <value value="3"/>
+      <value value="8"/>
+      <value value="10"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MIN-WAGE-RATE">
       <value value="2.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="DIMINISHING-UTILITY-CONSTANT">
       <value value="0.3"/>
+      <value value="0.6"/>
       <value value="0.9"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="pick-cheapest-firm?">
@@ -1765,10 +1720,10 @@ NetLogo 6.2.2
       <value value="0.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-households">
-      <value value="500"/>
+      <value value="1000"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-firms">
-      <value value="30"/>
+      <value value="60"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="SEARCH-N">
       <value value="5"/>
@@ -1783,7 +1738,7 @@ NetLogo 6.2.2
       <value value="24"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="MAX-PRICE-CHANGE">
-      <value value="0.05"/>
+      <value value="0.2"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="index-in-use">
       <value value="&quot;no index&quot;"/>
