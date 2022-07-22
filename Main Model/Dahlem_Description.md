@@ -1,1 +1,4 @@
-/Users/jzkelter/Dropbox (SESP)/obsidian-vault/Econ Petri Dish Dahlem Description.md
+[[Economic Petri Dish]]
+# Dahlem Description
+
+Coming soon :)
