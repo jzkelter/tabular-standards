@@ -1,8 +1,9 @@
 [[Economic Petri Dish]]
 # Dahlem Description
 
-This is an inline expression: $S(t)_{ave}=mS_{ave}(t-1)+(m-1)s(t)$
+
 
 $$S_{ave}(t)=mS_{ave}(t-1)+(m-1)s(t)$$
 
 
+This is an inline expression: $S_{ave}(t)=mS_{ave}(t-1)+(m-1)s(t)$
