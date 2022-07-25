@@ -1,4 +1,4 @@
 [[Economic Petri Dish]]
 # Dahlem Description
 
-Coming soon :)
+$S(t)_{ave}=mS_{ave}(t-1)+(m-1)s(t)$
