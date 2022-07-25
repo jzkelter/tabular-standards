@@ -411,9 +411,9 @@ HORIZONTAL
 
 SLIDER
 0
-1465
+1510
 170
-1498
+1543
 framework-duration
 framework-duration
 1
@@ -455,9 +455,9 @@ PENS
 
 SLIDER
 0
-1495
+1540
 215
-1528
+1573
 mean-new-agreements-per-month
 mean-new-agreements-per-month
 0
@@ -540,9 +540,9 @@ HORIZONTAL
 
 SWITCH
 0
-1530
+1575
 215
-1563
+1608
 fix-n-framework-agreements?
 fix-n-framework-agreements?
 1
@@ -596,9 +596,9 @@ HORIZONTAL
 
 SLIDER
 0
-1410
+1455
 105
-1443
+1488
 alpha
 alpha
 .1
@@ -611,9 +611,9 @@ HORIZONTAL
 
 SLIDER
 0
-1375
+1420
 105
-1408
+1453
 s
 s
 .01
@@ -626,9 +626,9 @@ HORIZONTAL
 
 CHOOSER
 0
-1330
-207
 1375
+207
+1420
 primary-good-prod-function
 primary-good-prod-function
 "linear" "asymptotic" "Cobb-Douglas"
@@ -636,9 +636,9 @@ primary-good-prod-function
 
 TEXTBOX
 115
-1375
+1420
 210
-1405
+1450
 only relevant for asymptotic prod
 11
 0.0
@@ -646,9 +646,9 @@ only relevant for asymptotic prod
 
 TEXTBOX
 115
-1410
+1455
 205
-1440
+1485
 only relevant for Cobb-Douglas
 11
 0.0
@@ -656,9 +656,9 @@ only relevant for Cobb-Douglas
 
 TEXTBOX
 0
-1450
+1495
 150
-1468
+1513
 framework settings
 11
 105.0
@@ -676,9 +676,9 @@ general firm settings
 
 TEXTBOX
 0
-1310
+1355
 150
-1328
+1373
 primary good firm settings
 11
 105.0
@@ -1124,9 +1124,9 @@ Households start with this much liquidity
 
 TEXTBOX
 360
-1270
+1335
 510
-1288
+1353
 Land Constants
 13
 0.0
@@ -1134,9 +1134,9 @@ Land Constants
 
 INPUTBOX
 355
-1290
+1355
 530
-1350
+1415
 BACKGROUND-IMPROVEMENT
 10
 1
@@ -1145,9 +1145,9 @@ String
 
 TEXTBOX
 540
-1305
+1370
 750
-1345
+1410
 the background improvement on each land's productive capacity per tick 
 11
 0.0
@@ -1267,6 +1267,36 @@ Buffer fraction excess before a firm will lower prices
 11
 0.0
 1
+
+SLIDER
+365
+1210
+612
+1243
+LIQUIDITY-WILLING-TO-INVEST
+LIQUIDITY-WILLING-TO-INVEST
+0.1
+1
+0.5
+.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+0
+1295
+185
+1328
+MIN-INVESTMENT-FRAC
+MIN-INVESTMENT-FRAC
+.01
+.2
+0.1
+.01
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?

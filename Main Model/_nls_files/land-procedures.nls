@@ -4,10 +4,9 @@ breed [lands  land]
 lands-own [
   productive-capacity              ; the soil health located under the firm, possible change to patch variable?
   patch-pointer                    ; points to corresponding patch
-  optimal-productive-capacity
+  optimal-productive-capacity  
   maximum-productive-capacity-increase
-  maximum-productive-capacity-decrease
-  optimal-productive-capacity
+  maximum-productive-capacity-decrease  
   MAXIMUM-PRODUCTIVE-CAPACITY-CHANGE-FRACTION ;constant, should be elsewhere, here for now
   MARGINAL-EFFECT-OF-LABOR-ON-LAND
   MAXIMUM-RENEWAL-FRACTION

@@ -379,8 +379,8 @@ to-report FIRM.raise-funds
   let avg-consumer-price mean [price] of CONSUMER-GOOD-FIRMS  
   while [to-be-raised > 0] [
     ask one-of households with [not equity-link-neighbor? new-firm][ 
-      let liquidity-available liquidity * 0.5  ; when we were using AUTONOMOUS-CONSUMPTION (liquidity - AUTONOMOUS-CONSUMPTION * avg-consumer-price) * 0.5
-      if liquidity-available >= 0.1 * STARTUP-LIQUIDITY [  ; only accept investments that are at least 10% of the total
+      let liquidity-available liquidity * LIQUIDITY-WILLING-TO-INVEST  ; when we were using AUTONOMOUS-CONSUMPTION (liquidity - AUTONOMOUS-CONSUMPTION * avg-consumer-price) * 0.5
+      if liquidity-available >= MIN-INVESTMENT-FRAC * STARTUP-LIQUIDITY [  ; only accept investments that are at least 10% of the total
         ifelse liquidity-available > to-be-raised [
           create-equity-link-with new-firm [
             init-equity-link
@@ -414,6 +414,7 @@ to FIRM.search-for-framework-agreements
     foreach table:keys input-data[i ->
       FIRM.search-new-in-framework-agreements i
     ]
+    
     if not consumer-good-firm? [
       FIRM.search-new-out-framework-agreements 
     ] 
@@ -439,7 +440,7 @@ end
 
 ;firm procedure, caller searches for a new framework agreement with probability 50% and repeats searching for a new framework agreement with a given input
 to FIRM.search-new-in-framework-agreements [input-i] 
-  let new-agreements FIRM.round-up-or-down-with-prob mean-new-agreements-per-month
+  let new-agreements FIRM.round-up-or-down-with-prob MEAN-NEW-AGREEMENTS-PER-MONTH 
   create-framework-agreements-from up-to-n-of new-agreements firms with [firm-type = input-i and not in-framework-agreement-neighbor? myself] [
     init-framework-agreement
   ]  
