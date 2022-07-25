@@ -29,7 +29,9 @@ In addition to these generic classifications, a firms are further defined by the
 2. *Consumers*: households buy goods from cg-firms
 3. *Investors*: households can invest money to help a firm start up and then will subsequently receive dividends from the firm's profits. 
 
-![[Econ Petri Dish Structure.png]]
+
+![](Econ Petri Dish Structure.png?raw=true)
+
 **Figure 1: A)** A schematic of the relationships between land, firms, and household in the simple case in which a single type of firms produces primary goods and sells them directly to household. **B)** A schematic representation of an arbitrary firm network, in this case consisting of one type of primary good firm, two intermediate good firms, and one consumer good firm.
 
 ### 1.3 Other Entities
