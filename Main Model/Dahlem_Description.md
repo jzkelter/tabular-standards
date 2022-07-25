@@ -1,4 +1,3 @@
-[[Economic Petri Dish]]
 # Dahlem Description
 
 ## 1. Overview (max 3 pages)
